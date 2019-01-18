@@ -3,8 +3,8 @@
 !! @file 
 !! @brief Derived datatypes and constants for PIO
 !! 
-!! $Revision$
-!! $LastChangedDate$
+!! $Revision: 943 $
+!! $LastChangedDate: 2014-02-15 00:20:17 +0800 (六, 15  2 2014) $
 !<
 module pio_types
     use pio_kinds

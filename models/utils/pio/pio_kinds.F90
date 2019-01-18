@@ -2,8 +2,8 @@
 !! @file pio_kinds.F90
 !! @brief basic data types 
 !!
-!! $Revision$
-!! $LastChangedDate$
+!! $Revision: 751 $
+!! $LastChangedDate: 2013-04-03 00:01:13 +0800 (三, 03  4 2013) $
 !<
  module pio_kinds
 

@@ -3,8 +3,8 @@
 !! @file
 !! @brief NetCDF interface routines
 !!
-!! $Revision$
-!! $LastChangedDate$
+!! $Revision: 894 $
+!! $LastChangedDate: 2013-12-14 06:04:58 +0800 (六, 14 12 2013) $
 !!
 !<
 module nf_mod

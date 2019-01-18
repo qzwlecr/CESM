@@ -3,8 +3,8 @@
 !! @file pio_support.F90
 !! @brief internal code for compiler workarounds, aborts and debug functions
 !!
-!! $Revision$
-!! $LastChangedDate$
+!! $Revision: 823 $
+!! $LastChangedDate: 2013-08-29 23:16:58 +0800 (四, 29  8 2013) $
 !<
 !>
 !! \def _NO_MPI_RSEND

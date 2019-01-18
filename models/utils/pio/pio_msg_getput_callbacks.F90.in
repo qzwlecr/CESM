@@ -1,8 +1,8 @@
 ! Not a module - this line is required by genf90.pl
 !>
 !! @file 
-!! $Revision$
-!! $LastChangedDate$
+!! $Revision: 757 $
+!! $LastChangedDate: 2013-04-03 03:55:15 +0800 (三, 03  4 2013) $
 !! @brief Callback functions for Asyncronous IO 
 !<
 subroutine string_handler_for_var1(file, varid, index, ndims, strlen, msg)

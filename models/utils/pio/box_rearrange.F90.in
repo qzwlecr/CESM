@@ -2,8 +2,8 @@
 !>
 !!
 !! @file 
-!! $Revision$
-!! $LastChangedDate$
+!! $Revision: 819 $
+!! $LastChangedDate: 2013-06-01 02:32:27 +0800 (六, 01  6 2013) $
 !! @brief
 !!  Perform data rearrangement with each io processor
 !!  owning a rectangular box in the output domain

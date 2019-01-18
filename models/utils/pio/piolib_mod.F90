@@ -13,8 +13,8 @@
 !! @file 
 !! @brief Initialization Routines for PIO
 !! 
-!! $Revision$
-!! $LastChangedDate$
+!! $Revision: 912 $
+!! $LastChangedDate: 2014-01-17 10:06:39 +0800 (五, 17  1 2014) $
 !<
 module piolib_mod
   !--------------

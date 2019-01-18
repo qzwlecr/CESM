@@ -1,8 +1,8 @@
 #define __PIO_FILE__ "pionfput_mod.F90"
 !>
 !! @file 
-!! $Revision$
-!! $LastChangedDate$
+!! $Revision: 894 $
+!! $LastChangedDate: 2013-12-14 06:04:58 +0800 (六, 14 12 2013) $
 !! @brief Write Routines for non-decomposed NetCDF data.
 !<
 module pionfput_mod

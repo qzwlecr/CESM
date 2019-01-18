@@ -1,7 +1,7 @@
 !> @file piovdc.F90
 !> @author  Yannick Polius <ypolius@ucar.edu>
-!> @version $Revision$
-!> @date $LastChangedDate$
+!> @version $Revision: 751 $
+!> @date $LastChangedDate: 2013-04-03 00:01:13 +0800 (三, 03  4 2013) $
 !> @brief The piovdc library for writing Vapor Data Collection (VDC) 2 data files
 !> https://wiki.ucar.edu/display/dasg/PIOVDC
 !> <br>

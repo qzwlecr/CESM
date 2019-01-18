@@ -2,8 +2,8 @@
 !! @file 
 !! @brief User interface Module for PIO, this is the only file a user program should 'use'
 !! 
-!! $Revision$
-!! $LastChangedDate$
+!! $Revision: 856 $
+!! $LastChangedDate: 2013-11-20 05:48:54 +0800 (三, 20 11 2013) $
 !<
 
 module pio

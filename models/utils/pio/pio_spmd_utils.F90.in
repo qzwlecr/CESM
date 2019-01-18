@@ -1,7 +1,7 @@
 !>
 !! @file 
-!! $Revision$
-!! $LastChangedDate$
+!! $Revision: 777 $
+!! $LastChangedDate: 2013-05-01 20:39:51 +0800 (三, 01  5 2013) $
 !! @brief SPMD helper routines
 !<
 #define __PIO_FILE__ "pio_spmd_utils.F90"
