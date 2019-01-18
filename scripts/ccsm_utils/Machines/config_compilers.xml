@@ -850,4 +850,10 @@ for mct, etc.
   <TRILINOS_PATH>$(TRILINOS_PATH)</TRILINOS_PATH>
 </compiler>
 
+<compiler MACH="cluster">
+   <NETCDF_PATH>/home/gpu_ubuntu/zhanglichen/tools/netcdf-build</NETCDF_PATH>
+   <ADD_SLIBS>-L/home/gpu_ubuntu/zhanglichen/tools/netcdf-build -lnetcdf -lnetcdff</ADD_SLIBS>
+   <MPI_PATH>/home/gpu_ubuntu/zhanglichen/tools/mvapich2-build</MPI_PATH>
+</compiler>
+
 </config_compilers>

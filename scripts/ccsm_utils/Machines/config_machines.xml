@@ -32,6 +32,26 @@
             contain other variables defined in cesm.
 
 -->
+
+<machine MACH="cluster">
+        <DESC>rubbish cluster</DESC>
+        <OS>LINUX</OS>
+        <COMPILERS>gnu</COMPILERS>
+        <MPILIBS>mpich</MPILIBS>
+        <CESMSCRATCHROOT>/local/zhanglichen/cesm/CESM</CESMSCRATCHROOT>
+        <RUNDIR>/home/gpu_ubuntu/zhanglichen/asc2019/cesm/$CASE/run</RUNDIR>
+        <EXEROOT>/home/gpu_ubuntu/zhanglichen/asc2019/cesm/$CASE/bld</EXEROOT>
+        <DIN_LOC_ROOT>/home/gpu_ubuntu/zhanglichen/asc2019/cesm/inputdata/$CASE</DIN_LOC_ROOT>
+        <DOUT_S>TRUE</DOUT_S>
+        <DOUT_S_ROOT>/home/gpu_ubuntu/zhanglichen/asc2019/cesm/outputdata/short/$CASE</DOUT_S_ROOT>
+        <DOUT_L_MSROOT>/home/gpu_ubuntu/zhanglichen/asc2019/cesm/outputdata/long/$CASE</DOUT_L_MSROOT>
+        <CCSM_BASELINE>/local/zhanglichen/cesm/CESM/ccsm_baselines</CCSM_BASELINE>
+        <CCSM_CPRNC>/local/cesm/zhanglichen/CESM/tools/cprnc/cprnc</CCSM_CPRNC>
+        <SUPPORTED_BY>qzwlecr -at- gmail.com</SUPPORTED_BY>
+        <GMAKE_J>16</GMAKE_J>
+        <MAX_TASKS_PER_NODE>4</MAX_TASKS_PER_NODE>
+</machine>
+
 <machine MACH="userdefined">
         <DESC>User Defined Machine</DESC>                                 <!-- can be anything -->
         <OS>USERDEFINED_required_macros</OS>                              <!-- LINUX,Darwin,CNL,AIX,BGL,BGP -->
