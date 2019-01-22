@@ -49,7 +49,7 @@
         <CCSM_CPRNC>/local/cesm/zhanglichen/CESM/tools/cprnc/cprnc</CCSM_CPRNC>
         <SUPPORTED_BY>qzwlecr -at- gmail.com</SUPPORTED_BY>
         <GMAKE_J>16</GMAKE_J>
-        <MAX_TASKS_PER_NODE>4</MAX_TASKS_PER_NODE>
+        <MAX_TASKS_PER_NODE>16</MAX_TASKS_PER_NODE>
 </machine>
 
 <machine MACH="userdefined">
