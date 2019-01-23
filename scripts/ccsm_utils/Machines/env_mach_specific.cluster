@@ -19,5 +19,9 @@ source /usr/share/modules/init/csh
 set MODULEPATH=/home/gpu_ubuntu/public/modulefiles
 
 module load compilers/gcc/7.4.1
-module load librarys/netcdf
-module load mpi/mvapich
+module load compilers/icc/intel-cc
+module load librarys/netcdf-icc
+module load mpi/mvapich-icc
+setenv MPICH_CXX icpc
+setenv MPICH_CC icc
+setenv MPICH_FC ifort

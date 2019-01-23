@@ -36,7 +36,7 @@
 <machine MACH="cluster">
         <DESC>rubbish cluster</DESC>
         <OS>LINUX</OS>
-        <COMPILERS>gnu</COMPILERS>
+        <COMPILERS>intel,gnu</COMPILERS>
         <MPILIBS>mpich</MPILIBS>
         <CESMSCRATCHROOT>/local/zhanglichen/cesm/CESM</CESMSCRATCHROOT>
         <RUNDIR>/home/gpu_ubuntu/zhanglichen/asc2019/cesm/$CASE/run</RUNDIR>
