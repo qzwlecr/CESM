@@ -871,8 +871,14 @@ for mct, etc.
 </compiler>
 
 <compiler MACH="single-pc" COMPILER="gnu">
+  <MPICC>/media/rgy/win-file/document/computer/HPC/cesm/openmpi/bin/mpicc</MPICC>
+  <MPIFC>/media/rgy/win-file/document/computer/HPC/cesm/openmpi/bin/mpifort</MPIFC>
+  <MPICXX>/media/rgy/win-file/document/computer/HPC/cesm/openmpi/bin/mpicxx</MPICXX>
+  <SFC>gfortran</SFC>
+  <SCC>gcc</SCC>
+  <SCXX>g++</SCXX>
   <NETCDF_PATH>/media/rgy/win-file/document/computer/HPC/cesm/netcdf-build</NETCDF_PATH>
-  <ADD_SLIBS>-L/media/rgy/win-file/document/computer/HPC/cesm/netcdf-build -lnetcdf -lnetcdff</ADD_SLIBS>
+  <ADD_SLIBS> -L/media/rgy/win-file/document/computer/HPC/cesm/netcdf-build/lib -lnetcdf -lnetcdff</ADD_SLIBS> 
   <MPI_PATH>/media/rgy/win-file/document/computer/HPC/cesm/openmpi</MPI_PATH>
 </compiler>
 </config_compilers>

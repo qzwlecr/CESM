@@ -79,7 +79,7 @@ setenv OMP_NUM_THREADS ${maxthrds}
 #mpiexec -n ${maxtasks} \$EXEROOT/cesm.exe >&! cesm.log.\$LID
 setenv MV2_SMP_USE_CMA 0
 #setenv MV2_ENABLE_AFFINITY 0
-mpirun -launcher rsh -np 1  \$EXEROOT/cesm.exe >&! cesm.log.\$LID
+/media/rgy/win-file/document/computer/HPC/cesm/openmpi/bin/mpirun  -np 1  \$EXEROOT/cesm.exe >&! cesm.log.\$LID
 #mpirun -launcher rsh -np 1  /home/gpu_ubuntu/public/software/intel/vtune_amplifier_2019.1.0.579888/bin64/amplxe-cl -collect hpc-performance -target-duration-type long -result-dir /home/gpu_ubuntu/zhanglichen/profiling/cesm/exp1 -- \$EXEROOT/cesm.exe >&! cesm.log.\$LID
 
 wait
