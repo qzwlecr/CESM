@@ -1,6 +1,17 @@
-module wv_sat_methods
+module cuda
+    interface
+      pure subroutine svp_water_cuda( tboil, t, es) bind(C, name="svp_water_cuda")
+         integer, parameter :: r8 = selected_real_kind(12) ! 8 byte real
+         real(r8), intent(in) :: tboil,t
+         real(r8),intent(out) :: es
+      end subroutine svp_water_cuda
+    end interface
+  end module
 
-! This portable module contains all CAM methods for estimating
+module wv_sat_methods
+ use cuda
+
+ ! This portable module contains all CAM methods for estimating
 ! the saturation vapor pressure of water.
 !
 ! wv_saturation provides CAM-specific interfaces and utilities
@@ -391,14 +402,17 @@ end function wv_sat_svp_trans
 elemental function GoffGratch_svp_water(t) result(es)
   real(r8), intent(in) :: t  ! Temperature in Kelvin
   real(r8) :: es             ! SVP in Pa
-
+  !Y00: call into cuda
+  !call  svp_water_cuda(tboil,t,es)
+  !这里因为是elemental，所以在这个文件头加上了一个interface
+  
   ! uncertain below -70 C
-  es = 10._r8**(-7.90298_r8*(tboil/t-1._r8)+ &
-       5.02808_r8*log10(tboil/t)- &
-       1.3816e-7_r8*(10._r8**(11.344_r8*(1._r8-t/tboil))-1._r8)+ &
-       8.1328e-3_r8*(10._r8**(-3.49149_r8*(tboil/t-1._r8))-1._r8)+ &
-       log10(1013.246_r8))*100._r8
-
+   es = 10._r8**(-7.90298_r8*(tboil/t-1._r8)+ &
+        5.02808_r8*log10(tboil/t)- &
+        1.3816e-7_r8*(10._r8**(11.344_r8*(1._r8-t/tboil))-1._r8)+ &
+        8.1328e-3_r8*(10._r8**(-3.49149_r8*(tboil/t-1._r8))-1._r8)+ &
+        log10(1013.246_r8))*100._r8
+       
 end function GoffGratch_svp_water
 
 elemental function GoffGratch_svp_ice(t) result(es)

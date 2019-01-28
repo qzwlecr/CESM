@@ -97,6 +97,19 @@
       it = itot / nxu
       jp = nxu * ( jlast - jfirst + 1 )
 
+      !asc , init it by the intel_memset 编译器会自动优化这个的
+      !Y00: this is trying to init the matrix? we use a sinlg memset to do it
+      do j=jfirst,jlast
+         do i=ifirst,ilast
+            pe(i,1,j) = D0_0  !only init the (*,1,*) for all the cal will base on this one
+        enddo
+      enddo
+      do j=jfirst,jlast
+         do i=ifirst,ilast
+           wz(i,j,km+1) = D0_0  ! only the last (*,*,km+1) for all the cal base on the last one
+         enddo
+      enddo
+
 !$omp  parallel do      &
 !$omp  default(shared)  &
 !$omp  private(i1, i2, ixj, i, j, k )
@@ -108,10 +121,6 @@
          i1 = ifirst + it * mod(ixj-1, nxu)
          i2 = i1 + it - 1
 
-         do i=i1,i2
-            pe(i,1,j) = D0_0
-            wz(i,j,km+1) = D0_0
-         enddo
 
 ! Top down
          do k=2,km+1
@@ -122,9 +131,17 @@
          do k=1,km+1
             do i=i1,i2
                pe(i,k,j)  = pe(i,k,j) + ptop
-               pk(i,j,k) = pe(i,k,j)**akap
             enddo
          enddo
+
+         do k=1,km+1
+            do i=i1,i2
+               pk(i,j,k) = pe(i,k,j)**akap
+               ! 在这里用cuda流水做优化？，先在最外面弄stream
+               ! call calpk(pk(i,j,k), pe(i,k,j), akap);
+            enddo
+         enddo
+         !call calpkCuda(pk,pe,akap,km,i1,i2,j)  或者整个传参？
 
 ! Bottom up
          do k=1,km

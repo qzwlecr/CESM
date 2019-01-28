@@ -101,6 +101,8 @@ $(CURDIR)/Srcfiles: $(CURDIR)/Filepath
 
 OBJS      := $(addsuffix .o, $(basename $(SOURCES)))
 
+#OBJS      += geopk_cuda.o fft_cuda.o
+# didn't work to add cuda.o here !
 CPPDEF    := -DNO_SHR_VMATH -DSEQ_MCT -DNO_C_SIZEOF $(USER_CPPDEFS)
 ifeq ($(SPMD),TRUE)
    CPPDEF += -DSPMD
@@ -113,7 +115,7 @@ ifneq ($(strip $(LIB_PNETCDF)),)
 endif
 
 $(MODEL_EXEDIR)/$(EXENAME): $(OBJS)
-	$(LINKER) -o $@ $(OBJS) $(NC_LDFLAGS) $(LDFLAGS)
+	$(LINKER) -o $@ $(OBJS) $(NC_LDFLAGS) $(LDFLAGS) 
 
 ifneq ($(strip $(COSP_LIBDIR)),)
 # Rules to build COSP in its own library.  Add abortutils dependency so

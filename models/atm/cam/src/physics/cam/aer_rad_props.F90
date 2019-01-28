@@ -487,11 +487,11 @@ subroutine get_hygro_rad_props(ncol, krh, wrh, mass, ext, ssa, asm, &
                       - wrh(icol,ilev)  * ssa(krh(icol,ilev),  iswband)
             asm1 = (1 + wrh(icol,ilev)) * asm(krh(icol,ilev)+1,iswband) &
                       - wrh(icol,ilev)  * asm(krh(icol,ilev),  iswband)
-  
-            tau    (icol, ilev, iswband) = mass(icol, ilev) * ext1
-            tau_w  (icol, ilev, iswband) = mass(icol, ilev) * ext1 * ssa1
-            tau_w_g(icol, ilev, iswband) = mass(icol, ilev) * ext1 * ssa1 * asm1
-            tau_w_f(icol, ilev, iswband) = mass(icol, ilev) * ext1 * ssa1 * asm1 * asm1
+  !ASC todo cuda 
+            tau    (icol, ilev, iswband) = mass(icol, ilev) * ext1  !这个地方要改成累乘
+            tau_w  (icol, ilev, iswband) = tau    (icol, ilev, iswband) * ssa1 !每次在之前的基础上再乘，，
+            tau_w_g(icol, ilev, iswband) = tau_w  (icol, ilev, iswband) * asm1
+            tau_w_f(icol, ilev, iswband) = tau_w_g(icol, ilev, iswband) * asm1
          enddo
       enddo
    enddo

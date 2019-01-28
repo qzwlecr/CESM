@@ -30,7 +30,7 @@ foreach $dir (@paths) {  # (could check that directories exist here)
 # automatically eliminates redunancies.
 %src = ();
 foreach $dir (@paths) {
-    @filenames = (glob("$dir/*.[Fc]"), glob("$dir/*.[Ff]90"));
+    @filenames = (glob("$dir/*.[Fc]"), glob("$dir/*.[Ff]90"), glob("$dir/*.cu", glob("$dir/*.cpp")));
     foreach $filename (@filenames) {
 	$filename =~ s!.*/!!;                   # remove part before last slash
 	$src{$filename} = "";

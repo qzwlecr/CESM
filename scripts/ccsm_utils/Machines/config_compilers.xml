@@ -878,7 +878,8 @@ for mct, etc.
   <SCC>gcc</SCC>
   <SCXX>g++</SCXX>
   <NETCDF_PATH>/media/rgy/win-file/document/computer/HPC/cesm/netcdf-build</NETCDF_PATH>
-  <ADD_SLIBS> -L/media/rgy/win-file/document/computer/HPC/cesm/netcdf-build/lib -lnetcdf -lnetcdff</ADD_SLIBS> 
+  <ADD_SLIBS> -L/media/rgy/win-file/document/computer/HPC/cesm/netcdf-build/lib -lnetcdf -lnetcdff  -L/usr/local/cuda/lib64/ -lcuda -lcudart -lstdc++
+</ADD_SLIBS> 
   <MPI_PATH>/media/rgy/win-file/document/computer/HPC/cesm/openmpi</MPI_PATH>
 </compiler>
 </config_compilers>
