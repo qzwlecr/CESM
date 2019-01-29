@@ -490,8 +490,11 @@ elemental subroutine qmmr(t, p, es, qm)
   8.1328e-3_r8*(10._r8**(-3.49149_r8*(tboil/t-1._r8))-1._r8)+ &
   log10(1013.246_r8))*100._r8
 
-  qm = svp_to_qmmr(es, p)
-
+  if ( (p - es) < epsilon(1.0_r8)**2 ) then
+     qm = huge(1.0_r8)
+  else
+     qm = epsilo*es / (p - es)
+  end if
   ! Ensures returned es is consistent with limiters on qmmr.
   es = min(es, p)
 

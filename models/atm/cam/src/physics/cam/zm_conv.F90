@@ -3615,7 +3615,7 @@ converge: do i=0, LOOPMAX
 
    L = rl - (cpliq - cpwv)*(Ts-tfreez) 
 
-   call qmmr_hPa(Ts, p, est, qst)
+   call qmmr_hPa(Ts, p, est, qst) !这里编译器应该直接把L3662 inline过来
    qv = min(qt,qst) 
    e = qv*p / (eps1 +qv)  ! Bolton (eq. 16)
    fs1 = (cpres + qt*cpliq)*log( Ts/tfreez ) - rgas*log( (p-e)/pref ) + &
@@ -3670,8 +3670,22 @@ elemental subroutine qmmr_hPa(t, p, es, qm)
   real(r8), intent(out) :: qm  ! Saturation mass mixing ratio
                                ! (vapor mass over dry mass, kg/kg)
 
-  call qmmr(t, p*100._r8, es, qm)
+  p=p*100._r8
 
+  es = 10._r8**(-7.90298_r8*(tboil/t-1._r8)+ &
+      5.02808_r8*log10(tboil/t)- &
+      1.3816e-7_r8*(10._r8**(11.344_r8*(1._r8-t/tboil))-1._r8)+ &
+      8.1328e-3_r8*(10._r8**(-3.49149_r8*(tboil/t-1._r8))-1._r8)+ &
+      log10(1013.246_r8))*100._r8
+
+  if ( (p - es) < epsilon(1.0_r8)**2 ) then
+     qm = huge(1.0_r8)
+  else
+     qm = epsilo*es / (p - es)
+  end if
+  ! Ensures returned es is consistent with limiters on qmmr.
+  es = min(es, p)
+  
   es = es*0.01_r8
 
 end subroutine qmmr_hPa
