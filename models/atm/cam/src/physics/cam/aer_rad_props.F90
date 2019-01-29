@@ -477,6 +477,9 @@ subroutine get_hygro_rad_props(ncol, krh, wrh, mass, ext, ssa, asm, &
    real(r8) :: ext1, ssa1, asm1
    integer :: icol, ilev, iswband
    !-----------------------------------------------------------------------------
+   ! call get_hygro_rad_props_cuda(pcols, pver, nswbands, ncol, krh, &
+   !    wrh, mass, ext, ssa, asm, &
+   !    tau, tau_w, tau_w_g, tau_w_f)
 
    do iswband = 1, nswbands
       do icol = 1, ncol
