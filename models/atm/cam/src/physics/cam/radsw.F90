@@ -2184,14 +2184,18 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
             tauray(i) = trayoslp*(pflx(i,k+1)-pflx(i,k))
             taugab(i) = abh2o*uh2o(i,k) + abo3*uo3(i,k) + abco2*uco2(i,k) + abo2*uo2(i,k)
             tautot = tauxcl(i,k) + tauxci(i,k) + tauray(i) + taugab(i) + aer_tau(i,k)
-            taucsc = tauxcl(i,k)*wcl(i,k) + tauxci(i,k)*wci(i,k) + aer_tau_w(i,k)
+            
+            tmp1   = wcl(i,k)*tauxcl(i,k)
+            tmp2   = wci(i,k)*tauxci(i,k)
+            
+            taucsc = tmp1 + tmp2 + aer_tau_w(i,k)
             wtau   = wray*tauray(i)
             wt     = wtau + taucsc
             wtot   = wt/tautot
-            gtot   = (wtau*gray + gcl(i,k)*wcl(i,k)*tauxcl(i,k) &
-                     + gci(i,k)*wci(i,k)*tauxci(i,k) + aer_tau_w_g(i,k))/wt
-            ftot   = (wtau*fray + fcl(i,k)*wcl(i,k)*tauxcl(i,k) &
-                     + fci(i,k)*wci(i,k)*tauxci(i,k) + aer_tau_w_f(i,k))/wt
+            gtot   = (wtau*gray + gcl(i,k)*tmp1 &
+                     + gci(i,k)*tmp2 + aer_tau_w_g(i,k))/wt
+            ftot   = (wtau*fray + fcl(i,k)*tmp1 &
+                     + fci(i,k)*tmp2 + aer_tau_w_f(i,k))/wt
             ts   = taus(wtot,ftot,tautot)
             ws   = omgs(wtot,ftot)
             gs   = asys(gtot,ftot)
@@ -2205,7 +2209,7 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
             arg  = min(lm*ts,25._r8)
             extins = exp(-arg)
             ne = n(ue,extins)
-            rdif(ns,i,k) = (ue+1._r8)*(ue-1._r8)*(1._r8/extins - extins)/ne
+            rdif(ns,i,k) = (ue*ue-1._r8)*(1._r8/extins - extins)/ne
             tdif(ns,i,k)   =   4._r8*ue/ne
 !
 !     Limit argument of exponential to 25, in case coszrs is very small:
@@ -2257,7 +2261,7 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
                arg  = min(lm*ts,25._r8)
                extins = exp(-arg)
                ne = n(ue,extins)
-               rdifc(ns,i,k) = (ue+1._r8)*(ue-1._r8)*(1._r8/extins - extins)/ne
+               rdifc(ns,i,k) = (ue*ue-1._r8)*(1._r8/extins - extins)/ne
                tdifc(ns,i,k)   =   4._r8*ue/ne
 !
 !     Limit argument of exponential to 25, in case coszrs is very small:
