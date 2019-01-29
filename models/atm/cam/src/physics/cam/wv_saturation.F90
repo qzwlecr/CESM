@@ -268,13 +268,15 @@ end subroutine wv_sat_final
 ! Compute saturation vapor pressure over water
 elemental function svp_water(t) result(es)
 
-  use wv_sat_methods, only: &
-       wv_sat_svp_water
 
   real(r8), intent(in) :: t ! Temperature (K)
   real(r8) :: es            ! SVP (Pa)
 
-  es = wv_sat_svp_water(T)
+  es = 10._r8**(-7.90298_r8*(tboil/t-1._r8)+ &
+  5.02808_r8*log10(tboil/t)- &
+  1.3816e-7_r8*(10._r8**(11.344_r8*(1._r8-t/tboil))-1._r8)+ &
+  8.1328e-3_r8*(10._r8**(-3.49149_r8*(tboil/t-1._r8))-1._r8)+ &
+  log10(1013.246_r8))*100._r8
 
 end function svp_water
 
@@ -472,8 +474,6 @@ elemental subroutine qmmr(t, p, es, qm)
   ! SVP may exceed the actual pressure, and therefore qmmr can blow  !
   ! up.                                                              !
   !------------------------------------------------------------------!
-  use wv_sat_methods, only: &
-       wv_sat_svp_water
 
 
   ! Inputs
@@ -484,7 +484,11 @@ elemental subroutine qmmr(t, p, es, qm)
   real(r8), intent(out) :: qm  ! Saturation mass mixing ratio
                                ! (vapor mass over dry mass)
 
-  es = wv_sat_svp_water(t)
+  es = 10._r8**(-7.90298_r8*(tboil/t-1._r8)+ &
+  5.02808_r8*log10(tboil/t)- &
+  1.3816e-7_r8*(10._r8**(11.344_r8*(1._r8-t/tboil))-1._r8)+ &
+  8.1328e-3_r8*(10._r8**(-3.49149_r8*(tboil/t-1._r8))-1._r8)+ &
+  log10(1013.246_r8))*100._r8
 
   qm = svp_to_qmmr(es, p)
 
