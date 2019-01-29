@@ -233,6 +233,10 @@
 !================================================================================================
 
       SUBROUTINE FFT99(A,WORK,TRIGS,IFAX,INC,JUMP,N,LOT,ISIGN)
+      !asc hack begin
+      !TODO
+      !RETURN
+      !asc hack end
 !
 !-----------------------------------------------------------------------
 !     SUBROUTINE "FFT99" - MULTIPLE FAST REAL PERIODIC TRANSFORM
@@ -594,6 +598,10 @@
 !================================================================================================
 
       SUBROUTINE FFT991(A,WORK,TRIGS,IFAX,INC,JUMP,N,LOT,ISIGN)
+      !asc hack begin
+      !TODO
+      !RETURN
+      !asc hack end
 !
 !-----------------------------------------------------------------------
 !     SUBROUTINE "FFT991" - MULTIPLE REAL/HALF-COMPLEX PERIODIC
@@ -756,6 +764,10 @@
 !================================================================================================
 
       SUBROUTINE SET99 (TRIGS, IFAX, N)
+      !asc hack begin
+      !call() TODO
+      !RETURN
+      !asc hack end
 !
 !-----------------------------------------------------------------------
 !
