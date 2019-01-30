@@ -478,7 +478,7 @@ subroutine get_hygro_rad_props(ncol, krh, wrh, mass, ext, ssa, asm, &
    integer :: icol, ilev, iswband
    !-----------------------------------------------------------------------------
    ! call get_hygro_rad_props_cuda(pcols, pver, nswbands, ncol, krh, &
-   !    wrh, mass, ext, ssa, asm, &
+   !    mass,&
    !    tau, tau_w, tau_w_g, tau_w_f)
    ! 这里ext1 ssa1 asm1的计算可以完全给CPU，然后后面的tau 再给GPU，这样要传送的数据少一些，两边也可以overlap一点时间
 

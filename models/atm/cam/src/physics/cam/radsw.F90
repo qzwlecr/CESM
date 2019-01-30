@@ -2137,6 +2137,9 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
    real(r8) extins               ! Extinction
    real(r8) amg                  ! Alp - gam
    real(r8) apg                  ! Alp + gam
+   real(r8) tmp1
+   real(r8) tmp2
+
 !
 ! ssa <=1 limit for aerosol
 !

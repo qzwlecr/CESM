@@ -130,7 +130,7 @@ do 2000 ixj=1, jp
 
 2000  continue
 
-do L2 ixj=1, jp
+do 133 ixj=1, jp
 
    j  = jfirst + (ixj-1)/nxu
    i1 = ifirst + it * mod(ixj-1, nxu)
@@ -141,9 +141,9 @@ do L2 ixj=1, jp
             enddo
          enddo
          !call calpkcuda(pk,pe,akap,km,i1,i2,jfirst,jp,ptop)  或者整个传参？
-L2  continue
+133  continue
 
-do L3 ixj=1, jp
+do 146 ixj=1, jp
    j  = jfirst + (ixj-1)/nxu
    i1 = ifirst + it * mod(ixj-1, nxu)
    i2 = i1 + it - 1
@@ -165,7 +165,7 @@ do L3 ixj=1, jp
             enddo
          enddo
 
-L3  continue
+146  continue
 
       return
 !EOC

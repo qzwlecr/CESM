@@ -1,0 +1,170 @@
+#!/usr/bin/env perl
+
+# Output a list of timestep vs mass weighted rms differences for T
+# (temperature) or some other variable specified using the "-v" option.
+# This is done by searching the output of either a previously run cprnc
+# command or a cprnc command run from this script.
+#
+# Author: Brian Eaton | eaton@ucar.edu
+#         Climate Modelling Section, NCAR
+#         Mar 2001
+#
+# 2008-11-17 jedwards - update logic and regexp for parsing the case names
+
+
+use strict;
+use warnings;
+use diagnostics;
+
+use Getopt::Std;
+
+# Check for usage request.
+@ARGV != 0                 or usage();
+
+# Process command line.
+my %opt = ();
+getopts( "v:X:", \%opt )  or usage();
+my $file1 = shift()       or usage();
+
+my $cprnc_input = 0;   # set flag when cprnc output listing is used as input
+my $file2;             # second history file, if present
+if ( @ARGV == 0 ) {
+    $cprnc_input = 1;
+} else {
+    $file2 = shift();
+    @ARGV == 0            or usage();  # Check that all args were processed.
+}
+
+# Set variable to search for in the cprnc output.
+my $var = 'T';
+if ( defined $opt{'v'} ) { $var = $opt{'v'}; }
+
+# filehandle for reading output from the cprnc command
+my $cprnc_out;
+if ( $cprnc_input == 1 ) {
+    # Read previously generated output from cprnc.
+    open $cprnc_out, $file1  or die "*** can't open $file1\n";
+} else {
+    # Make sure that a cprnc executable exists.
+    my $cprnc = which_cmd('cprnc', $opt{'X'});
+    unless ( defined $cprnc ) { 
+	die "Either put the cprnc executable in your path or specify its\n".
+              "location using the -X command line argument.\n";
+    }
+
+    # Pipe output from cprnc command to $cprnc_out filehandle.
+    open $cprnc_out, "$cprnc $file1 $file2 2>&1 |"  
+	or die "*** can't open pipe '$cprnc $file1 $file2 2>&1 |'\n";
+}
+
+# Search output just far enough to determine the case names.
+# Write case names to stdout.
+my $found_case_names;
+my ($case1, $case2);
+while( <$cprnc_out> ) { 
+    print $_;
+    if ( /cprtps: / or / failed / ) {            # look for output indicating an error
+	print STDERR $_;
+    }
+    if ( /CASE:/ ) {
+	chop;
+	my @line = split /:/;                       # split CASE from blank separated values
+	($case1, $case2) = split / /, $line[1];  # split values into separate words
+	$case1 =~ s/\0+$//;                         # remove trailing nulls
+	$case2 =~ s/\0+$//;
+
+	$found_case_names = 1;
+	last;
+    }
+    if(/CASE\s+(\d+) :\s*(\S+)/){
+	my $num = $1;
+	if($num==1){
+	    $case1 = $2;
+	}elsif($num==2){
+	    $case2 = $2;
+	    $found_case_names = 1;
+	    last;
+	}
+    }
+    if(/case:\s*(\S+)/){
+	$case1 = $1;
+	$case2 = $case1;
+	$found_case_names = 1;
+	last;
+    }
+}
+
+# Check that the case names were found.  If not it could be due to using an old
+# version of cprnc which produced a different output format.
+if ($found_case_names) {
+    print "$case1\n";
+    print "$case2\n";
+    print "$var\n";
+}else{ 
+    die "Didn't find case names in cprnc output.  This could be due\n".
+	"to using an old version of cprnc.\n";
+}
+
+# Resume search of output and create arrays of step no. and rms diffs.
+my @nstep;
+my @rmsDiff;
+while( <$cprnc_out> ) { 
+    if ( /NSTEPH:/ ) {
+	my @line = split;
+	push @nstep, $line[1];
+    }
+    if ( /RMS $var / ) {
+	chop;
+	my @line = split;
+	push @rmsDiff, $line[$#line];
+    }
+}
+
+for( my $i = 0; $i <= $#nstep; ++$i ) {
+    if ( $rmsDiff[$i] == 0. ) { next; }
+    print "$nstep[$i] $rmsDiff[$i]\n";
+}
+
+
+#-------------------------------------------------------------------------------
+
+sub which_cmd {
+
+# look for the specified command in the user's path prepended by an optional
+# directory specified by the $cmd_bin argument.
+
+    my ($bin, $cmd_bin) = @_;
+
+    my @bindirs = split /:/, $ENV{'PATH'};
+    if ( defined $cmd_bin ) { unshift @bindirs, $cmd_bin; }
+
+    foreach my $dir ( @bindirs ) {
+	if ( -x "$dir/$bin" ) {
+	    return "$dir/$bin";
+	}
+    }
+    print "\nERROR: Can't find $bin in: @bindirs\n";
+    return;
+}
+
+#--------------------------------------------------------------------------------------
+
+sub usage {
+    my $ProgName;
+    ($ProgName = $0) =~ s!.*/!!;            # name of program
+    die <<EOF;
+SYNOPSIS
+     $ProgName [-v vars] [-X dir] filename(s) ...
+OPTIONS
+     -v var
+          Generate list of RMS differences for the variable var (case sensitive).
+          Default is T.
+     -X dir  
+          Specify directory containing cprnc executable.
+FILE ARGUMENTS
+     If there are 2 file arguments they are assumed to be CCM history files
+     which will be processed by the cprnc utility.
+     If there is only 1 file argument it is assumed to be an output
+     file from a previous run of the cprnc utility.
+EOF
+}

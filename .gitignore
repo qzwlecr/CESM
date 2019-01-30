@@ -1,3 +1,5 @@
 EXP1/ 
 *.o
 *.mod
+# validation test for cam!
+#models/atm/cam/bld/

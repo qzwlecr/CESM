@@ -1,0 +1,273 @@
+#!/usr/bin/env perl
+#-----------------------------------------------------------------------------------------------
+#
+# Interface to yorick to produce line plot from cprncdf output.
+#
+# Author: Brian Eaton | eaton@ucar.edu
+#         Climate Modelling Section, NCAR
+#         Jan 2001
+#-----------------------------------------------------------------------------------------------
+
+use strict;
+
+use Getopt::Long;
+use IO::File;
+use IO::Handle qw(autoflush);
+
+#-----------------------------------------------------------------------------------------------
+
+my $ProgName;
+($ProgName = $0) =~ s!(.*)/!!;         # name of program
+
+autoflush STDOUT 1;                    # Helps in debugging to have the test description
+                                       # echoed before the error messages start
+#-----------------------------------------------------------------------------------------------
+sub usage {
+    die <<EOF;
+SYNOPSIS
+     $ProgName [options] data_file(s) ...
+
+OPTIONS
+     User supplied values are denoted in angle brackets (<>).  Any value that contains
+     white-space must be quoted.  Single letter options may NOT be bundled.
+
+     -b[atch]   Run program in batch mode.
+     -h[elp]    Print usage to STDOUT.
+     -l[egends] <str1>[,<str2>[,<str3>[...]]]
+                Legend strings, one per line in plot.  Default strings are constructed from
+                the case names of the runs that were compared.
+     -pl[title] <str>
+                Top plot title string.
+     -t[ime]    x-coordinate is time rather than step number.  This option assumes that
+                all input files contain 2 days worth of data.
+
+FILE ARGUMENTS
+     Specified file(s) each contain data for one line on the plot.
+     They are ascii files in the format produced by the utility cprncdf.
+EOF
+}
+
+#-----------------------------------------------------------------------------------------------
+# Open a temporary file (for the yorick script) that will be removed when program exits.
+# This is done first so that the END subroutine doesn't generate confusing error messages
+# if the program exits before the temporary file is created.
+my $name = "yorscript__${$}__";
+my $fh = IO::File->new( $name, O_RDWR|O_CREAT|O_EXCL )  or die "Couldn't open $name : $!";
+$fh->autoflush;    # Disable buffering.
+END { unlink( $name ) or die "Couldn't unlink $name : $!" }
+#-----------------------------------------------------------------------------------------------
+
+# Process command line options.
+my %opts = ( 
+	     batch    => undef,
+	     help     => 0,
+             legends  => undef,
+	     pltitle  => undef,
+	     time     => undef,
+	     );
+GetOptions(
+	   "b|batch"        => \$opts{'batch'},
+	   "h|help"         => \$opts{'help'},
+	   "l|legends=s"    => \$opts{'legends'},
+	   "pl|pltitle=s"   => \$opts{'pltitle'},
+	   "t|time"         => \$opts{'time'},
+) or usage();
+
+# Give usage message.
+usage() if $opts{'help'};
+
+#-----------------------------------------------------------------------------------------------
+
+# Make sure that a yorick executable exists.
+my $yorick = which_cmd('yorick', 'YORICK_BIN');
+unless ( defined $yorick ) { 
+    die "Either put the yorick executable in your path or set the environment\n".
+	"variable YORICK_BIN to the directory that contains it.\n";
+}
+
+# construct list of filenames in the form: [ "f1", "f2", "f3", ... ] for yorick script.
+# Check that the files exist.
+my $fnames = '[ ';
+my $numfiles = 0;
+while ( @ARGV != 0 ) {
+    my $file = shift();
+    if ( -f $file ) {
+	++$numfiles;
+	if ( $numfiles > 1 ) { $fnames .= ', '; }
+	$fnames .= '"'.$file.'"';
+    } else {
+	print STDERR  "bad filename: $file\n";
+    }
+}
+$fnames .= ' ]';
+$numfiles != 0  or die "quitting... no data to plot\n";
+
+# construct list of legend strings in the form ["str1","str2",...] for yorick script.
+my $legends = format_yorick_string_list( $opts{legends} );
+
+# Construct the Yorick script.
+
+print $fh <<EOD;
+fnames = $fnames;
+nfiles = numberof( fnames );
+psfile = "pertGrowth.ps";
+colors = [ "black", "red", "blue", "green", "cyan", "magenta", "yellow", "black" ];
+legends = $legends;
+// Plot setup
+EOD
+
+if ( $opts{'batch'} ) {
+print $fh <<EOD;
+window, 0, height=750, width=550, legends=0, hcp=psfile, display="";
+EOD
+} else {
+print $fh <<EOD;
+window, 0, height=750, width=550, legends=0, hcp=psfile;
+EOD
+}
+
+my $pltitle = "Perturbation Growth";
+if ( defined $opts{'pltitle'} ) {$pltitle = $opts{'pltitle'};}
+
+my $xtitle = "Time Step";
+if ( defined $opts{'time'} ) {$xtitle = "Days";}
+
+print $fh <<EOD;
+logxy, 0, 1;
+xtitle = "$xtitle";
+// position legend strings
+xlg = .09;
+ylg = .33;
+dylg = .025;
+for ( i = 1; i <= nfiles; ++i ) {
+  f = open( fnames(i) );
+  // read through file to determine number of data points
+  nlines = 0;
+  for(;;) {
+    line = rdline( f );
+    if ( line ) {
+      ++nlines;
+    } else {
+      break;
+    }
+  }
+  // there are 3 lines of metadata
+  nstep = array( int, nlines-3 );
+  rmsDiff = array( double, nlines-3 );
+
+  // reopen (rewind) the file an read the data
+  f = open( fnames(i) );
+  case1 = rdline( f );
+  case2 = rdline( f );
+  vname = rdline( f );
+  read, f, nstep, rmsDiff;
+  if (xtitle=="Days") {
+      last_step = nstep(0);
+      days_per_step = 2./last_step;
+      x = nstep * days_per_step;
+  } else {
+      x = nstep;
+  }
+  if (numberof(legends) >= i) {
+      leg = legends(i);
+  } else {
+      leg = vname+":  "+case1+"  vs.  "+case2;
+  }
+  plg, rmsDiff, x, marks=0, color=colors(i);
+  plt, leg, xlg, ylg-dylg*(i-1), color=colors(i);
+}
+
+pltitle,  "$pltitle";
+xytitles, xtitle, "RMS "+vname+" Difference", [-.025,0];
+
+// hardcopy to psfile
+hcp;
+hcp_finish;
+EOD
+
+if (! $opts{'batch'} ) {
+print $fh <<EOD;
+write, " ";
+write, "postscript output written to file: "+psfile;
+EOD
+}
+
+if (! $opts{'batch'} ) {
+print $fh <<EOD;
+// wait for user to exit if interactive
+write, " ";
+write, "press return to finish:";
+read, junk;
+EOD
+}
+
+print $fh <<EOD;
+quit;
+EOD
+
+#seek( $fh, 0, 0 );
+#print "$name:\n", <$fh>;
+
+# Invoke Yorick to create plot.
+if ( $opts{'batch'} ) {
+    system( "$yorick -batch $name" );
+} else {
+    system( "$yorick -i $name" );
+}
+
+
+
+#-------------------------------------------------------------------------------
+
+sub which_cmd {
+
+# look for the specified command in the user's path prepended by an optional
+# directory specified by a specified environment variable
+
+    my ($bin, $cmd_bin) = @_;
+
+    my @bindirs = split /:/, $ENV{'PATH'};
+    if ( defined $ENV{$cmd_bin} ) { unshift @bindirs, $ENV{$cmd_bin}; }
+    my $dir;
+    foreach $dir ( @bindirs ) {
+	if ( -x "$dir/$bin" ) {
+	    return "$dir/$bin";
+	}
+    }
+    print "\nERROR: Can't find $bin in: @bindirs\n";
+    return;
+}
+
+#--------------------------------------------------------------------------------------
+
+sub format_yorick_string_list {
+
+# Parse a comma separated list of strings and return 
+# a list of strings in the form ["str1","str2",...] for a yorick script.
+# The input is a single string from the command line which has any quotes 
+# removed.  So only the commas remain as string separators.  If a quoted
+# string contained a comma, after the quotes are removed the internal comma
+# is interpreted as a string separator.  To allow commas in the strings 
+# use the backslash escape and check for that before returning the array of
+# strings.
+
+    my ($stringlist) = @_;
+
+    my $yorstring = '[ ';
+    if (defined $stringlist) {
+	# replace any escaped commas with the string '__COMMA__'
+	$stringlist =~ s/\\,/__COMMA__/g;
+	my @strings = split ',', $stringlist;
+	for (my $i=0; $i<@strings; ++$i) {
+	    $yorstring .= '"'.$strings[$i].'"';
+	    if ( $i < @strings-1 ) { $yorstring .= ', '; }
+	}
+    }
+    $yorstring .= ' ]';
+    # reinsert commas embedded in strings
+    $yorstring =~ s/__COMMA__/,/g;
+    return $yorstring;
+}
+
+#--------------------------------------------------------------------------------------
+

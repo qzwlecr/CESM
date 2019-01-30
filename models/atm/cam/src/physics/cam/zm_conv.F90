@@ -3659,18 +3659,20 @@ end SUBROUTINE ientropy
 ! Wrapper for qmmr that does translation between Pa and hPa
 ! qmmr uses Pa internally, so get qmmr right, need to pass in Pa.
 ! Afterward, set es back to hPa.
-elemental subroutine qmmr_hPa(t, p, es, qm)
+elemental subroutine qmmr_hPa(t, p1, es, qm)
   use wv_saturation, only: qmmr
 
   ! Inputs
   real(r8), intent(in) :: t    ! Temperature (K)
-  real(r8), intent(in) :: p    ! Pressure (hPa)
+  real(r8), intent(in) :: p1    ! Pressure (hPa)
   ! Outputs
   real(r8), intent(out) :: es  ! Saturation vapor pressure (hPa)
   real(r8), intent(out) :: qm  ! Saturation mass mixing ratio
                                ! (vapor mass over dry mass, kg/kg)
-
-  p=p*100._r8
+  real(r8)  p
+  real(r8)  tboil
+  tboil = 373.16_r8
+  p=p1*100._r8
 
   es = 10._r8**(-7.90298_r8*(tboil/t-1._r8)+ &
       5.02808_r8*log10(tboil/t)- &
