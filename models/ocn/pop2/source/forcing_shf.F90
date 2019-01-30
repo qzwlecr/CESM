@@ -36,10 +36,14 @@
              set_shf        
 
 ! !PUBLIC DATA MEMBERS:
+      real (r8), dimension(:,:,:), &
+      public, pointer :: &
+      SHF_QSW             ! incoming short wave
+    
+       
 
    real (r8), dimension(nx_block,ny_block,max_blocks_clinic), &
       public, target :: &
-      SHF_QSW,          & ! incoming short wave
       SHF_QSW_RAW         ! no masking, no diurnal cycle
 
    logical (log_kind), public :: &
@@ -462,6 +466,10 @@
 !  supplied by data:  for example, with KPP and restoring.
 !
 !-----------------------------------------------------------------------
+
+   !allocate in pinned memory if using GPU
+   call cudaMallocHost(cptr, (nx_block*ny_block*max_blocks_clinic))
+   call c_f_pointer(cptr, SHF_QSW, (/ nx_block,ny_block,max_blocks_clinic /))
 
 
    SHF_QSW = c0

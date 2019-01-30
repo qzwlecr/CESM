@@ -118,14 +118,17 @@
       FCOR, FCORT         ,&! coriolis parameter at U,T points
       UAREA, TAREA        ,&! area of U,T cells
       UAREA_R, TAREA_R    ,&! reciprocal of area of U,T cells
-      HT, HU, HUR           ! ocean depth at T,U points
+      HT, HU, HUR         ,&! ocean depth at T,U points
+      AU		    ! weights for ugrid to tgrid conversion on the GPU
+
+
 
    real (POP_r8), dimension(nx_block,ny_block,max_blocks_clinic), public :: &
       TLATD, TLOND          ! {latitude,longitude} of T points in degrees
 
    !*** 3d depth fields for partial bottom cells
 
-   real (POP_r8), dimension(:,:,:,:), allocatable, public :: &
+   real (POP_r8), dimension(:,:,:,:), pointer, public :: &
       DZU, DZT               ! thickness of U,T cell for pbc
 
    !*** 2d landmasks
@@ -2790,7 +2793,8 @@
 !   to U points.
 !
 !-----------------------------------------------------------------------
-
+!Store only AU on the GPU
+   AU = TAREA * p25 
    AU0  = TAREA
    AUN  = eoshift(TAREA,dim=2,shift=+1)
    AUE  = eoshift(TAREA,dim=1,shift=+1)

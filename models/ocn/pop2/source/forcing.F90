@@ -47,7 +47,7 @@
    use sw_absorption, only: set_chl
    use registry
    use forcing_fields
-
+   use gpu_mod
    implicit none
    private
    save
@@ -132,10 +132,18 @@
    ATM_PRESS = c0
    FW        = c0
    FW_OLD    = c0
-   SMF       = c0
    SMFT      = c0
-   STF       = c0
    TFW       = c0
+
+   !allocate these in pinned memory if using GPU
+      call cudaMallocHost(cptr, (nx_block*ny_block*nt*max_blocks_clinic))
+      call c_f_pointer(cptr, STF, (/ nx_block,ny_block,nt,max_blocks_clinic /))
+
+      call cudaMallocHost(cptr, (nx_block*ny_block*2*max_blocks_clinic))
+      call c_f_pointer(cptr, SMF, (/ nx_block,ny_block,2,max_blocks_clinic /))
+
+      STF       = c0
+      SMF       = c0
 
 !-----------------------------------------------------------------------
 !
