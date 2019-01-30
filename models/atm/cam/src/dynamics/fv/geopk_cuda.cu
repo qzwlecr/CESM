@@ -1,5 +1,3 @@
-//直接把那个循环里的openmp移除？ 这样方便cuda计算？？
-
 __global__
 void cudaCal(double* pk,double pe,double akap){
    *pk=pow(pe,akap);
@@ -12,7 +10,7 @@ void calpk_(double* pk,double* pe,double* akap){
    cudaDeviceSynchronize();
 }
 
-extern "C" 
-void calpkCuda_(double*pk,double*pe,double*akap,int* km, int* i1, int* i2,int* jfirst,int* jp){
+extern "C" //fortran直接调用的函数名一定要小写
+void calpkcuda_(double* pk,double* pe,double* akap,int* km, int* i1, int* i2,int* jfirst,int* jp,double* ptop){
 
 }

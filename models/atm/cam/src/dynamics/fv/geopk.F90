@@ -124,7 +124,7 @@ do 2000 ixj=1, jp
          enddo
          do k=1,km+1
             do i=i1,i2
-               pe(i,k,j)  = pe(i,k,j) + ptop
+               pe(i,k,j)  = pe(i,k,j) + ptop ! 这个也丢cuda？ 就多一个参数
             enddo
          enddo
 
@@ -138,11 +138,9 @@ do L2 ixj=1, jp
          do k=1,km+1
             do i=i1,i2
                pk(i,j,k) = pe(i,k,j)**akap
-               ! 在这里用cuda流水做优化？，先在最外面弄stream
-               ! call calpk(pk(i,j,k), pe(i,k,j), akap);
             enddo
          enddo
-         !call calpkCuda(pk,pe,akap,km,i1,i2,jfirst,jp)  或者整个传参？
+         !call calpkcuda(pk,pe,akap,km,i1,i2,jfirst,jp,ptop)  或者整个传参？
 L2  continue
 
 do L3 ixj=1, jp
