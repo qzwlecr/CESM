@@ -1,5 +1,5 @@
 #!/bin/bash
-
+echo 'you need to download tar cam53_f19c4aqpgro_ys.tar.gz in sftp first'
 ./cuda-build.sh
 
 export INC_MPI=/media/rgy/win-file/document/computer/HPC/cesm/openmpi/include
@@ -10,15 +10,21 @@ export LDFLAGS='-L/media/rgy/win-file/document/computer/HPC/cesm/openmpi/lib -L/
 
 echo "you need to build cprnc in tools/cprnc first"
 ./build-cprnc.sh || exit 2
+
 export LD_LIBRARY_PATH=/media/rgy/win-file/document/computer/HPC/cesm/netcdf-build/lib:${LD_LIBRARY_PATH}:/media/rgy/win-file/document/computer/HPC/cesm/openmpi/lib/ 
-./configure -dyn fv -hgrid 1.9x2.5 -fc lf95 -ntasks 1 -phys cam4 -ocn aquaplanet -pergro -fc gfortran
+
+./configure -dyn fv -hgrid 1.9x2.5 -ntasks 1 -phys cam4 -ocn aquaplanet -pergro -fc gfortran
 ./build-namelist -s -case cam5.0_port -runtype startup  -csmdata ./\
  -namelist "&camexp stop_option='ndays', stop_n=2 nhtfrq=1 ndens=1 \
    mfilt=97 hfilename_spec='h%t.nc' empty_htapes=.true. \
    fincl1='T:I','PS:I' /"
 rm -f Depends
+
 export FC=mpifort
+
 gmake > gmake.log
+
+echo "now link the cam"
 mpifort -o /media/rgy/win-file/document/computer/HPC/cesm/CESM/models/atm/cam/bld/cam \
 C_interface_mod.o ESMF.o ESMF_AlarmClockMod.o ESMF_AlarmMod.o ESMF_BaseMod.o ESMF_BaseTimeMod.o ESMF_CalendarMod.o \
 ESMF_ClockMod.o ESMF_FractionMod.o ESMF_ShrTimeMod.o ESMF_Stubs.o ESMF_TimeIntervalMod.o ESMF_TimeMod.o FVperf_module.o \
@@ -42,9 +48,9 @@ ghostmodule.o glc_comp_mct.o gptl.o gptl_papi.o gravity_waves_sources.o gw_drag.
 mpirun ./cam
 #pwd
 #ls ../../../../tools/cprnc
-#./cprncdf -X ../../../../tools/cprnc/  f19c4aqpgro_cam53_ys_intel.nc h0.nc  #> RMST_f1.9_cmp_ibm_5.0
+./cprncdf -X ../../../../tools/cprnc/  f19c4aqpgro_cam53_ys_intel.nc h0.nc  > RMST_f1.9_cmp_ibm_5.0
 
-# ./cprncplt -b -t -pltitle "cam5.0, FV-1.9x2.5, port validation" \
-#   -l "perturbation: cam5.0(ibm)","difference: cam5.0(ibm) - cam5.0(pc/lf95)" \
-#   RMST_f1.9ph_ibm_aqpgro_5.0 RMST_f1.9_cmp_ibm_5.0
+ ./cprncplt -b -t -pltitle "cam5.0, FV-1.9x2.5, port validation" \
+   -l "perturbation: cam5.0(ibm)","difference: cam5.0(ibm) - cam5.0(pc/lf95)" \
+   RMST_f19c4aqpgro_cam53_ys_intel RMST_f1.9_cmp_ibm_5.0
 

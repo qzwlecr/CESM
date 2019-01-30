@@ -1,4 +1,3 @@
-on sftp asc2019@104.131.147.182
-, get cami_0000-01-01_1.9x2.5_L26_APE_c080203.nc 
-and /atm/cam/rad/abs_ems_factors_fastvx.c030508.nc
-/atm/cam/topo/USGS-gtopo30_1.9x2.5_remap_c050602.nc
+nope . 直接用我下载好的CAM 测试包就好了，
+sftp asc2019@104.131.147.182
+cam.zip
