@@ -402,9 +402,6 @@ end function wv_sat_svp_trans
 elemental function GoffGratch_svp_water(t) result(es)
   real(r8), intent(in) :: t  ! Temperature in Kelvin
   real(r8) :: es             ! SVP in Pa
-  !Y00: call into cuda
-  !call  svp_water_cuda(tboil,t,es)
-  !这里因为是elemental，所以在这个文件头加上了一个interface
   
   ! uncertain below -70 C
    es = 10._r8**(-7.90298_r8*(tboil/t-1._r8)+ &
