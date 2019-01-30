@@ -88,7 +88,6 @@
    use overflows
    use overflow_type
 
-   use gpu_mod
    implicit none
    private
    save
@@ -223,7 +222,6 @@
 !  initialize timers 
 !
 !-----------------------------------------------------------------------
-   call init_gpu_mod
 
    call init_timers
 

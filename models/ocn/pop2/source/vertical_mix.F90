@@ -55,7 +55,7 @@
 
 ! !PUBLIC DATA MEMBERS:
 
-  real (r8), dimension(:,:,:,:,:), public, pointer  :: &
+   real (r8), dimension(:,:,:,:,:), allocatable, public, target :: &
       VDC                 ! tracer diffusivity - public to allow
                           ! possible modification by Gent-McWilliams
                           ! horizontal mixing parameterization
@@ -83,7 +83,7 @@
 !
 !-----------------------------------------------------------------------
 
-      real (r8), dimension(:,:,:,:), pointer :: &
+   real (r8), dimension(:,:,:,:), allocatable, target :: &
       VVC                 ! momentum viscosity
 
 !-----------------------------------------------------------------------
@@ -596,7 +596,7 @@
                     'vmix_coeffs: must supply either SMF,SMFT')
 
          if (present(SMFT)) then
-            call vmix_coeffs_kpp_cuda(VDC(:,:,:,:,bid),           &
+            call vmix_coeffs_kpp(VDC(:,:,:,:,bid),           &
                                  VVC(:,:,:,  bid),           &
                                  TMIX,UMIX,VMIX,UCUR,VCUR,RHOMIX, &
                                  STF,SHF_QSW,                &
@@ -604,7 +604,7 @@
                                  convect_diff, convect_visc, &
                                  SMFT=SMFT)
          else
-            call vmix_coeffs_kpp_cuda(VDC(:,:,:,:,bid),           &
+            call vmix_coeffs_kpp(VDC(:,:,:,:,bid),           &
                                  VVC(:,:,:,  bid),           &
                                  TMIX,UMIX,VMIX,UCUR,VCUR,RHOMIX, &
                                  STF,SHF_QSW,                &

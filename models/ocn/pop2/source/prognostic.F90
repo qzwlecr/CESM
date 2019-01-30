@@ -36,25 +36,29 @@
 
 ! !PUBLIC DATA MEMBERS:
 
-   real (r8), dimension(:,:,:,:,:,:), pointer :: &
+   real (r8), dimension(nx_block,ny_block,km,nt,3,max_blocks_clinic), &
+      target :: &
       TRACER     ! 3d tracer fields for all blocks at 3 time levels
 
    type (tracer_field), dimension(nt) :: &
       tracer_d   ! descriptors for each tracer
 
-   real (r8), dimension(:,:,:,:,:), pointer :: &
+   real (r8), dimension(nx_block,ny_block,km,3,max_blocks_clinic), &
+      target :: &
       UVEL,     &! 3d horizontal velocity for all blocks at 3 time lvls
       VVEL,     &! 3d horizontal velocity for all blocks at 3 time lvls
       RHO        ! 3d density fields,     for all blocks at 3 time lvls
 
-   real (r8), dimension(:,:,:,:), allocatable, target :: &
+   real (r8), dimension(nx_block,ny_block,3,max_blocks_clinic), &
+      target :: &
       PSURF,    &! surface pressure for all blocks at 3 time levels
       GRADPX,   &! surface-pressure gradient for all blocks at
       GRADPY,   &!   3 time levels
       UBTROP,   &! barotropic velocities for all blocks at
       VBTROP     !   3 time levels 
 
-   real (r8), dimension(:,:,:), allocatable, target :: &
+   real (r8), dimension(nx_block,ny_block,max_blocks_clinic), &
+      target :: &
       PGUESS     ! next guess for surface pressure
 
    integer (int_kind) :: &! time indices for prognostic arrays
@@ -94,25 +98,7 @@
 !     initialize time indices.
 !
 !-----------------------------------------------------------------------
-   !these will be allocated in pinned memory when GPU is used
-   call cudaMallocHost( cptr, nx_block*ny_block*km*nt*3*max_blocks_clinic )
-   call c_f_pointer(cptr, TRACER, (/ nx_block,ny_block,km,nt,3,nblocks_clinic /))
-   call cudaMallocHost(cptr, (nx_block*ny_block*km*3*nblocks_clinic))
-   call c_f_pointer(cptr, RHO, (/ nx_block,ny_block,km,3,nblocks_clinic /))
 
-   call cudaMallocHost(cptr, (nx_block*ny_block*km*3*nblocks_clinic))
-   call c_f_pointer(cptr, UVEL, (/ nx_block,ny_block,km,3,nblocks_clinic /))
-
-   call cudaMallocHost(cptr, (nx_block*ny_block*km*3*nblocks_clinic))
-   call c_f_pointer(cptr, VVEL, (/ nx_block,ny_block,km,3,nblocks_clinic /))
-
-   allocate(  PSURF  (nx_block,ny_block,3,max_blocks_clinic), &
-   GRADPX (nx_block,ny_block,3,max_blocks_clinic), &
-   GRADPY (nx_block,ny_block,3,max_blocks_clinic), &
-   UBTROP (nx_block,ny_block,3,max_blocks_clinic), &
-   VBTROP (nx_block,ny_block,3,max_blocks_clinic), &
-   PGUESS (nx_block,ny_block,max_blocks_clinic))
-   
       oldtime = 1
       curtime = 2
       newtime = 3

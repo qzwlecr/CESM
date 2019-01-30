@@ -12,11 +12,9 @@
 !  November 1994).
 !
 ! !REVISION HISTORY:
-!  SVN:$Id: vmix_kpp.F90 12674 2008-10-31 22:21:32Z njn01 $
+!  SVN:$Id: vmix_kpp.F90 60213 2014-05-13 21:20:35Z mlevy@ucar.edu $
 
 ! !USES:
-
-   use POP_IOUnitsMod
 
    use kinds_mod
    use blocks
@@ -30,71 +28,30 @@
    use state_mod
    use exit_mod
    use sw_absorption
-   use tavg, only: define_tavg_field, tavg_requested, accumulate_tavg_field
+   use tavg, only: define_tavg_field, accumulate_tavg_field, accumulate_tavg_now
    use io_types, only: stdout
    use communicate, only: my_task, master_task
+   use niw_mixing
    use tidal_mixing, only: TIDAL_COEF, tidal_mix_max, ltidal_mixing
-   use gpu_mod
-
-   use iso_c_binding
+   use registry
+   use prognostic
+   use time_management
 
    implicit none
    private
    save
 
 
-
-!generated interface block for GPU entry point
-interface
-
-subroutine vmix_coeffs_kpp_gpu_entry (VDC, VVC, TRCR, UUU, VVV, STF, SHF_QSW, bid, convect_diff, convect_visc, SMF, HMXL, & 
-                                               KPP_HBLT, KPP_SRC) bind (c)
-  use iso_c_binding
-  real (c_double), dimension (*) :: &
-      VDC, VVC, TRCR, UUU, VVV, STF, SHF_QSW, SMF, HMXL, KPP_HBLT, KPP_SRC
-  integer (c_int) :: &
-      bid
-  real (c_double) :: &
-      convect_diff, convect_visc
-end subroutine vmix_coeffs_kpp_gpu_entry
-
-subroutine vmix_coeffs_kpp_gpu_entry_test (VDC, VVC, TRCR, UUU, VVV, STF, SHF_QSW, bid, convect_diff, convect_visc, SMF, HMXL, & 
-                                               KPP_HBLT, KPP_SRC) bind (c)
-  use iso_c_binding
-  real (c_double), dimension (*) :: &
-      VDC, VVC, TRCR, UUU, VVV, STF, SHF_QSW, SMF, HMXL, KPP_HBLT, KPP_SRC
-  integer (c_int) :: &
-      bid
-  real (c_double) :: &
-      convect_diff, convect_visc
-end subroutine vmix_coeffs_kpp_gpu_entry_test
-
-subroutine init_global_variables( DZT, KMU, dz, zt, DZU, KMT, bckgrnd_vdc, bckgrnd_vvc, zgrid, Ricr, hwide, &
-                                             pressz, AU, UAREA_R, nblocks_clinic) bind (c)
-  use iso_c_binding
-  real (c_double), dimension (*) :: &
-     DZT, dz, zt, DZU, bckgrnd_vdc, bckgrnd_vvc, zgrid, Ricr, hwide, pressz, AU, UAREA_R
-  integer (c_int), dimension (*) :: &
-     KMU, KMT
-  integer (c_int) :: &
-     nblocks_clinic
-end subroutine init_global_variables
-
-end interface
-
-
-
 ! !PUBLIC MEMBER FUNCTIONS:
    public :: init_vmix_kpp,   &
              vmix_coeffs_kpp, &
-             vmix_coeffs_kpp_gpu, &
              add_kpp_sources, &
              smooth_hblt,     &
              linertial
 
 ! !PUBLIC DATA MEMBERS:
 
-   real (r8), dimension(:,:,:), pointer, public :: & 
+   real (r8), dimension(:,:,:), allocatable, public :: & 
       HMXL,               &! mixed layer depth
       KPP_HBLT,           &! boundary layer depth
       BOLUS_SP             ! scaled eddy-induced (bolus) speed used in inertial
@@ -119,12 +76,13 @@ end interface
       bckgrnd_vdc      ! background value for diffusivity
 
    logical (log_kind) :: &
-      lrich,        &! flag for computing Ri-dependent mixing
-      ldbl_diff,    &! flag for computing double-diffusive mixing
-      lshort_wave,  &! flag for computing short-wave forcing
-      lcheckekmo,   &! check Ekman, Monin-Obhukov depth limit
-      llangmuir,    &! flag for using Langmuir parameterization
-      linertial      ! flag for using inertial mixing parameterization
+      lrich,             &! flag for computing Ri-dependent mixing
+      ldbl_diff,         &! flag for computing double-diffusive mixing
+      lshort_wave,       &! flag for computing short-wave forcing
+      lcheckekmo,        &! check Ekman, Monin-Obhukov depth limit
+      llangmuir,         &! flag for using Langmuir parameterization
+      linertial,         &! flag for using inertial mixing parameterization
+      lccsm_control_compatible !flag for backwards compatibility with ccsm4 control
 
    integer (int_kind) :: & 
       num_v_smooth_Ri     ! num of times to vertically smooth Ri
@@ -145,7 +103,7 @@ end interface
 !
 !-----------------------------------------------------------------------
 
-   real (r8), dimension(:,:,:,:,:), pointer :: & 
+   real (r8), dimension(:,:,:,:,:), allocatable :: & 
       KPP_SRC              ! non-local mixing (treated as source term)
 
 !-----------------------------------------------------------------------
@@ -240,9 +198,21 @@ end interface
 
    integer (int_kind) ::   &
       tavg_QSW_HBL,        &! tavg id for solar short-wave heat flux in bndry layer
-      tavg_KVMIX,          &
+      tavg_VDC_BCK,        &! tavg id for bckgrnd vertical tracer diffusivity
+      tavg_VVC_BCK,        &! tavg id for bckgrnd vertical momentum viscosity
+      tavg_KVMIX,          &! tavg id for tidal+bckgrnd vertical tracer diffusivity
+      tavg_KVMIX_M,        &! tavg id for tidal+bckgrnd vertical momentum viscosity
       tavg_TPOWER
 
+   integer (int_kind), dimension(nt) :: &
+      tavg_KPP_SRC          ! tavg id for KPP_SRC for each tracer
+
+   real (r8), dimension(:,:,:,:), allocatable :: &
+      TIDAL_DIFF            ! diffusivity due to tidal mixing 
+
+   integer (int_kind) ::   &
+      tavg_KE_BL,    &! tavg id for boundary layer kinetic energy at mix time
+      tavg_En         ! tavg id for boundary layer kinetic energy En
 
 !EOC
 !***********************************************************************
@@ -267,7 +237,7 @@ end interface
    real (r8), dimension(:,:,:,:), intent(inout) :: &
       VVC        ! viscosity for momentum diffusion
 
-   real (r8), dimension(:,:,:,:,:),intent(inout) :: &
+   real (r8), dimension(:,:,0:,:,:),intent(inout) :: &
       VDC        ! diffusivity for tracer diffusion
 
 !EOP
@@ -279,6 +249,7 @@ end interface
 !-----------------------------------------------------------------------
 
    integer (int_kind) ::  &
+      n,                  &! local dummy index for tracer
       k,                  &! local dummy index for vertical lvl
       i, j, iblock,       &! local dummy indexes
       nml_error            ! namelist i/o error flag
@@ -291,9 +262,7 @@ end interface
       bckgrnd_vdc_psis,   &! PSI diffusivity in southern hemisphere
       bckgrnd_vdc_ban,    &! Banda Sea diffusivity (Gordon)
       bckgrnd_vdc_dpth,   &! depth at which diff equals vdc1
-      bckgrnd_vdc_linv,   &! inverse length for transition region
-      tlatd,              &! tlat * radian  (degrees)
-      tlond                ! tlon * radian  (degrees)
+      bckgrnd_vdc_linv     ! inverse length for transition region
 
    logical (log_kind) ::  &
       lhoriz_varying_bckgrnd
@@ -318,7 +287,7 @@ end interface
       fmt_int  = '(a30,2x,i5)'
 
    character (char_len) :: &
-      string
+      string, string2
 
 !-----------------------------------------------------------------------
 !
@@ -409,6 +378,14 @@ end interface
 
 !-----------------------------------------------------------------------
 !
+!  determine if this case must be backwards compatible with ccsm4 control
+!
+!-----------------------------------------------------------------------
+
+   lccsm_control_compatible = registry_match('lccsm_control_compatible')
+
+!-----------------------------------------------------------------------
+!
 !  define some non-dimensional constants 
 !
 !-----------------------------------------------------------------------
@@ -492,20 +469,16 @@ end interface
      do j=1,ny_block
      do i=1,nx_block
 
-      tlatd = TLAT(i,j,iblock)*radian
-      tlond = TLON(i,j,iblock)*radian
-
-
-      bckgrnd_vdc_psis= bckgrnd_vdc_psim*exp(-(0.4_r8*(tlatd+28.9_r8))**c2)  
-      bckgrnd_vdc_psin= bckgrnd_vdc_psim*exp(-(0.4_r8*(tlatd-28.9_r8))**c2)  
+      bckgrnd_vdc_psis= bckgrnd_vdc_psim*exp(-(0.4_r8*(TLATD(i,j,iblock)+28.9_r8))**c2)  
+      bckgrnd_vdc_psin= bckgrnd_vdc_psim*exp(-(0.4_r8*(TLATD(i,j,iblock)-28.9_r8))**c2)  
 
       bckgrnd_vdc(i,j,k,iblock)=bckgrnd_vdc_eq+bckgrnd_vdc_psin+bckgrnd_vdc_psis
 
-      if ( tlatd .lt. -10.0_r8 ) then
+      if ( TLATD(i,j,iblock) .lt. -10.0_r8 ) then
         bckgrnd_vdc(i,j,k,iblock) = bckgrnd_vdc(i,j,k,iblock) + bckgrnd_vdc1
-      elseif  ( tlatd .le. 10.0_r8 ) then
+      elseif  ( TLATD(i,j,iblock) .le. 10.0_r8 ) then
         bckgrnd_vdc(i,j,k,iblock) = bckgrnd_vdc(i,j,k,iblock) +         &
-        bckgrnd_vdc1 * (tlatd/10.0_r8)**c2
+        bckgrnd_vdc1 * (TLATD(i,j,iblock)/10.0_r8)**c2
       else
         bckgrnd_vdc(i,j,k,iblock)=bckgrnd_vdc(i,j,k,iblock) + bckgrnd_vdc1       
       endif
@@ -514,8 +487,8 @@ end interface
       ! North Banda Sea
       !----------------
 
-      if ( (tlatd .lt. -1.0_r8)  .and. (tlatd .gt. -4.0_r8)  .and.  & 
-           (tlond .gt. 103.0_r8) .and. (tlond .lt. 134.0_r8)) then
+      if ( (TLATD(i,j,iblock) .lt. -1.0_r8)  .and. (TLATD(i,j,iblock) .gt. -4.0_r8)  .and.  & 
+           (TLOND(i,j,iblock) .gt. 103.0_r8) .and. (TLOND(i,j,iblock) .lt. 134.0_r8)) then
            bckgrnd_vdc(i,j,k,iblock) = bckgrnd_vdc_ban
       endif
 
@@ -523,8 +496,8 @@ end interface
       ! Middle Banda Sea
       !-----------------
 
-      if ( (tlatd .le. -4.0_r8)  .and. (tlatd .gt. -7.0_r8)  .and.  & 
-           (tlond .gt. 106.0_r8) .and. (tlond .lt. 140.0_r8)) then
+      if ( (TLATD(i,j,iblock) .le. -4.0_r8)  .and. (TLATD(i,j,iblock) .gt. -7.0_r8)  .and.  & 
+           (TLOND(i,j,iblock) .gt. 106.0_r8) .and. (TLOND(i,j,iblock) .lt. 140.0_r8)) then
            bckgrnd_vdc(i,j,k,iblock) = bckgrnd_vdc_ban
       endif
 
@@ -532,9 +505,19 @@ end interface
       ! South Banda Sea
       !----------------
 
-      if ( (tlatd .le. -7.0_r8)  .and. (tlatd .gt. -8.3_r8)  .and.  & 
-           (tlond .gt. 111.0_r8) .and. (tlond .lt. 142.0_r8)) then
+      if ( (TLATD(i,j,iblock) .le. -7.0_r8)  .and. (TLATD(i,j,iblock) .gt. -8.3_r8)  .and.  & 
+           (TLOND(i,j,iblock) .gt. 111.0_r8) .and. (TLOND(i,j,iblock) .lt. 142.0_r8)) then
            bckgrnd_vdc(i,j,k,iblock) = bckgrnd_vdc_ban
+      endif
+
+      !----------------
+      ! Arctic
+      !----------------
+
+      if (lniw_mixing) then   ! for now, only used in niw mixing
+      if (TLATD(i,j,iblock)  .ge. 70.0_r8) then
+       bckgrnd_vdc(i,j,k,iblock) = bckgrnd_vdc_eq
+      endif
       endif
 
       bckgrnd_vvc(i,j,k,iblock) = Prandtl*bckgrnd_vdc(i,j,k,iblock)
@@ -547,7 +530,7 @@ end interface
       bckgrnd_vdc(:,:,k,:) = bckgrnd_vdc(:,:,1,:)
       bckgrnd_vvc(:,:,k,:) = bckgrnd_vvc(:,:,1,:)
      enddo
-   
+
    else
 
 !-----------------------------------------------------------------------
@@ -583,17 +566,20 @@ end interface
 !
 !-----------------------------------------------------------------------
 
-        call cudaMallocHost( cptr, nx_block*ny_block*nblocks_clinic )
-        call c_f_pointer(cptr, HMXL, (/ nx_block,ny_block,nblocks_clinic /))
-        call cudaMallocHost( cptr, nx_block*ny_block*nblocks_clinic )
-        call c_f_pointer(cptr, KPP_HBLT, (/ nx_block,ny_block,nblocks_clinic /))
-        call cudaMallocHost( cptr, nx_block*ny_block*km*nt*nblocks_clinic )
-        call c_f_pointer(cptr, KPP_SRC, (/ nx_block,ny_block,km,nt,nblocks_clinic /))
+   allocate (HMXL     (nx_block,ny_block,nblocks_clinic), &
+             KPP_HBLT (nx_block,ny_block,nblocks_clinic), &
+             KPP_SRC  (nx_block,ny_block,km,nt,nblocks_clinic))
+
    HMXL     = c0
    KPP_HBLT = c0
    KPP_SRC  = c0
    VDC      = c0
    VVC      = c0
+
+   if ( ltidal_mixing ) then
+     allocate ( TIDAL_DIFF(nx_block,ny_block,km,nblocks_clinic) ) 
+     TIDAL_DIFF = c0
+   endif
 
 !-----------------------------------------------------------------------
 !
@@ -630,85 +616,90 @@ end interface
    string = 'Solar Short-Wave Heat Flux in bndry layer'
    call define_tavg_field(tavg_QSW_HBL,'QSW_HBL',2,           &
                           long_name=trim(string),             &
-                          units='watt/m^2', grid_loc='2110'   &
-                          )
+                          units='watt/m^2', grid_loc='2110',  &
+                          coordinates='TLONG TLAT time')
 
    if (ltidal_mixing) then
-     string = 'Vertical Mixing due to Tidal Mixing'
+     string = 'Vertical diabatic diffusivity due to Tidal Mixing + background'
    else
-     string = 'Background Vertical Mixing Coefficient'
+     string = 'Vertical diabatic diffusivity due to background'
    endif
    call define_tavg_field(tavg_KVMIX,'KVMIX',3,               &
                           long_name=trim(string),             &
                           units='centimeter^2/s',             &
-                          grid_loc='3112'                     &
-                          )
+                          grid_loc='3113',                    &
+                          coordinates  ='TLONG TLAT z_w_bot time' ) 
+
+   string = 'Vertical diabatic diffusivity due to background'
+   call define_tavg_field(tavg_VDC_BCK,'VDC_BCK',3,               &
+                          long_name=trim(string),             &
+                          units='centimeter^2/s',             &
+                          grid_loc='3113',                    &
+                          coordinates  ='TLONG TLAT z_w_bot time' ) 
+
+   if (ltidal_mixing) then
+     string = 'Vertical viscosity due to Tidal Mixing + background'
+   else
+     string = 'Vertical viscosity due to background'
+   endif
+   call define_tavg_field(tavg_KVMIX_M,'KVMIX_M',3,               &
+                          long_name=trim(string),             &
+                          units='centimeter^2/s',             &
+                          grid_loc='3113',                    &
+                          coordinates  ='TLONG TLAT z_w_bot time' )
+
+   string = 'Vertical viscosity due to background'
+   call define_tavg_field(tavg_VVC_BCK,'VVC_BCK',3,               &
+                          long_name=trim(string),             &
+                          units='centimeter^2/s',             &
+                          grid_loc='3113',                    &
+                          coordinates  ='TLONG TLAT z_w_bot time' )
 
    string = 'Energy Used by Vertical Mixing'
    call define_tavg_field(tavg_TPOWER,'TPOWER',3,             &
                           long_name=trim(string),             &
-                          units='erg/s',                      &
-                          grid_loc='3112'                     &
-                          )
+                          units='erg/s/cm^3',                 &
+                          grid_loc='3113',                    &
+                          coordinates  ='TLONG TLAT z_w_bot time' ) 
 
+   do n = 1,nt
+     string  = 'KPP_SRC_' /&
+               &/ trim(tracer_d(n)%short_name)
+     string2 = trim(tracer_d(n)%short_name) /&
+               &/ ' tendency from KPP non local mixing term'
+     call define_tavg_field(tavg_KPP_SRC(n),trim(string),3,     &
+                            long_name=trim(string2),            &
+                            units=trim(tracer_d(n)%tend_units), &
+                            scale_factor=tracer_d(n)%scale_factor,&
+                            grid_loc='3111',                    &
+                            coordinates  ='TLONG TLAT z_t time' ) 
+   enddo
+
+   if (lniw_mixing) then
+     call define_tavg_field(tavg_KE_BL,'KE_BL',2,                 &
+                            long_name='Boundary Layer KE',        &
+                            units='ergs/centimeter**2',           &
+                            grid_loc='2221')
+     call define_tavg_field(tavg_En,'En',2,                       &
+                            long_name='En for Boundary Layer KE ',&
+                            units='Watts/meter^2',                &
+                            grid_loc='2221')
+   endif
 
 !-----------------------------------------------------------------------
 !EOC
 
- call POP_IOUnitsFlush(POP_stdout)
-
-
-!---------------------------------------------------------------------
-!
-!
-! initialize global variables on the GPU
-!
-!---------------------------------------------------------------------
- if (use_gpu) then
-
-   !--------------------------------------------------------------------- 
-   !
-   ! check if the combination of settings is supported.
-   ! this check is not complete, refer to userguide for full list
-   !
-   !---------------------------------------------------------------------
-
-   if (lrich       == .true.            .and. &
-      ldbl_diff	   == .true.            .and. &
-      lshort_wave  == .true.            .and. &
-      lcheckekmo   == .false.           .and. &
-      lhoriz_varying_bckgrnd == .false. .and. &
-      llangmuir              == .false. .and. &
-      linertial              == .false. .and. &
-      partial_bottom_cells == .true.    .and. &
-      Prandtl         == 10.0           .and. &
-      rich_mix        == 50.0           .and. & 
-      num_v_smooth_Ri == 1             ) then
-
-     call init_global_variables( DZT, KMU, dz, zt, DZU, KMT, bckgrnd_vdc, bckgrnd_vvc, zgrid, Ricr, hwide, pressz, AU, UAREA_R, nblocks_clinic)
-
-   else
-     call exit_POP(sigAbort, 'ERROR KPP GPU VERSION: Settings not correct please refer to userguide')
-
-   endif
-
-
- endif
-
- 
- call init_global_variables( DZT, KMU, dz, zt, DZU, KMT, bckgrnd_vdc, bckgrnd_vvc, zgrid, Ricr, hwide, pressz, AU, UAREA_R, nblocks_clinic)
+ call flushm (stdout)
 
  end subroutine init_vmix_kpp
-
 
 !***********************************************************************
 !BOP
 ! !IROUTINE: vmix_coeffs_kpp
 ! !INTERFACE:
 
-
- subroutine vmix_coeffs_kpp(VDC, VVC, TRCR, UUU, VVV, RHOMIX, STF, SHF_QSW, &
-                            bid, convect_diff, convect_visc, &
+ subroutine vmix_coeffs_kpp(VDC, VVC, TRCR, UUU, VVV, UCUR, VCUR, RHOMIX, STF, SHF_QSW, &
+                            this_block, convect_diff, convect_visc, &
                             SMF, SMFT)
 
 ! !DESCRIPTION:
@@ -717,6 +708,44 @@ end interface
 !  Large, McWilliams and Doney, Reviews of Geophysics, 32, 363 
 !  (November 1994).  The non-local mixing is also computed here, but
 !  is treated as a source term in baroclinic.
+!
+!----------------------------------------------------------------------------------
+!  Updated late 2010/early 2011 to include near inertial wave parameterization.
+!  Final code description is as follows. We use the diffusivity k to describe 
+!  the order of computation.
+!
+!  k is diffusivity, k_w = background, k_n = near inertial wave, k_t = tidal, 
+!  k_s = shear (Richardson), k_d = double diffusion, and k_c = convection. 
+!  HBLT is boundary layer depth. The diffusivities in the description below
+!  show total combination and limits after each routine is called. k_n_max is 
+!  the maximum near inertial wave diffusivity allowed, and k_t_max is the 
+!  corresponding maximum for the tidal diffusivity.
+!
+!    routine                                 description
+!
+!      buoydiff                (computes buoyancy difference with surface)
+!      bldepth                    (computes boundary layer depth HBLT)
+!      iw_reset                        initialize k:    k = k_w
+!      niw_mix               (compute niwm diffusivity k_n below HBLT,
+!                        and extend upward the top value into the BL for the
+!                         matching slope condition on k required by blmix)
+!                               k_w' = min(max(k_w,k_n),k_n_max)
+!      ri_iwmix                 k = min((k_w' + k_t),k_t_max) + k_s
+!      if( dbl_diff) ddmix      k = min((k_w' + k_t),k_t_max) + k_s + k_d
+!      blmix            (computes k in boundary layer using present interior k)
+!      .....                   (computes interior convective mixing)
+!      .....    k = min((min(max(k_w,k_n),k_n_max) + k_t),k_t_max) + k_s + k_d + k_c
+!  
+!  Thus, in words, the background diffusivity k_w is initialized first. Then the
+!  near inertial wave diffusivity is set, which is then combined with the background 
+!  such that when k_n is greater than the background, it is chosen; otherwise, the
+!  background is unchanged. Then, the tidal is evaluated and combined with the
+!  modified background (including near inertial wave) in a similar manner. Finally,
+!  the shear, double diffusion (if present) and the convection diffusivities are
+!  added to the modified background/near inertial wave/tidal diffusivity.
+!
+!  Bruce P. Briegleb  April 2011
+!----------------------------------------------------------------------------------
 !
 ! !REVISION HISTORY:
 !  same as module
@@ -727,7 +756,8 @@ end interface
       TRCR                ! tracers at current time
 
    real (r8), dimension(nx_block,ny_block,km), intent(in) :: &
-      UUU,VVV             ! velocities at current time
+      UUU,VVV,           &! velocities at mix time
+      UCUR,VCUR           ! velocities at current time
 
    real (r8), dimension(nx_block,ny_block,km), intent(in) :: &
       RHOMIX              ! density at mix time
@@ -738,25 +768,25 @@ end interface
    real (r8), dimension(nx_block,ny_block), intent(in) :: &
       SHF_QSW             ! short-wave forcing
 
- real (r8), dimension(nx_block,ny_block,2), intent(in), optional :: &
+   real (r8), dimension(nx_block,ny_block,2), intent(in), optional :: &
       SMF,               &! surface momentum forcing at U points
       SMFT                ! surface momentum forcing at T points
-                          ! *** either one or the other (not
-                          ! *** both) should be passed
+                         ! *** either one or the other (not
+                         ! *** both) should be passed
 
    real (r8), intent(in) :: &
       convect_diff,      &! diffusivity to mimic convection
       convect_visc        ! viscosity   to mimic convection
 
-   integer (int_kind), intent(in) :: &
-	bid		! local block address for this block
+   type (block), intent(in) :: &
+      this_block          ! block information for current block
 
 ! !INPUT/OUTPUT PARAMETERS:
 
    real (r8), dimension(nx_block,ny_block,km), intent(inout) ::      &
       VVC        ! viscosity for momentum diffusion
 
-   real (r8), dimension(nx_block,ny_block,km+1,2),intent(inout) :: &
+   real (r8), dimension(nx_block,ny_block,0:km+1,2),intent(inout) :: &
       VDC        ! diffusivity for tracer diffusion
 
 !EOP
@@ -767,11 +797,15 @@ end interface
 !
 !-----------------------------------------------------------------------
 
+   character (char_len) ::  &
+      error_string
+
    integer (int_kind) :: &
       k,                 &! vertical level index 
       i,j,               &! horizontal loop indices
       n,                 &! tracer index
-      mt2                 ! index for separating temp from other trcrs
+      mt2,               &! index for separating temp from other trcrs
+      bid                 ! local block address for this block
 
    integer (int_kind), dimension(nx_block,ny_block) :: &
       KBL                   ! index of first lvl below hbl
@@ -781,25 +815,35 @@ end interface
       BFSFC,      &! surface buoyancy forcing
       WORK1,WORK2,&! temporary storage
       FCON,       &! convection temporary
-      STABLE       ! = 1 for stable forcing; = 0 for unstable forcing
+      STABLE,     &! = 1 for stable forcing; = 0 for unstable forcing
+      KE_mix,     &! kinetic energy at mix time
+      KE_cur,     &! kinetic energy at cur time
+      En           ! En for boundary layer kinetic energy
  
    real (r8), dimension(nx_block,ny_block,km) :: &
       DBLOC,      &! buoyancy difference between adjacent levels
       DBSFC,      &! buoyancy difference between level and surface
       GHAT         ! non-local mixing coefficient
 
-   real (r8), dimension(nx_block,ny_block,km+1) :: &
+   real (r8), dimension(nx_block,ny_block,0:km+1) :: &
       VISC        ! local temp for viscosity
 
+   real (r8) ::  &
+      factor
+
 !-----------------------------------------------------------------------
 !
-!  initialize
+!  initialize  and consistency checks
 !
 !-----------------------------------------------------------------------
 
-   if (.not. present(SMF) .and. .not. present(SMFT)) &
-      call exit_POP(sigAbort, &
-                    'ERROR KPP: must supply either SMF or SMFT')
+   bid = this_block%local_id
+
+   if (.not. present(SMF) .and. .not. present(SMFT)) then
+      error_string = 'ERROR KPP: must supply either SMF or SMFT'
+      call document ('vmix_coeffs_kpp',  trim(error_string))
+      call exit_POP(sigAbort, trim(error_string))
+   endif
 
 !-----------------------------------------------------------------------
 !
@@ -807,8 +851,30 @@ end interface
 !
 !-----------------------------------------------------------------------
 
-   call buoydiff(DBLOC, DBSFC, TRCR, bid)
+   call buoydiff(DBLOC, DBSFC, TRCR, this_block)
 
+   if (lniw_mixing) then
+!-----------------------------------------------------------------------
+!
+!     when lniw_mixing, compute boundary layer depth now
+!
+!-----------------------------------------------------------------------
+
+     if (present(SMFT)) then
+        call bldepth (DBLOC, DBSFC, TRCR, UUU, VVV, UCUR, VCUR, STF, SHF_QSW,   &
+                      KPP_HBLT(:,:,bid), USTAR, BFSFC, STABLE, KBL, & 
+                      this_block, SMFT=SMFT)
+     else
+        call bldepth (DBLOC, DBSFC, TRCR, UUU, VVV, UCUR, VCUR, STF, SHF_QSW,   &
+                      KPP_HBLT(:,:,bid), USTAR, BFSFC, STABLE, KBL, & 
+                      this_block, SMF=SMF)
+     endif
+
+
+     call compute_niw_energy_flux(VISC,VDC,UUU,VVV,KE_mix,UCUR,VCUR,KE_cur,  &
+                                  DBLOC, KPP_HBLT(:,:,bid),KBL,En,this_block)
+
+   endif ! if (lniw_mixing) then
 
 !-----------------------------------------------------------------------
 !
@@ -817,8 +883,8 @@ end interface
 !
 !-----------------------------------------------------------------------
 
-   call ri_iwmix(DBLOC, VISC, VDC, UUU, VVV, RHOMIX, &
-                 convect_diff, convect_visc, bid)
+   call ri_iwmix(DBLOC, VISC, VDC, UUU, VVV, RHOMIX,&
+                 convect_diff, convect_visc, this_block)
 
 !-----------------------------------------------------------------------
 !
@@ -826,32 +892,34 @@ end interface
 !
 !-----------------------------------------------------------------------
 
-   if (ldbl_diff) call ddmix(VDC, TRCR, bid)
+   if (ldbl_diff) call ddmix(VDC, TRCR, this_block)
 
 !-----------------------------------------------------------------------
 !
-!     compute boundary layer depth
+!     compute boundary layer depth (when no niw mixing)
 !
 !-----------------------------------------------------------------------
 
-   if (present(SMFT)) then
-      call bldepth (DBLOC, DBSFC, TRCR, UUU, VVV, STF, SHF_QSW,   &
-                    KPP_HBLT(:,:,bid), USTAR, BFSFC, STABLE, KBL, & 
-                    bid, SMFT=SMFT)
-   else
-      call bldepth (DBLOC, DBSFC, TRCR, UUU, VVV, STF, SHF_QSW,   &
-                    KPP_HBLT(:,:,bid), USTAR, BFSFC, STABLE, KBL, & 
-                    bid, SMF=SMF)
-   endif
+   if (.not. lniw_mixing) then
+     if (present(SMFT)) then
+        call bldepth (DBLOC, DBSFC, TRCR, UUU, VVV, UCUR, VCUR, STF, SHF_QSW,   &
+                      KPP_HBLT(:,:,bid), USTAR, BFSFC, STABLE, KBL, & 
+                      this_block, SMFT=SMFT)
+     else
+        call bldepth (DBLOC, DBSFC, TRCR, UUU, VVV, UCUR, VCUR, STF, SHF_QSW,   &
+                      KPP_HBLT(:,:,bid), USTAR, BFSFC, STABLE, KBL, & 
+                      this_block, SMF=SMF)
+     endif
+   endif ! .not. lniw_mixing
 
 !-----------------------------------------------------------------------
 !
-!  compute boundary layer diffusivities
+!  compute boundary layer diffusivities and match to interior values
 !
 !-----------------------------------------------------------------------
 
    call blmix(VISC, VDC, KPP_HBLT(:,:,bid), USTAR, BFSFC, STABLE, &
-              KBL, GHAT, bid) 
+              KBL, GHAT, this_block) 
 
 !-----------------------------------------------------------------------
 !
@@ -1023,512 +1091,13 @@ end interface
 !EOC
 
  end subroutine vmix_coeffs_kpp
-
-
-
-!***********************************************************************
-!BOP
-! !IROUTINE: vmix_coeffs_kpp_gpu
-! !INTERFACE:
-
- subroutine vmix_coeffs_kpp_gpu(VDC, VVC, TRCR, UUU, VVV, RHOMIX, STF, SHF_QSW, &
-                            bid, convect_diff, convect_visc, &
-                            SMF, SMFT)
-
-! !DESCRIPTION:
-!  This routine will call the GPU entry point function, which steers the GPU
-!  computations. This routine also performs all the actions that can not be
-!  performed by the GPU.
-!
-! !REVISION HISTORY:
-!  None yet.
-
-! !INPUT PARAMETERS:
-
-   real (r8), dimension(nx_block,ny_block,km,nt), intent(in) :: &
-      TRCR                ! tracers at current time
-
-   real (r8), dimension(nx_block,ny_block,km), intent(in) :: &
-      UUU,VVV             ! velocities at current time
-
-   real (r8), dimension(nx_block,ny_block,km), intent(in) :: &
-      RHOMIX              ! density at mix time
-
-   real (r8), dimension(nx_block,ny_block,nt), intent(in) :: &
-      STF                 ! surface forcing for all tracers
-
-   real (r8), dimension(nx_block,ny_block), intent(in) :: &
-      SHF_QSW             ! short-wave forcing
-
-   real (r8), dimension(nx_block,ny_block,2), intent(in), optional :: &
-      SMF,               &! surface momentum forcing at U points
-      SMFT                ! surface momentum forcing at T points
-                         ! *** either one or the other (not
-                         ! *** both) should be passed
-
-   real (r8), intent(in) :: &
-      convect_diff,      &! diffusivity to mimic convection
-      convect_visc        ! viscosity   to mimic convection
-
-
-   integer (int_kind), intent(in) :: &
-      bid                 ! local block address for this block
-
-! !INPUT/OUTPUT PARAMETERS:
-
-   real (r8), dimension(nx_block,ny_block,km), intent(inout) ::      &
-      VVC        ! viscosity for momentum diffusion
-
-   real (r8), dimension(nx_block,ny_block,km+1,2),intent(inout) :: &
-      VDC        ! diffusivity for tracer diffusion
-
-!EOP
-
-!-----------------------------------------------------------------------
-!
-! initialize
-!
-!-----------------------------------------------------------------------
-
-   if (.not. present(SMF) .or. present(SMFT)) then
-      call exit_POP(sigAbort, &
-                    'ERROR KPP GPU: must supply SMF and not SMFT')
-   end if
-
-
-   call vmix_coeffs_kpp_gpu_entry(VDC, VVC, TRCR, UUU, VVV, STF, SHF_QSW, &
-                            bid, convect_diff, convect_visc, &
-                            SMF, HMXL(:,:,bid), KPP_HBLT(:,:,bid), KPP_SRC)
-
-
-!any removed tavg_requested stuff should go here
-
-
-
-
-
-
-!-----------------------------------------------------------------------
-!EOC
-
- end subroutine vmix_coeffs_kpp_gpu
-
-
-
-
-
-
-
-
-
-!***********************************************************************
-!BOP
-! !IROUTINE: vmix_coeffs_kpp_gpu_entry (fortran copy for reference)
-! !INTERFACE:
-
- subroutine vmix_coeffs_kpp_gpu_entry_fortran(VDC, VVC, TRCR, UUU, VVV, STF, SHF_QSW, &
-                            bid, convect_diff, convect_visc, &
-                            SMF, HMXL, KPP_HBLT, KPP_SRC)
-
-! !DESCRIPTION:
-!  This is the main GPU driver routine which calculates the vertical
-!  mixing coefficients for the KPP mixing scheme as outlined in 
-!  Large, McWilliams and Doney, Reviews of Geophysics, 32, 363 
-!  (November 1994). The non-local mixing is also computed here, but
-!  is treated as a source term in baroclinic. This routine will be
-!  translated to C.
-!
-! !REVISION HISTORY:
-!  same as module
-
-! !INPUT PARAMETERS:
-
-   real (r8), dimension(nx_block,ny_block,km,nt), intent(in) :: &
-      TRCR                ! tracers at current time
-
-   real (r8), dimension(nx_block,ny_block,km), intent(in) :: &
-      UUU,VVV             ! velocities at current time
-
-   real (r8), dimension(nx_block,ny_block,nt), intent(in) :: &
-      STF                 ! surface forcing for all tracers
-
-   real (r8), dimension(nx_block,ny_block), intent(in) :: &
-      SHF_QSW             ! short-wave forcing
-
-   real (r8), dimension(nx_block,ny_block,2), intent(in) :: &
-      SMF                 ! surface momentum forcing at U points
-
-   real (r8), intent(in) :: &
-      convect_diff,      &! diffusivity to mimic convection
-      convect_visc        ! viscosity   to mimic convection
-
-   integer (int_kind), intent(in) :: &
-      bid                 ! local block address for this block
-
-! !INPUT/OUTPUT PARAMETERS:
-
-   real (r8), dimension(nx_block,ny_block,km+1,2),intent(inout) :: &
-      VDC        ! diffusivity for tracer diffusion
-
-! !OUTPUT PARAMETERS:
-
-   real (r8), dimension(nx_block,ny_block,km), intent(out) ::      &
-      VVC        ! viscosity for momentum diffusion
-
-   real (r8), dimension(nx_block,ny_block), intent(out) :: &
-      HMXL,               &! mixed layer depth
-      KPP_HBLT             ! boundary layer depth
-
-   real (r8), dimension(nx_block,ny_block,km,nt), intent(out) :: &
-      KPP_SRC              ! non-local mixing (treated as source term)
-
-!EOP
-!BOC
-!-----------------------------------------------------------------------
-!
-!  local variables
-!
-!-----------------------------------------------------------------------
-
-   integer (int_kind) :: &
-      k,                 &! vertical level index 
-      i,j,               &! horizontal loop indices
-      n,                 &! tracer index
-      mt2                 ! index for separating temp from other trcrs
-
-   integer (int_kind), dimension(nx_block,ny_block) :: &
-      KBL                   ! index of first lvl below hbl
-
-   real (r8), dimension(nx_block,ny_block) :: &
-      USTAR,      &! surface friction velocity
-      BFSFC,      &! surface buoyancy forcing
-      STABLE       ! = 1 for stable forcing; = 0 for unstable forcing
- 
-   real (r8), dimension(nx_block,ny_block,km) :: &
-      DBLOC,      &! buoyancy difference between adjacent levels
-      DBSFC,      &! buoyancy difference between level and surface
-      GHAT         ! non-local mixing coefficient
-
-   real (r8), dimension(nx_block,ny_block,km+1) :: &
-      VISC        ! local temp for viscosity
-
-!dummy variable that is not used by ri_iwmix but added here to have the
-!same interface during testing
-   real (r8), dimension(nx_block,ny_block,km) :: &
-      RHOMIX              ! density at mix time
-
-
-
-!-----------------------------------------------------------------------
-!
-!  compute buoyancy differences at each vertical level.
-!
-!-----------------------------------------------------------------------
-
-   call buoydiff(DBLOC, DBSFC, TRCR, bid)
-
-
-!-----------------------------------------------------------------------
-!
-!  compute mixing due to shear instability, internal waves and
-!  convection
-!
-!-----------------------------------------------------------------------
-
-   call ri_iwmix(DBLOC, VISC, VDC, UUU, VVV, RHOMIX, &
-                    convect_diff, convect_visc, bid)
-
-!-----------------------------------------------------------------------
-!
-!  compute double diffusion if desired
-!
-!-----------------------------------------------------------------------
-
-   call ddmix(VDC, TRCR, bid)
-
-!-----------------------------------------------------------------------
-!
-!     compute boundary layer depth
-!
-!-----------------------------------------------------------------------
-
-   call bldepth (DBLOC, DBSFC, TRCR, UUU, VVV, STF, SHF_QSW,   &
-                    KPP_HBLT, USTAR, BFSFC, STABLE, KBL, & 
-                    bid, SMF=SMF)
-
-!-----------------------------------------------------------------------
-!
-!  compute boundary layer diffusivities
-!
-!-----------------------------------------------------------------------
-
-   call blmix(VISC, VDC, KPP_HBLT, USTAR, BFSFC, STABLE, &
-              KBL, GHAT, bid) 
-
-!-----------------------------------------------------------------------
-!
-!  consider interior convection:
-!
-!-----------------------------------------------------------------------
-
-   call interior_convection(DBLOC, DBSFC, KBL, STF, GHAT, & 
-                    VISC, convect_diff, convect_visc, bid, VDC, VVC, KPP_SRC, HMXL)
-
-
-!-----------------------------------------------------------------------
-!EOC
-
- end subroutine vmix_coeffs_kpp_gpu_entry_fortran
-
-
-
-
-
-subroutine interior_convection(DBLOC, DBSFC, KBL, STF, GHAT, VISC, convect_diff, &
-                                      convect_visc, bid, VDC, VVC, KPP_SRC, HMXLB) bind (c)
-
-! DESCRIPTION:
-!
-! This routine implements the final part of vmix_coeffs_kpp.
-! It is rewritten into a separate routine for the purpose of creating a 
-! GPU implementation of the entire vertical mixing scheme.
-! Previously USTAR and BFSFC were reused as temps by this final part,
-! these were renamed to WORK3 and WORK4 respectively.
-!
-
-! PARAMETERS
-
-! INPUTS:
-
-   real (r8), dimension(nx_block,ny_block,km), intent(in) :: &
-      DBLOC,      &! buoyancy difference between adjacent levels
-      DBSFC,      &! buoyancy difference between level and surface
-      GHAT         ! non-local mixing coefficient
-
-   real (r8), dimension(nx_block,ny_block,nt), intent(in) :: &
-      STF                 ! surface forcing for all tracers
-
-   integer (int_kind), dimension(nx_block,ny_block), intent(in) :: &
-      KBL                   ! index of first lvl below hbl
-
-   real (r8), intent(in) :: &
-      convect_diff,      &! diffusivity to mimic convection
-      convect_visc        ! viscosity   to mimic convection
-
-   integer (int_kind), intent(in) :: &
-      bid                 ! local block address for this block
-
-! fake INOUTS:
-! these are actually inputs but are listed as inouts because they are also
-! written by part of the computation, we are however not interested in their
-! final value after the execution of this subroutine
-
-   real (r8), dimension(nx_block,ny_block,km+1), intent(inout) :: &
-      VISC        ! local temp for viscosity
-
-! true INOUTS:
-
-   real (r8), dimension(nx_block,ny_block,km+1,2),intent(inout) :: &
-      VDC        ! diffusivity for tracer diffusion
-
-! OUTPUTS:
-
-   real (r8), dimension(nx_block,ny_block,km), intent(out) :: &
-      VVC        ! viscosity for momentum diffusion
-
-   real (r8), dimension(nx_block,ny_block), intent(out) :: &
-      HMXLB       ! mixed layer depth of the current block
-
-   real (r8), dimension(nx_block,ny_block,km,nt,nblocks_clinic), intent(out) :: &
-      KPP_SRC    ! non-local mixing (treated as source term)
-
-! local variables:
-
-   real (r8), dimension(nx_block,ny_block) :: &
-      WORK1,WORK2,&! temporary storage
-      WORK3,WORK4,&! temporary storage
-      WORK5,FCON         ! convection temporary
-
-   integer (int_kind) :: &
-      k,                 &! vertical level index 
-      i,j,               &! horizontal loop indices
-      n,                 &! tracer index
-      mt2                 ! index for separating temp from other trcrs
-
-
-
-!-----------------------------------------------------------------------
-!    compute function of Brunt-Vaisala squared for convection.
-!
-!  use either a smooth    
-!
-!    WORK1 = N**2,  FCON is function of N**2
-!    FCON = 0 for N**2 > 0
-!    FCON = [1-(1-WORK1/BVSQcon)**2]**3 for BVSQcon < N**2 < 0
-!    FCON = 1 for N**2 < BVSQcon
-!
-!  or a step function. The smooth function has been used with
-!  BVSQcon = -0.2e-4_dbl_kind.
-!
-!  after convection, average viscous coeffs to U-grid and reset sea 
-!  floor values
-!
-!-----------------------------------------------------------------------
-
-   do k=1,km-1           
-
-      if (partial_bottom_cells) then
-         WORK1 = DBLOC(:,:,k)/(p5*(DZT(:,:,k  ,bid) + &
-                                   DZT(:,:,k+1,bid)))
-      else
-         WORK1 = DBLOC(:,:,k)/(zgrid(k) - zgrid(k+1))
-      end if
-
-      where (WORK1 > c0)
-         FCON = c0
-      elsewhere
-         FCON = c1
-      end where
-
-      !*** add convection and reset sea floor values to zero
-      
-      do j=1,ny_block
-      do i=1,nx_block
-         if ( k >= KBL(i,j) ) then
-            VISC(i,j,k)  = VISC(i,j,k)  + convect_visc * FCON(i,j)
-            VDC(i,j,k,1) = VDC(i,j,k,1) + convect_diff * FCON(i,j)
-            VDC(i,j,k,2) = VDC(i,j,k,2) + convect_diff * FCON(i,j)
-         endif
-         if (k >= KMT(i,j,bid)) then
-         	  VISC(i,j,k  ) = c0
-            VDC (i,j,k,1) = c0
-            VDC (i,j,k,2) = c0
-         endif
-      end do
-      end do
-
-      !*** now average visc to U grid 
-      
-      call tgrid_to_ugrid(WORK2,VISC(:,:,k),bid)
-
-      VVC(:,:,k) = merge(WORK2, c0, (k < KMU(:,:,bid)))
-
-
-   enddo
-
-   VDC(:,:,km,:) = c0
-   VVC(:,:,km)   = c0
-
-!-----------------------------------------------------------------------
-!
-!  add ghatp term from previous computation to right-hand-side 
-!  source term on current row
-!
-!-----------------------------------------------------------------------
-
-   do n=1,nt
-      mt2=min(n,2)
-      KPP_SRC(:,:,1,n,bid) = STF(:,:,n)/dz(1)           &
-                             *(-VDC(:,:,1,mt2)*GHAT(:,:,1))
-      if (partial_bottom_cells) then
-         do k=2,km
-            KPP_SRC(:,:,k,n,bid) = STF(:,:,n)/DZT(:,:,k,bid)         &
-                                 *( VDC(:,:,k-1,mt2)*GHAT(:,:,k-1)   &
-                                   -VDC(:,:,k  ,mt2)*GHAT(:,:,k  ))
-         enddo
-      else
-         do k=2,km
-            KPP_SRC(:,:,k,n,bid) = STF(:,:,n)/dz(k)                  &
-                                 *( VDC(:,:,k-1,mt2)*GHAT(:,:,k-1)   &
-                                   -VDC(:,:,k  ,mt2)*GHAT(:,:,k  ))
-         enddo
-      endif
-   enddo
-
-!-----------------------------------------------------------------------
-!
-!  compute diagnostic mixed layer depth (cm) using a max buoyancy 
-!  gradient criterion. This part previously used USTAR and BFSFC as temps.
-!  These have been renamed to WORK3 and WORK4
-!
-!-----------------------------------------------------------------------
-
-   WORK3 = c0
-   where (KMT(:,:,bid) == 1)
-      HMXLB(:,:) = zt(1)
-   elsewhere
-      HMXLB(:,:) = c0
-   endwhere
-
-   if (partial_bottom_cells) then
-      do k=2,km
-         where (k <= KMT(:,:,bid))
-            WORK5 = zt(k-1) + p5*(DZT(:,:,k-1,bid) + DZT(:,:,k,bid))
-            WORK3 = max(DBSFC(:,:,k)/WORK5,WORK3)
-            HMXLB(:,:) = WORK5
-         endwhere
-      enddo
-
-      VISC(:,:,1) = c0
-      do k=2,km
-         where (WORK3 > c0 )
-            VISC(:,:,k) = (DBSFC(:,:,k)-DBSFC(:,:,k-1))/ &
-                          (p5*(DZT(:,:,k,bid) + DZT(:,:,k-1,bid)))
-         end where
-         where ( VISC(:,:,k) >= WORK3 .and.              &
-                (VISC(:,:,k)-VISC(:,:,k-1)) /= c0 .and.  &
-                 WORK3 > c0 )   ! avoid divide by zero
-            WORK4 = (VISC(:,:,k) - WORK3)/ &
-                    (VISC(:,:,k)-VISC(:,:,k-1))
-! tqian
-!            HMXL(:,:,bid) =   (zt(k-1) + p5*DZT(:,:,k-1,bid))*(c1-WORK4) &
-!                            + (zt(k-1) - p5*DZT(:,:,k-1,bid))*WORK4
-             HMXLB(:,:) =   (zt(k-1) + p25*(DZT(:,:,k-1,bid)+DZT(:,:,k,bid)))*(c1-WORK4) &
-                             + (zt(k-1) - p25*(DZT(:,:,k-2,bid)+DZT(:,:,k-1,bid)))*WORK4
-
-            WORK3(:,:) = c0
-         endwhere
-      enddo
-   else
-      do k=2,km
-         where (k <= KMT(:,:,bid))
-            WORK3 = max(DBSFC(:,:,k)/zt(k),WORK3)
-            HMXLB(:,:) = zt(k)
-         endwhere
-      enddo
-
-      VISC(:,:,1) = c0
-      do k=2,km
-         where (WORK3 > c0 )
-            VISC(:,:,k) = (DBSFC(:,:,k)-DBSFC(:,:,k-1))/ &
-                          (zt(k) - zt(k-1))
-         end where
-         where ( VISC(:,:,k) >= WORK3 .and.              &
-                (VISC(:,:,k)-VISC(:,:,k-1)) /= c0 .and.  &
-                 WORK3 > c0 )   ! avoid divide by zero
-            WORK4 = (VISC(:,:,k) - WORK3)/ &
-                    (VISC(:,:,k)-VISC(:,:,k-1))
-            HMXLB(:,:) = -p5*(zgrid(k  ) + zgrid(k-1))*(c1-WORK4) &
-                            -p5*(zgrid(k-1) + zgrid(k-2))*WORK4
-            WORK3(:,:) = c0
-         endwhere
-      enddo
-   endif
-
-end subroutine interior_convection
-
-
-
-
-
-
 !***********************************************************************
 !BOP
 ! !IROUTINE: ri_iwmix
 ! !INTERFACE:
 
  subroutine ri_iwmix(DBLOC, VISC, VDC, UUU, VVV, RHOMIX, &
-                          convect_diff, convect_visc, bid) bind (c)
+                     convect_diff, convect_visc, this_block)
 
 ! !DESCRIPTION:
 !  Computes viscosity and diffusivity coefficients for the interior
@@ -1536,8 +1105,7 @@ end subroutine interior_convection
 !  internal wave activity, and to static instability (Ri < 0).
 !
 ! !REVISION HISTORY:
-!  Ben changed VDC from inout to output, because it was not read
-!  but only written
+!  same as module
 
 ! !INPUT PARAMETERS:
 
@@ -1549,22 +1117,25 @@ end subroutine interior_convection
       DBLOC             ! buoyancy difference between adjacent levels
 
    real (r8), dimension(nx_block,ny_block,km), intent(in) :: &
-      RHOMIX ! density at mix time
+      RHOMIX            ! density at mix time
 
    real (r8), intent(in) :: &
-      convect_diff, &! diffusivity to mimic convection
-      convect_visc ! viscosity to mimic convection
+      convect_diff,         &! diffusivity to mimic convection
+      convect_visc           ! viscosity   to mimic convection
 
-   integer (int_kind), intent(in) :: &
-      bid                 ! local block address for this block
+   type (block), intent(in) :: &
+      this_block          ! block information for current block
 
-! !OUTPUT PARAMETERS:
+! !INPUT/OUTPUT PARAMETERS:
 
-   real (r8), dimension(nx_block,ny_block,km+1,2), intent(out) :: & 
+   real (r8), dimension(nx_block,ny_block,0:km+1,2), intent(inout) :: & 
       VDC        ! diffusivity for tracer diffusion
 
-   real (r8), dimension(nx_block,ny_block,km+1), intent(out) :: & 
-      VISC              ! viscosity
+   real (r8), dimension(nx_block,ny_block,0:km+1), intent(inout) :: & 
+      VISC       ! viscosity
+
+   logical (log_kind), parameter :: &
+      prnt = .false. ! if true, diagnostic prints made of tidal, rich
 
 !EOP
 !BOC
@@ -1577,17 +1148,23 @@ end subroutine interior_convection
    integer (int_kind) :: &
       k,                 &! index for vertical levels
       i,j,               &! horizontal loop indices
+      bid,               &! local block index
       n                   ! vertical smoothing index
 
    real (r8), dimension(nx_block,ny_block) :: &
-      KVMIX
+      KVMIX, 		 &! vertical diffusivity
+      KVMIX_M		  ! vertical viscosity
+
+   real (r8), dimension(nx_block,ny_block,0:km+1) :: &
+      WORK0               ! work array 
 
    real (r8), dimension(nx_block,ny_block) :: &
       VSHEAR,            &! (local velocity shear)^2
       RI_LOC,            &! local Richardson number 
       FRI,               &! function of Ri for shear
       FCON,              &
-      WORK1
+      WORK1,             &! local work array
+      WORKN               ! local work array
 
 !-----------------------------------------------------------------------
 !
@@ -1595,8 +1172,11 @@ end subroutine interior_convection
 !
 !-----------------------------------------------------------------------
 
+   bid = this_block%local_id
+
    KVMIX       = c0
-!   VISC(:,:,0) = c0
+   KVMIX_M     = c0
+   WORK0(:,:,0)= c0
 
    do k = 1,km
 
@@ -1628,7 +1208,6 @@ end subroutine interior_convection
 !-----------------------------------------------------------------------
 !
 !     compute local richardson number
-!     use visc array as temporary Ri storage to be smoothed
 !
 !-----------------------------------------------------------------------
 
@@ -1646,35 +1225,31 @@ end subroutine interior_convection
          RI_LOC = DBLOC(:,:,k)*(zgrid(k)-zgrid(k+1))/(VSHEAR + eps)
       end if
 
-      if (k == 1) then
-	VISC(:,:,k)   = merge(RI_LOC, c0, k <= KMT(:,:,bid))
-      else
-	VISC(:,:,k)   = merge(RI_LOC, VISC(:,:,k-1), k <= KMT(:,:,bid))
-      endif
+      WORK0(:,:,k)   = merge(RI_LOC, WORK0(:,:,k-1), k <= KMT(:,:,bid))
  
    enddo
 
 !-----------------------------------------------------------------------
 !
 !  vertically smooth Ri num_v_smooth_Ri times with 1-2-1 weighting
-!  result again stored temporarily in VISC and use RI_LOC and FRI
+!  result again stored in WORK0 and use RI_LOC and FRI
 !  as temps
 !
 !-----------------------------------------------------------------------
  
    do n = 1,num_v_smooth_Ri
  
-      FRI            =  p25 * VISC(:,:,1)
-      VISC(:,:,km+1) =        VISC(:,:,km)
+      FRI            =  p25 * WORK0(:,:,1)
+      WORK0(:,:,km+1) =       WORK0(:,:,km)
  
       do k=1,km
-         ! DIR$ NODEP
+         !DIR$ NODEP
          do j=1,ny_block
-         ! DIR$ NODEP
+         !DIR$ NODEP
          do i=1,nx_block
-            RI_LOC(i,j) = VISC(i,j,k)
+            RI_LOC(i,j) = WORK0(i,j,k)
             if (KMT(i,j,bid) >= 3) then
-               VISC(i,j,k) = FRI(i,j) + p5*RI_LOC(i,j) + p25*VISC(i,j,k+1)
+               WORK0(i,j,k) = FRI(i,j) + p5*RI_LOC(i,j) + p25*WORK0(i,j,k+1)
             endif
             FRI(i,j) = p25*RI_LOC(i,j)
          enddo
@@ -1690,6 +1265,8 @@ end subroutine interior_convection
 !
 !-----------------------------------------------------------------------
 
+   if ( ltidal_mixing )  TIDAL_DIFF(:,:,:,bid) = c0
+
    do k = 1,km
 
 !-----------------------------------------------------------------------
@@ -1700,7 +1277,7 @@ end subroutine interior_convection
 !       for     Ri > Riinfty, function = 0
 !       for     Ri < 0      , function = 1
 !     compute contribution due to shear instability
-!     VISC holds smoothed Ri at k, but replaced by real VISC
+!     WORK0 holds smoothed Ri at k
 !
 !     otherwise only use iw
 !     convection is added later
@@ -1712,8 +1289,7 @@ end subroutine interior_convection
 !-----------------------------------------------------------------------
 !
 !  consider the internal wave mixing first. rich_mix is used as the
-!  upper limit for internal wave mixing coefficient. bckgrnd_vvc
-!  was already multiplied by Prandtl. use VSHEAR as temp.
+!  upper limit for internal wave mixing coefficient.
 !
 !  NOTE: no partial_bottom_cell implementation at this time 
 !
@@ -1721,22 +1297,88 @@ end subroutine interior_convection
 
         WORK1 = DBLOC(:,:,k)/(zgrid(k) - zgrid(k+1))
 
-        VSHEAR = c0
         where (WORK1 > c0)
-           VSHEAR = TIDAL_COEF(:,:,k,bid)/WORK1
+          TIDAL_DIFF(:,:,k,bid) = TIDAL_COEF(:,:,k,bid)/WORK1
         endwhere
 
-        WORK1 = Prandtl*min(bckgrnd_vvc(:,:,k,bid)/Prandtl+VSHEAR, tidal_mix_max)
+        ! Notes:
+        ! (1) this step breaks backwards compatibility
+        ! (2) check for k>2 was added to if statement to avoid
+        !     out of bounds access
+        if ((.not. lccsm_control_compatible).and.(k.gt.2)) then
+        where ( k == KMT(:,:,bid)-1  .or.  k == KMT(:,:,bid)-2 )
+          TIDAL_DIFF(:,:,k,bid) = max( TIDAL_DIFF(:,:,k,  bid),  &
+                                       TIDAL_DIFF(:,:,k-1,bid) )
+        endwhere 
+        endif
+
+        if (lniw_mixing) then
+         WORKN = VISC(:,:,k)
+        else
+         WORKN = bckgrnd_vvc(:,:,k,bid)
+        endif
+
+        WORK1 = Prandtl*min(WORKN(:,:)/Prandtl  &
+                            + TIDAL_DIFF(:,:,k,bid), tidal_mix_max)
+
+        if( prnt ) then
+
+! use DS product point to test, global (i,j) = (5,103)
+           do j=1,ny_block
+             if( this_block%j_glob(j) .eq. 103 ) then
+             do i=1,nx_block
+               if( this_block%i_glob(i) .eq. 5 ) then
+       if( k < KMT(i,j,bid) ) then
+ write(stdout,100) this_block%i_glob(i),this_block%j_glob(j),k, &
+                         TIDAL_DIFF(i,j,k,bid)
+ 100 format(' tidal  i,j,k TIDAL_DIFF =',3(i3,1x),1pe11.4,1x)
+       endif
+               endif
+             enddo ! i
+             endif
+           enddo ! j
+
+         endif
+
 
         if ( k < km ) then
-          VDC(:,:,k,2) = min(bckgrnd_vdc(:,:,k,bid) + VSHEAR, tidal_mix_max)
+          KVMIX_M(:,:) = WORK1(:,:)
+        endif
+
+        if ( k < km ) then
+          if (lniw_mixing) then
+            VDC(:,:,k,2) = min(VDC(:,:,k,2) + TIDAL_DIFF(:,:,k,bid),  &
+                               tidal_mix_max)
+          else
+            VDC(:,:,k,2) = min(bckgrnd_vdc(:,:,k,bid) + TIDAL_DIFF(:,:,k,bid),  &
+                               tidal_mix_max)
+          endif
           KVMIX(:,:) = VDC(:,:,k,2)
         endif
 
         if (lrich) then
-          FRI    = min((max(VISC(:,:,k),c0))/Riinfty, c1)
+          FRI    = min((max(WORK0(:,:,k),c0))/Riinfty, c1)
 
           VISC(:,:,k) = WORK1 + rich_mix*(c1 - FRI*FRI)**3
+
+          if( prnt ) then
+
+! use DS product point to test, global (i,j) = (5,103)
+            do j=1,ny_block
+              if( this_block%j_glob(j) .eq. 103 ) then
+              do i=1,nx_block
+                if( this_block%i_glob(i) .eq. 5 ) then
+        if( k < KMT(i,j,bid) ) then
+  write(stdout,200) this_block%i_glob(i),this_block%j_glob(j),k, &
+                          rich_mix*(c1 - FRI(i,j)*FRI(i,j))**3
+  200 format(' Rich  i,j,k DIFF =',3(i3,1x),1pe11.4,1x)
+        endif
+                endif
+              enddo ! i
+              endif
+            enddo ! j
+
+          endif
 
           if ( k < km ) then
             VDC(:,:,k,2) = VDC(:,:,k,2) + rich_mix*(c1 - FRI*FRI)**3
@@ -1753,12 +1395,33 @@ end subroutine interior_convection
       else ! .not. ltidal_mixing
 
         if ( k < km ) then
-          KVMIX(:,:) = bckgrnd_vdc(:,:,k,bid)
+          if (lniw_mixing) then
+            KVMIX(:,:) = VDC(:,:,k,2)
+            KVMIX_M(:,:) = VISC(:,:,k)
+          else
+            KVMIX(:,:) = bckgrnd_vdc(:,:,k,bid)
+            KVMIX_M(:,:) = bckgrnd_vvc(:,:,k,bid)
+          endif
         endif
 
 
+        if (lniw_mixing) then
         if (lrich) then
-           FRI    = min((max(VISC(:,:,k),c0))/Riinfty, c1)
+           FRI    = min((max(WORK0(:,:,k),c0))/Riinfty, c1)
+
+           VISC(:,:,k  ) = VISC(:,:,k) + &
+                           rich_mix*(c1 - FRI*FRI)**3
+
+           if ( k < km ) then
+              VDC (:,:,k,2) = VDC(:,:,k,2) + &
+                              rich_mix*(c1 - FRI*FRI)**3
+              VDC(:,:,k,1) = VDC(:,:,k,2)
+           endif
+        endif
+
+        else 
+        if (lrich) then
+           FRI    = min((max(WORK0(:,:,k),c0))/Riinfty, c1)
 
            VISC(:,:,k  ) = bckgrnd_vvc(:,:,k,bid) + &
                            rich_mix*(c1 - FRI*FRI)**3
@@ -1776,6 +1439,8 @@ end subroutine interior_convection
               VDC(:,:,k,1) = VDC(:,:,k,2)
            endif
         endif
+        endif ! lniw_mixing
+
 
       endif ! ltidal_mixing
 
@@ -1785,28 +1450,38 @@ end subroutine interior_convection
 !
 !-----------------------------------------------------------------------
 
-      ! DIR$ NODEP
-      ! DIR$ COLLAPSE
+      !DIR$ NODEP
+      !DIR$ COLLAPSE
       do j=1,ny_block
-      ! DIR$ NODEP
+      !DIR$ NODEP
       do i=1,nx_block
          if ( k >= KMT(i,j,bid) ) then
             VISC(i,j,k  ) = c0
-            VDC (i,j,k,1) = c0 
-            VDC (i,j,k,2) = c0 
+            VDC (i,j,k,1) = c0
+            VDC (i,j,k,2) = c0
          endif
       end do
       end do
 
-!      if (tavg_requested(tavg_KVMIX)) then
-!         call accumulate_tavg_field(KVMIX,tavg_KVMIX,bid,k)
-!      endif
+      ! k index shifted because KVMIX and KVMIX_M are at cell bottom
+      ! while output axis is at cell top
+      call accumulate_tavg_field(KVMIX,tavg_KVMIX,bid,k)
+      call accumulate_tavg_field(KVMIX_M,tavg_KVMIX_M,bid,k)
+     
+      if (lniw_mixing) then
+      !*** accumulated in iw_reset
+      else
+      ! k index shifted because bckgrnd_vdc and bckgrnd_vvc are at cell bottom
+      ! while output axis is at cell top
+        call accumulate_tavg_field(bckgrnd_vdc(:,:,k,bid),tavg_VDC_BCK,bid,k)
+        call accumulate_tavg_field(bckgrnd_vvc(:,:,k,bid),tavg_VVC_BCK,bid,k)
+      endif
  
-!      if (tavg_requested(tavg_TPOWER)) then
-!         WORK1(:,:) = KVMIX(:,:)*RHOMIX(:,:,k)*DBLOC(:,:,k)/ &
-!            (zgrid(k) - zgrid(k+1))
-!         call accumulate_tavg_field(WORK1,tavg_TPOWER,bid,k)
-!      endif
+      if (accumulate_tavg_now(tavg_TPOWER)) then
+         WORK1(:,:) = KVMIX(:,:)*RHOMIX(:,:,k)*DBLOC(:,:,k)/ &
+            (zgrid(k) - zgrid(k+1))
+         call accumulate_tavg_field(WORK1,tavg_TPOWER,bid,k)
+      endif
 
 !-----------------------------------------------------------------------
 !
@@ -1822,12 +1497,14 @@ end subroutine interior_convection
 !
 !-----------------------------------------------------------------------
 
-!   VISC(:,:,0  ) = c0    ! no longer necessary Ben
-!   VDC (:,:,0,:) = c0    ! no longer necessary Ben
-
-   VISC(:,:,km+1  ) = c0 
-   VDC (:,:,km,:) = c0  !added by Ben
-   VDC (:,:,km+1,:) = c0 
+   if (lniw_mixing) then
+   !*** see iw_reset
+   else
+     VISC(:,:,0  ) = c0
+     VDC (:,:,0,:) = c0
+     VISC(:,:,km+1  ) = c0
+     VDC (:,:,km+1,:) = c0
+   endif
 
 !-----------------------------------------------------------------------
 !EOC
@@ -1839,9 +1516,9 @@ end subroutine interior_convection
 ! !IROUTINE: bldepth
 ! !INTERFACE:
 
- subroutine bldepth (DBLOC, DBSFC, TRCR, UUU, VVV, STF, SHF_QSW,  &
+ subroutine bldepth (DBLOC, DBSFC, TRCR, UUU, VVV, UCUR, VCUR, STF, SHF_QSW,  &
                      HBLT, USTAR, BFSFC, STABLE, KBL,             &
-                     bid, SMF, SMFT)
+                     this_block, SMF, SMFT)
 
 ! !DESCRIPTION:
 !  This routine computes the ocean boundary layer depth defined as
@@ -1869,9 +1546,11 @@ end subroutine interior_convection
       TRCR                ! tracers at current time
 
    real (r8), dimension(nx_block,ny_block,km), intent(in) :: &
-      UUU,VVV,       &! velocities at current time
+      UUU,VVV,       &! velocities at mix     time
+      UCUR,VCUR,     &! velocities at current time    Markus (lniw_mixing)
       DBLOC,         &! buoyancy difference between adjacent levels
       DBSFC           ! buoyancy difference between level and surface
+
 
    real (r8), dimension(nx_block,ny_block,nt), intent(in) :: &
       STF                 ! surface forcing for all tracers
@@ -1885,8 +1564,8 @@ end subroutine interior_convection
                          ! *** either one or the other (not
                          ! *** both) should be passed
 
-   integer (int_kind), intent(in) :: &
-      bid                 ! local block address for this block
+   type (block), intent(in) :: &
+      this_block          ! block information for current block
 
 ! !OUTPUT PARAMETERS:
 
@@ -1907,8 +1586,11 @@ end subroutine interior_convection
 !
 !-----------------------------------------------------------------------
 
+   character (char_len) :: error_string
+
    integer (int_kind) :: &
       i,j,               &! loop indices
+      bid,               &! local block index
       kupper, kup, kdn, ktmp, kl  ! vertical level indices
 
    real (r8), dimension(nx_block,ny_block) :: &
@@ -1929,12 +1611,17 @@ end subroutine interior_convection
       HLIMIT              ! limit to mixed-layer depth
                           ! (= min(HEKMAN,HMONOB))
 
+   real (r8), dimension(nx_block,ny_block) :: &
+      niuel,             &! unresolved NIW part
+      nivel               ! unresolved NIW part
+
    real (r8), dimension(nx_block,ny_block,3) :: &
       RI_BULK,           &! Bulk Ri number at 3 lvls
       HMONOB              ! Monin-Obukhov depth limit
 
    real (r8) ::          &
       absorb_frac,       &! shortwave absorption frac
+      perio,             &! inertial period
       sqrt_arg,          &! dummy sqrt argument
       z_upper, z_up       ! upper depths for RI_BULK interpolation
 
@@ -1949,12 +1636,20 @@ end subroutine interior_convection
                           ! at zup. this is used as a boundary
                           ! condition to determine the coefficients.
 
+   real (r8) :: &
+      factor              ! temporary scalar factor
+
+   real (r8) :: &
+      ni_obs_factor = 0.8_r8 ! scaling factor for obs vs model
+
 !-----------------------------------------------------------------------
 !
 !  compute friction velocity USTAR.  compute on U-grid and average
 !  to T-grid.
 !
 !-----------------------------------------------------------------------
+
+   bid = this_block%local_id
 
    if (present(SMFT)) then
       USTAR = sqrt(sqrt(SMFT(:,:,1)**2 + SMFT(:,:,2)**2))
@@ -1971,7 +1666,7 @@ end subroutine interior_convection
 
    WORK = merge(-c2,TRCR(:,:,1,1),TRCR(:,:,1,1) < -c2)
 
-   call state(1,1,WORK,TRCR(:,:,1,2),bid, &
+   call state(1,1,WORK,TRCR(:,:,1,2),this_block, &
                   RHOFULL=RHO1, DRHODT=TALPHA, DRHODS=SBETA)
 
 !-----------------------------------------------------------------------
@@ -2038,7 +1733,7 @@ end subroutine interior_convection
          ZKL = -zgrid(kl)
       endif
 
-      ! DIR$ COLLAPSE
+      !DIR$ COLLAPSE
       do j=1,ny_block
       do i=1,nx_block
          if (kl == KBL(i,j)) HBLT(i,j) = ZKL(i,j)
@@ -2065,10 +1760,8 @@ end subroutine interior_convection
 
          case ('chlorophyll')
 
-#ifdef unsupported
             call sw_trans_chl(1,this_block)
             BFSFC = BO + BOSOL*(c1-TRANS(:,:,bid))
-#endif
 
          end select
 
@@ -2094,11 +1787,61 @@ end subroutine interior_convection
 !
 !-----------------------------------------------------------------------
 
+! account for the unresolved part of the NI velocity (equal to the resolved); Markus 9/27/11
+! the 0.05 accounts like in En for the average over the abs(cycle), loosely based on
+! 1/T * integral(cos), also tuned to get En = u'Tau' from model
+! Model resolves half NI energy, so the unresolved part, nivel is added again 
+! x4 because for 16 hours 1/f a time step of 1 hours gets only a quarter of max. increase
+
+   if ( lniw_mixing .and. linertial ) then
+
+     do j=1,ny_block
+       do i=1,nx_block
+         niuel(i,j)=c0
+         nivel(i,j)=c0
+
+         if( TLATD(i,j,bid) > 5.0_r8 ) then
+ 
+          factor = ni_obs_factor*abs(12.0_r8*3600.0_r8/sin(TLAT(i,j,bid)))/pi2/dtt
+          niuel(i,j) = - factor * (VCUR(i,j,1) - VVV(i,j,1))     
+          nivel(i,j) =   factor * (UCUR(i,j,1) - UUU(i,j,1))     
+    
+           if( TLATD(i,j,bid) < 10.0_r8 ) then
+            niuel(i,j) = niuel(i,j) * NIW_COS_FACTOR(i,j,bid)
+            nivel(i,j) = nivel(i,j) * NIW_COS_FACTOR(i,j,bid)
+           endif
+
+         endif
+
+
+         if( TLATD(i,j,bid) < -5.0_r8 ) then
+
+          factor = ni_obs_factor*abs(12.0_r8*3600.0_r8/sin(TLAT(i,j,bid)))/pi2/dtt
+          niuel(i,j) =   factor * (VCUR(i,j,1) - VVV(i,j,1))     
+          nivel(i,j) = - factor * (UCUR(i,j,1) - UUU(i,j,1))     
+
+           if( TLATD(i,j,bid) > -10.0_r8 ) then
+            niuel(i,j) = niuel(i,j) * NIW_COS_FACTOR(i,j,bid)
+            nivel(i,j) = nivel(i,j) * NIW_COS_FACTOR(i,j,bid)
+           endif
+
+         endif
+
+       enddo
+     enddo
+
+   endif  ! if ( lniw_mixing .and. linertial ) then
+
    do kl = 2,km
  
-      WORK = (UUU(:,:,1)-UUU(:,:,kl))**2 + &
-             (VVV(:,:,1)-VVV(:,:,kl))**2
-
+      if ( lniw_mixing ) then
+        WORK = (UUU(:,:,1) + niuel(:,:) - UUU(:,:,kl))**2 + &
+               (VVV(:,:,1) + nivel(:,:) - VVV(:,:,kl))**2 
+      else
+        WORK = (UUU(:,:,1) - UUU(:,:,kl))**2 + &
+               (VVV(:,:,1) - VVV(:,:,kl))**2
+      endif
+     
       if (partial_bottom_cells) then
          WORK = WORK/(-zgrid(kl-1) + & 
                       p5*(DZU(:,:,kl  ,bid) + &
@@ -2145,10 +1888,9 @@ end subroutine interior_convection
            enddo
 
          case ('chlorophyll')
-#ifdef unsupported
+
            call sw_trans_chl(2*kl-1,this_block)
            BFSFC = BO + BOSOL*(c1-TRANS(:,:,bid))
-#endif
 
          end select
 
@@ -2169,7 +1911,7 @@ end subroutine interior_convection
 
       if (lcheckekmo) then
 
-         ! DIR$ COLLAPSE
+         !DIR$ COLLAPSE
          do j=1,ny_block
          do i=1,nx_block
             if ( STABLE(i,j) > p5 .and. HEKMAN(i,j) >= -zgrid(km) ) then
@@ -2182,7 +1924,7 @@ end subroutine interior_convection
          HMONOB(:,:,kdn) = STABLE*cmonob*USTAR*USTAR*USTAR/vonkar/BFSFC + &
                           (STABLE-c1)*zgrid(km)
 
-         ! DIR$ COLLAPSE
+         !DIR$ COLLAPSE
          do j=1,ny_block
          do i=1,nx_block
             if (HMONOB(i,j,kdn) <= ZKL(i,j) .and. &
@@ -2256,10 +1998,15 @@ end subroutine interior_convection
       else
          WORK = MERGE( (zgrid(1)-zgrid(kl))*DBSFC(:,:,kl), &
                       c0, KMT(:,:,bid) >= kl)
-         if ( linertial ) then
-           RI_BULK(:,:,kdn) = WORK/(VSHEAR+WM+USTAR*BOLUS_SP(:,:,bid)+eps)
-         else
+
+         if (lniw_mixing) then
            RI_BULK(:,:,kdn) = WORK/(VSHEAR+WM+eps)
+         else
+           if ( linertial ) then
+             RI_BULK(:,:,kdn) = WORK/(VSHEAR+WM+USTAR*BOLUS_SP(:,:,bid)+eps)
+           else
+             RI_BULK(:,:,kdn) = WORK/(VSHEAR+WM+eps)
+           endif
          endif
       endif
 
@@ -2385,7 +2132,7 @@ end subroutine interior_convection
 
         BFSFC   = BO + BOSOL
 !       QSW_HBL = SHF_QSW
-        if (tavg_requested(tavg_QSW_HBL)) then
+        if (accumulate_tavg_now(tavg_QSW_HBL)) then
            WORK = SHF_QSW/hflux_factor
            call accumulate_tavg_field(WORK,tavg_QSW_HBL,bid,1)
         endif
@@ -2400,24 +2147,23 @@ end subroutine interior_convection
          enddo
          enddo
 
-!         if (tavg_requested(tavg_QSW_HBL)) then
-!            WORK = SHF_QSW*(c1-absorb_frac)/hflux_factor
-!            call accumulate_tavg_field(WORK,tavg_QSW_HBL,bid,1)
-!         endif
+         if (accumulate_tavg_now(tavg_QSW_HBL)) then
+           !QSW_HBL(i,j) = SHF_QSW(i,j)*(c1-absorb_frac)  ! boundary layer sw
+            WORK = SHF_QSW*(c1-absorb_frac)/hflux_factor
+            call accumulate_tavg_field(WORK,tavg_QSW_HBL,bid,1)
+         endif
 
       case ('chlorophyll')
 
-#ifdef unsupported
          ZTRANS(:,:,bid) = HBLT(:,:)
          call sw_trans_chl(0,this_block)
          BFSFC   = BO + BOSOL*(c1-TRANS(:,:,bid))
 
-         if (tavg_requested(tavg_QSW_HBL)) then
+         if (accumulate_tavg_now(tavg_QSW_HBL)) then
            !QSW_HBL = SHF_QSW   *(c1-TRANS(:,:,bid)) ! boundary layer sw heating
             WORK = SHF_QSW*(c1-TRANS(:,:,bid))/hflux_factor
             call accumulate_tavg_field(WORK,tavg_QSW_HBL,bid,1)
          endif
-#endif
 
       end select
 
@@ -2434,610 +2180,13 @@ end subroutine interior_convection
 
  end subroutine bldepth
 
-
-
-!***********************************************************************
-!BOP
-! !IROUTINE: bldepth_test for testing from C
-! !INTERFACE:
-
- subroutine bldepth_test (DBLOC, DBSFC, TRCR, UUU, VVV, STF, SHF_QSW,  &
-                     HBLT, USTAR, BFSFC, STABLE, KBL,             &
-                     bid, SMF) bind (c)
-
-! !DESCRIPTION:
-!  This routine computes the ocean boundary layer depth defined as
-!  the shallowest depth where the bulk Richardson number is equal to
-!  a critical value, Ricr.
-!
-!  NOTE: bulk richardson numbers are evaluated by computing 
-!        differences between values at zgrid(kl) $< 0$ and surface
-!        reference values. currently, the reference values are equal 
-!        to the values in the surface layer.  when using higher 
-!        vertical grid resolution, these reference values should be 
-!        computed as the vertical averages from the surface down to 
-!        epssfc*zgrid(kl).
-!
-!  This routine also computes where surface forcing is stable 
-!  or unstable (STABLE)
-!
-! !REVISION HISTORY:
-!  same as module
-
-
-! !INPUT PARAMETERS:
-
-   real (r8), dimension(nx_block,ny_block,km,nt), intent(in) :: &
-      TRCR                ! tracers at current time
-
-   real (r8), dimension(nx_block,ny_block,km), intent(in) :: &
-      UUU,VVV,       &! velocities at current time
-      DBLOC,         &! buoyancy difference between adjacent levels
-      DBSFC           ! buoyancy difference between level and surface
-
-   real (r8), dimension(nx_block,ny_block,nt), intent(in) :: &
-      STF                 ! surface forcing for all tracers
-
-   real (r8), dimension(nx_block,ny_block), intent(in) :: &
-      SHF_QSW             ! short-wave forcing
-
-   real (r8), dimension(nx_block,ny_block,2), intent(in) :: &
-      SMF               ! surface momentum forcing at U points
-
-   integer (int_kind), intent(in) :: &
-      bid                 ! local block address for this block
-
-! !OUTPUT PARAMETERS:
-
-   integer (int_kind), dimension(nx_block,ny_block), intent(out) :: &
-      KBL                    ! index of first lvl below hbl
-
-   real (r8), dimension(nx_block,ny_block), intent(out) :: &
-      HBLT,               &! boundary layer depth
-      BFSFC,              &! Bo+radiation absorbed to d
-      STABLE,             &! =1 stable forcing; =0 unstab
-      USTAR                ! surface friction velocity
-
-!EOP
-!BOC
-!-----------------------------------------------------------------------
-!
-!  local variables
-!
-!-----------------------------------------------------------------------
-
-   integer (int_kind) :: &
-      i,j,               &! loop indices
-      kupper, kup, kdn, ktmp, kl  ! vertical level indices
-
-   real (r8), dimension(nx_block,ny_block) :: &
-      VSHEAR,            &! (velocity shear re sfc)^2
-      SIGMA,             &! d/hbl
-      WM, WS,            &! turb vel scale functions
-      BO,                &! surface buoyancy forcing
-      BOSOL,             &! radiative buoyancy forcing
-      TALPHA,            &! temperature expansion coeff
-      SBETA,             &! salinity    expansion coeff
-      RHO1,              &! density at the surface
-      WORK,              &! temp array
-      ZKL,               &! depth at current z level
-      B_FRQNCY,          &! buoyancy frequency
-      RSH_HBLT,          &! resolved shear contribution to HBLT (fraction)
-      HLANGM,            &! Langmuir depth
-      HEKMAN,            &! Eckman depth limit
-      HLIMIT              ! limit to mixed-layer depth
-                          ! (= min(HEKMAN,HMONOB))
-
-   real (r8), dimension(nx_block,ny_block,3) :: &
-      RI_BULK,           &! Bulk Ri number at 3 lvls
-      HMONOB              ! Monin-Obukhov depth limit
-
-   real (r8) ::          &
-      absorb_frac,       &! shortwave absorption frac
-      sqrt_arg,          &! dummy sqrt argument
-      z_upper, z_up       ! upper depths for RI_BULK interpolation
-
-   real (r8) :: &
-      a_co, b_co, c_co    ! coefficients of the quadratic equation
-                          ! $(a_{co}z^2+b_{co}|z|+c_{co}=Ri_b) used to 
-                          ! find the boundary layer depth. when
-                          ! finding the roots, c_co = c_co - Ricr
-
-   real (r8) :: &
-      slope_up            ! slope of the above quadratic equation
-                          ! at zup. this is used as a boundary
-                          ! condition to determine the coefficients.
-
-!-----------------------------------------------------------------------
-!
-!  compute friction velocity USTAR.  compute on U-grid and average
-!  to T-grid.
-!
-!-----------------------------------------------------------------------
-
-   WORK = sqrt(sqrt(SMF(:,:,1)**2 + SMF(:,:,2)**2))
-   call ugrid_to_tgrid(USTAR,WORK,bid)
-
-!-----------------------------------------------------------------------
-!
-!  compute density and expansion coefficients at surface
-!
-!-----------------------------------------------------------------------
-
-   WORK = merge(-c2,TRCR(:,:,1,1),TRCR(:,:,1,1) < -c2)
-
-   call state(1,1,WORK,TRCR(:,:,1,2),bid, &
-                  RHOFULL=RHO1, DRHODT=TALPHA, DRHODS=SBETA)
-
-!-----------------------------------------------------------------------
-!
-!  compute turbulent and radiative sfc buoyancy forcing
-!
-!-----------------------------------------------------------------------
-
-   do j=1,ny_block
-   do i=1,nx_block
-      if (RHO1(i,j) /= c0) then
-         BO   (i,j) = grav*(-TALPHA(i,j)*STF(i,j,1) - &
-                             SBETA (i,j)*STF(i,j,2))/RHO1(i,j)
-
-         BOSOL(i,j) = -grav*TALPHA(i,j)*SHF_QSW(i,j)/RHO1(i,j)
-      else
-         BO   (i,j) = c0
-         BOSOL(i,j) = c0
-      endif
-   end do
-   end do
-
-!-----------------------------------------------------------------------
-!
-!  Find bulk Richardson number at every grid level until > Ricr
-!  max values when Ricr never satisfied are KBL = KMT and
-!  HBLT = -zgrid(KMT)
-!
-!  NOTE: the reference depth is -epssfc/2.*zgrid(i,k), but the 
-!        reference u,v,t,s values are simply the surface layer 
-!        values and not the averaged values from 0 to 2*ref.depth,
-!        which is necessary for very fine grids(top layer < 2m 
-!        thickness)
-!
-!
-!  Initialize hbl and kbl to bottomed out values
-!  Initialize HEKMAN and HLIMIT (= HMONOB until reset) to model bottom
-!  Initialize Monin Obukhov depth to value at z_up
-!  Set HMONOB=-zgrid(km) if unstable
-!
-!-----------------------------------------------------------------------
-
-   kupper = 1
-   kup = 2
-   kdn = 3
-   z_upper = c0
-   z_up    = zgrid(1)
-
-   RI_BULK(:,:,kupper) = c0
-   RI_BULK(:,:,kup) = c0 
-   KBL = merge(KMT(:,:,bid), 1, (KMT(:,:,bid) > 1))
-
-   HLANGM = c0
-
-   do kl=1,km
-      if (partial_bottom_cells) then
-      	 if (kl > 1) then
-      	 	  ZKL = -zgrid(kl-1) + p5*(DZT(:,:,kl  ,bid) + &
-                                     DZT(:,:,kl-1,bid))
-         else
-            ZKL = -zgrid(1)
-         endif
-      else
-         ZKL = -zgrid(kl)
-      endif
-
-      ! DIR$ COLLAPSE
-      do j=1,ny_block
-      do i=1,nx_block
-         if (kl == KBL(i,j)) HBLT(i,j) = ZKL(i,j)
-      end do
-      end do
-   enddo
-
-   if ( lcheckekmo ) then
-
-      HEKMAN = -zgrid(km) + eps
-      HLIMIT = -zgrid(km) + eps
-
-      if ( lshort_wave ) then
-         select case (sw_absorption_type)
-
-         case ('top-layer')
-
-            BFSFC = BO + BOSOL
-         
-         case ('jerlov')
-
-            call sw_absorb_frac(-z_up,absorb_frac)
-            BFSFC = BO + BOSOL * (c1 - absorb_frac)
-
-         case ('chlorophyll')
-
-#ifdef unsupported
-            call sw_trans_chl(1,this_block)
-            BFSFC = BO + BOSOL*(c1-TRANS(:,:,bid))
-#endif
-
-         end select
-
-      else
-         BFSFC = BO
-      endif
-
-      STABLE = merge(c1, c0, BFSFC >= c0)
-
-      BFSFC  = BFSFC + STABLE*eps
-
-      WORK =   STABLE * cmonob*USTAR*USTAR*USTAR/vonkar/BFSFC &
-            + (STABLE -c1)*zgrid(km)
-      HMONOB(:,:,kup) = merge( -z_up+eps, WORK, WORK <= -z_up )
-   endif
-
-   RSH_HBLT = c0
-
-!-----------------------------------------------------------------------
-!
-!  compute velocity shear squared on U-grid and use the maximum
-!  of the four surrounding U-grid values for the T-grid.
-!
-!-----------------------------------------------------------------------
-
-   do kl = 2,km
- 
-      WORK = (UUU(:,:,1)-UUU(:,:,kl))**2 + &
-             (VVV(:,:,1)-VVV(:,:,kl))**2
-
-      if (partial_bottom_cells) then
-         WORK = WORK/(-zgrid(kl-1) + & 
-                      p5*(DZU(:,:,kl  ,bid) + &
-                          DZU(:,:,kl-1,bid) - &
-                          DZU(:,:,1   ,bid)))**2
-
-      	 ZKL = -zgrid(kl-1) + p5*(DZT(:,:,kl  ,bid) + &
-                                  DZT(:,:,kl-1,bid))
-      else
-         ZKL = -zgrid(kl)
-      endif
-
-      VSHEAR(:,1) = c0
-      do j=2,ny_block
-         VSHEAR(1,j) = c0
-         do i=2,nx_block
-            VSHEAR(i,j) = max(WORK(i,j  ), WORK(i-1,j  ),   &
-                              WORK(i,j-1), WORK(i-1,j-1))
-         enddo
-      enddo
-
-!-----------------------------------------------------------------------
-!
-!     compute bfsfc= Bo + radiative contribution down to hbf * hbl
-!     add epsilon to BFSFC to ensure never = 0
-!
-!-----------------------------------------------------------------------
-
-      if (lshort_wave) then
-
-         select case (sw_absorption_type)
-
-         case ('top-layer')
-
-           BFSFC = BO + BOSOL
-
-         case ('jerlov')
-
-           do j=1,ny_block
-           do i=1,nx_block
-              call sw_absorb_frac(ZKL(i,j), absorb_frac)
-              BFSFC(i,j) = BO(i,j) + BOSOL(i,j)*(c1 - absorb_frac) 
-           enddo
-           enddo
-
-         case ('chlorophyll')
-#ifdef unsupported
-           call sw_trans_chl(2*kl-1,this_block)
-           BFSFC = BO + BOSOL*(c1-TRANS(:,:,bid))
-#endif
-
-         end select
-
-
-      else
-         BFSFC = BO
-      endif
-
-      STABLE = MERGE(c1, c0, BFSFC >= c0)
-
-      BFSFC  = BFSFC + STABLE*eps
-
-!-----------------------------------------------------------------------
-!
-!     compute the Ekman and Monin Obukhov depths using above stability
-!
-!-----------------------------------------------------------------------
-
-      if (lcheckekmo) then
-
-         ! DIR$ COLLAPSE
-         do j=1,ny_block
-         do i=1,nx_block
-            if ( STABLE(i,j) > p5 .and. HEKMAN(i,j) >= -zgrid(km) ) then
-               HEKMAN(i,j) = max(ZKL(i,j), &
-                           cekman*USTAR(i,j)/(abs(FCORT(i,j,bid))+eps))
-            endif
-         end do
-         end do
-
-         HMONOB(:,:,kdn) = STABLE*cmonob*USTAR*USTAR*USTAR/vonkar/BFSFC + &
-                          (STABLE-c1)*zgrid(km)
-
-         ! DIR$ COLLAPSE
-         do j=1,ny_block
-         do i=1,nx_block
-            if (HMONOB(i,j,kdn) <= ZKL(i,j) .and. &
-                HMONOB(i,j,kup) >  -z_up) then
-               WORK(i,j) = (HMONOB(i,j,kdn) - HMONOB(i,j,kup))/ &
-                           (z_up + ZKL(i,j))
-               HLIMIT(i,j) = (HMONOB(i,j,kdn) - WORK(i,j)*ZKL(i,j))/ &
-                             (c1 - WORK(i,j))
-
-            endif
-         end do
-         end do
-      endif
-
-!-----------------------------------------------------------------------
-!
-!     compute velocity scales at sigma, for hbl = -zgrid(kl)
-!
-!-----------------------------------------------------------------------
-
-      SIGMA = epssfc
-
-      call wscale(SIGMA, ZKL, USTAR, BFSFC, 2, WM, WS)
-
-!-----------------------------------------------------------------------
-!
-!     compute the turbulent shear contribution to RI_BULK and store
-!     in WM.
-!
-!-----------------------------------------------------------------------
-
-      if (partial_bottom_cells) then
-         if (kl < km) then
-            B_FRQNCY = sqrt( &
-                       p5*(DBLOC(:,:,kl) + abs(DBLOC(:,:,kl)) + eps2)/  &
-                      (p5*(DZT(:,:,kl,bid) + DZT(:,:,kl+1,bid))) )
-         else
-            B_FRQNCY = sqrt( &
-                       p5*(DBLOC(:,:,kl) + abs(DBLOC(:,:,kl)) + eps2)/  &
-                       DZT(:,:,kl,bid) )
-         end if
-      else
-         B_FRQNCY = sqrt( &
-                    p5*(DBLOC(:,:,kl) + abs(DBLOC(:,:,kl)) + eps2)/  &
-                    (zgrid(kl)-zgrid(kl+1)) )
-      endif
-
-      WM = ZKL*WS*B_FRQNCY* &
-          ( (Vtc/Ricr(kl))*max(2.1_r8 - 200.0_r8*B_FRQNCY,concv) )
-
-!-----------------------------------------------------------------------
-! 
-!     compute bulk Richardson number at new level
-!
-!-----------------------------------------------------------------------
-
-      if (partial_bottom_cells) then
-         WORK = merge( DBSFC(:,:,kl)/(-zgrid(kl-1)+            &
-                                      p5*(DZT(:,:,kl-1,bid) +  &
-                                          DZT(:,:,kl  ,bid) -  &
-                                          DZT(:,:,1   ,bid))), & 
-                       c0, KMT(:,:,bid) >= kl)
-         WM = WM/(-zgrid(kl-1) +          &
-                  p5*(DZT(:,:,kl-1,bid) + &
-                      DZT(:,:,kl  ,bid) - &
-                      DZT(:,:,1   ,bid)))**2
-         RI_BULK(:,:,kdn) = WORK/(VSHEAR+WM+eps/(-zgrid(kl-1)+   &
-                                   p5*(DZU(:,:,kl,bid) +         &
-                                       DZU(:,:,kl-1,bid) -       &
-                                       DZU(:,:,1,bid)))**2)
-      else
-         WORK = MERGE( (zgrid(1)-zgrid(kl))*DBSFC(:,:,kl), &
-                      c0, KMT(:,:,bid) >= kl)
-         if ( linertial ) then
-           RI_BULK(:,:,kdn) = WORK/(VSHEAR+WM+USTAR*BOLUS_SP(:,:,bid)+eps)
-         else
-           RI_BULK(:,:,kdn) = WORK/(VSHEAR+WM+eps)
-         endif
-      endif
-
-!-----------------------------------------------------------------------
-!
-!       find hbl where Rib = Ricr. if possible, use a quadratic
-!       interpolation. if not, linearly interpolate. the quadratic
-!       equation coefficients are determined using the slope and
-!       Ri_bulk at z_up and Ri_bulk at zgrid(kl). the slope at
-!       z_up is computed linearly between z_upper and z_up.
-!
-!       compute Langmuir depth always 
-!-----------------------------------------------------------------------
-
-      do j=1,ny_block
-      do i=1,nx_block
-         if ( KBL(i,j) == KMT(i,j,bid) .and.  &
-              RI_BULK(i,j,kdn) > Ricr(kl) ) then
-
-            slope_up =  (RI_BULK(i,j,kupper) - RI_BULK(i,j,kup))/ &
-                        (z_up - z_upper)
-            a_co = (RI_BULK(i,j,kdn) - RI_BULK(i,j,kup) -         &
-                    slope_up*(ZKL(i,j) + z_up) )/(z_up + ZKL(i,j))**2
-            b_co = slope_up + c2 * a_co * z_up
-            c_co = RI_BULK(i,j,kup) + &
-                   z_up*(a_co*z_up + slope_up) - Ricr(kl)
-            sqrt_arg = b_co**2 - c4*a_co*c_co
-
-            if ( ( abs(b_co) > eps .and. abs(a_co)/abs(b_co) <= eps ) &
-                 .or. sqrt_arg <= c0 ) then
-                 	
-               HBLT(i,j) = -z_up + (z_up + ZKL(i,j)) *               &
-                           (Ricr(kl)         - RI_BULK(i,j,kup))/    &
-                           (RI_BULK(i,j,kdn) - RI_BULK(i,j,kup))
-            else
-               HBLT(i,j) = (-b_co + sqrt(sqrt_arg)) / (c2*a_co)
-            endif
-            
-            KBL(i,j) = kl
-            RSH_HBLT(i,j) =  (VSHEAR(i,j)*Ricr(kl)/ &
-                              (DBSFC(i,j,kl)+eps))/HBLT(i,j)
-
-            HLANGM(i,j) = USTAR(i,j) * SQRT( FSTOKES(i,j,bid)*ZKL(i,j)/(DBSFC(i,j,kl)+eps) ) &
-                          / 0.9_r8
-
-         endif
-      enddo
-      enddo
-
-!-----------------------------------------------------------------------
-!
-!     swap klevel indices and move to next level
-!
-!-----------------------------------------------------------------------
-
-      ktmp   = kupper
-      kupper = kup
-      kup    = kdn
-      kdn    = ktmp
-      z_upper = z_up
-      z_up    = zgrid(kl)
-
-   end do
-
-!-----------------------------------------------------------------------
-!
-!     apply Langmuir parameterization if requested 
-!
-!-----------------------------------------------------------------------
-
-   if ( llangmuir ) then
-     do kl = km,2,-1
-        where ( HLANGM > HBLT          .and.   &
-                HLANGM >  -zgrid(kl-1) .and.   &
-                HLANGM <= ZKL                  )
-           HBLT  = HLANGM
-           KBL   = kl
-        end where
-     enddo
-   endif
-
-!-----------------------------------------------------------------------
-!
-!  first combine Ekman and Monin-Obukhov depth limits. then apply
-!  these restrictions to HBLT. note that HLIMIT is set to -zgrid(km)
-!  in unstable forcing.
-!
-!-----------------------------------------------------------------------
-
-   if ( lcheckekmo ) then
-
-      where ( HEKMAN < HLIMIT )  HLIMIT = HEKMAN
-
-      do kl = 2,km
-         where ( HLIMIT < HBLT          .and.   &
-                 HLIMIT >  -zgrid(kl-1) .and.   &
-                 HLIMIT <= ZKL                  )
-            HBLT = HLIMIT
-            KBL = kl
-         end where
-      enddo
-
-   endif
-
-!-----------------------------------------------------------------------
-!
-!  apply a Gaussian filter
-!
-!-----------------------------------------------------------------------
-
-   call smooth_hblt (.true., .false., bid, HBLT=HBLT, KBL=KBL)
-
-!-----------------------------------------------------------------------
-!
-!  correct stability and buoyancy forcing for SW up to boundary layer
-!
-!-----------------------------------------------------------------------
-
-   if (lshort_wave) then
-      select case (sw_absorption_type)
-
-      case ('top-layer')
-
-        BFSFC   = BO + BOSOL
-!       QSW_HBL = SHF_QSW
-        if (tavg_requested(tavg_QSW_HBL)) then
-           WORK = SHF_QSW/hflux_factor
-           call accumulate_tavg_field(WORK,tavg_QSW_HBL,bid,1)
-        endif
-
-
-      case ('jerlov')
-
-         do j = 1,ny_block
-         do i = 1,nx_block
-            call sw_absorb_frac(HBLT(i,j),absorb_frac)
-            BFSFC(i,j)  = BO(i,j) + BOSOL(i,j)*(c1 - absorb_frac) 
-         enddo
-         enddo
-
-!         if (tavg_requested(tavg_QSW_HBL)) then
-!            WORK = SHF_QSW*(c1-absorb_frac)/hflux_factor
-!            call accumulate_tavg_field(WORK,tavg_QSW_HBL,bid,1)
-!         endif
-
-      case ('chlorophyll')
-
-#ifdef unsupported
-         ZTRANS(:,:,bid) = HBLT(:,:)
-         call sw_trans_chl(0,this_block)
-         BFSFC   = BO + BOSOL*(c1-TRANS(:,:,bid))
-
-         if (tavg_requested(tavg_QSW_HBL)) then
-           !QSW_HBL = SHF_QSW   *(c1-TRANS(:,:,bid)) ! boundary layer sw heating
-            WORK = SHF_QSW*(c1-TRANS(:,:,bid))/hflux_factor
-            call accumulate_tavg_field(WORK,tavg_QSW_HBL,bid,1)
-         endif
-#endif
-
-      end select
-
-
-   endif
-
-   STABLE = MERGE(c1, c0, BFSFC >= c0)
-
-
-   BFSFC  = BFSFC + STABLE * eps ! ensures bfsfc never=0
-
-!-----------------------------------------------------------------------
-!EOC
-
- end subroutine bldepth_test
-
-
-
 !***********************************************************************
 !BOP
 ! !IROUTINE: blmix
 ! !INTERFACE:
 
  subroutine blmix(VISC, VDC, HBLT, USTAR, BFSFC, STABLE, &
-                  KBL, GHAT, bid) bind (c)
+                  KBL, GHAT, this_block) 
 
 ! !DESCRIPTION:
 !  This routine computes mixing coefficients within boundary layer 
@@ -3054,11 +2203,11 @@ end subroutine interior_convection
 
 ! !INPUT/OUTPUT PARAMETERS:
 
-   real (r8), dimension(nx_block,ny_block,km+1), intent(inout) :: & 
+   real (r8), dimension(nx_block,ny_block,0:km+1), intent(inout) :: & 
       VISC               ! interior mixing coeff on input
                          ! combined interior/bndy layer coeff output
 
-   real (r8), dimension(nx_block,ny_block,km+1,2),intent(inout) :: &
+   real (r8), dimension(nx_block,ny_block,0:km+1,2),intent(inout) :: &
       VDC        ! diffusivity for tracer diffusion
 
 ! !INPUT PARAMETERS:
@@ -3072,8 +2221,8 @@ end subroutine interior_convection
       STABLE,               & ! =1 stable forcing; =0 unstab
       USTAR                   ! surface friction velocity
 
-   integer (int_kind), intent(in) :: &
-      bid                 ! local block address for this block
+   type (block), intent(in) :: &
+      this_block          ! block information for current block
 
 ! !OUTPUT PARAMETERS:
 
@@ -3090,7 +2239,8 @@ end subroutine interior_convection
 
    integer (int_kind) :: &
       k,kp1,             &! dummy k level index
-      i,j                 ! horizontal indices
+      i,j,               &! horizontal indices
+      bid                 ! local block index
 
    integer (int_kind), dimension(nx_block,ny_block) :: &
       KN                  ! klvl closest to HBLT
@@ -3120,6 +2270,8 @@ end subroutine interior_convection
 !
 !-----------------------------------------------------------------------
 
+   bid = this_block%local_id
+
    SIGMA = epssfc
 
    call wscale(SIGMA, HBLT, USTAR, BFSFC, 3, WM, WS)
@@ -3132,7 +2284,7 @@ end subroutine interior_convection
 !-----------------------------------------------------------------------
 
    if (partial_bottom_cells) then
-      ! DIR$ COLLAPSE
+      !DIR$ COLLAPSE
       do j=1,ny_block
       do i=1,nx_block
          k = KBL(i,j)
@@ -3145,7 +2297,7 @@ end subroutine interior_convection
       enddo
       enddo
    else
-      ! DIR$ COLLAPSE
+      !DIR$ COLLAPSE
       do j=1,ny_block
       do i=1,nx_block
          k = KBL(i,j)
@@ -3181,7 +2333,7 @@ end subroutine interior_convection
             WORK2 = DZT(:,:,k+1,bid)
          end if
 
-         ! DIR$ COLLAPSE
+         !DIR$ COLLAPSE
          do j=1,ny_block
          do i=1,nx_block
             if (k == KN(i,j)) then
@@ -3190,33 +2342,21 @@ end subroutine interior_convection
                             p5*WORK1(i,j) - HBLT(i,j)  
             R     (i,j) = c1 - DELHAT(i,j) /DZT(i,j,k,bid)
 
-	    if (k == 1) then
-		DVDZUP(i,j) = (c0 - VISC(i,j,k  ))/DZT(i,j,k,bid)
-	    else
-		DVDZUP(i,j) = (VISC(i,j,k-1) - VISC(i,j,k  ))/DZT(i,j,k,bid)
-	    endif
+            DVDZUP(i,j) = (VISC(i,j,k-1) - VISC(i,j,k  ))/DZT(i,j,k,bid)
             DVDZDN(i,j) = (VISC(i,j,k  ) - VISC(i,j,k+1))/WORK2(i,j)
             VISCP (i,j) = p5*( (c1-R(i,j))* &
                                (DVDZUP(i,j) + abs(DVDZUP(i,j))) + &
                                    R(i,j) * &
                                (DVDZDN(i,j) + abs(DVDZDN(i,j))) )
 
-	    if (k == 1) then
-		DVDZUP(i,j) = (c0 - VDC(i,j,k  ,2))/DZT(i,j,k,bid)
-	    else
-		DVDZUP(i,j) = (VDC(i,j,k-1,2) - VDC(i,j,k  ,2))/DZT(i,j,k,bid)
-	    endif
+            DVDZUP(i,j) = (VDC(i,j,k-1,2) - VDC(i,j,k  ,2))/DZT(i,j,k,bid)
             DVDZDN(i,j) = (VDC(i,j,k  ,2) - VDC(i,j,k+1,2))/WORK2(i,j)
             DIFSP (i,j) = p5*( (c1-R(i,j))* &
                                (DVDZUP(i,j) + abs(DVDZUP(i,j))) + &
                                    R(i,j) * &
                                (DVDZDN(i,j) + abs(DVDZDN(i,j))) )
 
-	    if (k == 1) then
-		DVDZUP(i,j) = (c0 - VDC(i,j,k  ,1))/DZT(i,j,k,bid)
-	    else
-		DVDZUP(i,j) = (VDC(i,j,k-1,1) - VDC(i,j,k  ,1))/DZT(i,j,k,bid)
-	    endif
+            DVDZUP(i,j) = (VDC(i,j,k-1,1) - VDC(i,j,k  ,1))/DZT(i,j,k,bid)
             DVDZDN(i,j) = (VDC(i,j,k  ,1) - VDC(i,j,k+1,1))/WORK2(i,j)
             DIFTP (i,j) = p5*( (c1-R(i,j))* &
                                (DVDZUP(i,j) + abs(DVDZUP(i,j))) + &
@@ -3242,7 +2382,7 @@ end subroutine interior_convection
 
       else
 
-         ! DIR$ COLLAPSE
+         !DIR$ COLLAPSE
          do j=1,ny_block
          do i=1,nx_block
             if (k == KN(i,j)) then
@@ -3250,33 +2390,21 @@ end subroutine interior_convection
             DELHAT(i,j) = p5*hwide(k) - zgrid(k) - HBLT(i,j)        
             R     (i,j) = c1 - DELHAT(i,j) / hwide(k)
 
-	    if (k == 1) then
-		DVDZUP(i,j) = (0 - VISC(i,j,k  ))/hwide(k)
-	    else
-		DVDZUP(i,j) = (VISC(i,j,k-1) - VISC(i,j,k  ))/hwide(k)
-	    endif
+            DVDZUP(i,j) = (VISC(i,j,k-1) - VISC(i,j,k  ))/hwide(k)
             DVDZDN(i,j) = (VISC(i,j,k  ) - VISC(i,j,k+1))/hwide(k+1)
             VISCP (i,j) = p5*( (c1-R(i,j))* &
                                (DVDZUP(i,j) + abs(DVDZUP(i,j))) + &
                                    R(i,j) * &
                                (DVDZDN(i,j) + abs(DVDZDN(i,j))) )
 
-	    if (k == 1) then
-		DVDZUP(i,j) = (0 - VDC(i,j,k  ,2))/hwide(k)
-	    else
-		DVDZUP(i,j) = (VDC(i,j,k-1,2) - VDC(i,j,k  ,2))/hwide(k)
-	    endif
+            DVDZUP(i,j) = (VDC(i,j,k-1,2) - VDC(i,j,k  ,2))/hwide(k)
             DVDZDN(i,j) = (VDC(i,j,k  ,2) - VDC(i,j,k+1,2))/hwide(k+1)
             DIFSP (i,j) = p5*( (c1-R(i,j))* &
                                (DVDZUP(i,j) + abs(DVDZUP(i,j))) + &
                                    R(i,j) * &
                                (DVDZDN(i,j) + abs(DVDZDN(i,j))) )
 
-	    if (k == 1) then
-		DVDZUP(i,j) = (0 - VDC(i,j,k  ,1))/hwide(k)
-	    else
-		DVDZUP(i,j) = (VDC(i,j,k-1,1) - VDC(i,j,k  ,1))/hwide(k)
-	    endif
+            DVDZUP(i,j) = (VDC(i,j,k-1,1) - VDC(i,j,k  ,1))/hwide(k)
             DVDZDN(i,j) = (VDC(i,j,k  ,1) - VDC(i,j,k+1,1))/hwide(k+1)
             DIFTP (i,j) = p5*( (c1-R(i,j))* &
                                (DVDZUP(i,j) + abs(DVDZUP(i,j))) + &
@@ -3333,7 +2461,7 @@ end subroutine interior_convection
 
       call wscale(F1, HBLT, USTAR, BFSFC, 3, WM, WS)
 
-      ! DIR$ COLLAPSE
+      !DIR$ COLLAPSE
       do j=1,ny_block
       do i=1,nx_block
          BLMC(i,j,k,1) = HBLT(i,j)*WM(i,j)*SIGMA(i,j)*       &
@@ -3361,7 +2489,7 @@ end subroutine interior_convection
 !
 !-----------------------------------------------------------------------
 
-   ! DIR$ COLLAPSE
+   !DIR$ COLLAPSE
    do j=1,ny_block
    do i=1,nx_block
       k = KBL(i,j) - 1
@@ -3372,7 +2500,7 @@ end subroutine interior_convection
    F1 = min(SIGMA,epssfc)        
    call wscale(F1, HBLT, USTAR, BFSFC, 3, WM, WS)
 
-   ! DIR$ COLLAPSE
+   !DIR$ COLLAPSE
    do j=1,ny_block
    do i=1,nx_block
       DKM1(i,j,1) = HBLT(i,j)*WM(i,j)*SIGMA(i,j)*     &
@@ -3396,7 +2524,7 @@ end subroutine interior_convection
 !
 !-----------------------------------------------------------------------
 
-   ! DIR$ NOVECTOR
+   !DIR$ NOVECTOR
    do k=1,km-1
 
       if (partial_bottom_cells) then
@@ -3414,7 +2542,7 @@ end subroutine interior_convection
             DELHAT = (HBLT + zgrid(k))/(zgrid(k)-zgrid(k+1))
       endif
 
-      ! DIR$ COLLAPSE
+      !DIR$ COLLAPSE
       do j=1,ny_block
       do i=1,nx_block
          if (k == (KBL(i,j) - 1)) then
@@ -3450,11 +2578,11 @@ end subroutine interior_convection
 !
 !-----------------------------------------------------------------------
 
-   ! DIR$ NOVECTOR
+   !DIR$ NOVECTOR
    do k=1,km
-      ! DIR$ NODEP
+      !DIR$ NODEP
       do j=1,ny_block
-      ! DIR$ NODEP
+      !DIR$ NODEP
       do i=1,nx_block
          if (k < KBL(i,j)) then 
             VISC(i,j,k)  = BLMC(i,j,k,1)
@@ -3592,7 +2720,7 @@ end subroutine interior_convection
 ! !IROUTINE: ddmix
 ! !INTERFACE:
 
- subroutine ddmix(VDC, TRCR, bid) bind (c)
+ subroutine ddmix(VDC, TRCR, this_block)
 
 ! !DESCRIPTION:
 !  $R_\rho$ dependent interior flux parameterization.
@@ -3607,12 +2735,12 @@ end subroutine interior_convection
    real (r8), dimension(nx_block,ny_block,km,nt), intent(in) :: &
       TRCR                ! tracers at current time
 
-   integer (int_kind), intent(in) :: &
-      bid                 ! local block address for this block
+   type (block), intent(in) :: &
+      this_block          ! block information for current block
 
 ! !INPUT/OUTPUT PARAMETERS:
 
-   real (r8), dimension(nx_block,ny_block,km+1,2),intent(inout) :: &
+   real (r8), dimension(nx_block,ny_block,0:km+1,2),intent(inout) :: &
       VDC        ! diffusivity for tracer diffusion
 
 !EOP
@@ -3648,7 +2776,7 @@ end subroutine interior_convection
 
    PRANDTL = merge(-c2,TRCR(:,:,1,1),TRCR(:,:,1,1) < -c2)
 
-   call state(1, 1, PRANDTL, TRCR(:,:,1,2), bid, &
+   call state(1, 1, PRANDTL, TRCR(:,:,1,2), this_block, &
                     RHOFULL=RRHO, &
                     DRHODT=TALPHA(:,:,kup), DRHODS=SBETA(:,:,kup))
 
@@ -3659,7 +2787,7 @@ end subroutine interior_convection
          PRANDTL = merge(-c2,TRCR(:,:,k+1,1),TRCR(:,:,k+1,1) < -c2)
 
          call state(k+1, k+1, PRANDTL, TRCR(:,:,k+1,2),              &
-                              bid,                            &
+                              this_block,                            &
                               RHOFULL=RRHO, DRHODT=TALPHA(:,:,knxt), &
                                             DRHODS= SBETA(:,:,knxt))
 
@@ -3728,7 +2856,7 @@ end subroutine interior_convection
 ! !IROUTINE: buoydiff
 ! !INTERFACE:
 
- subroutine buoydiff(DBLOC, DBSFC, TRCR, bid) bind (c)
+ subroutine buoydiff(DBLOC, DBSFC, TRCR, this_block)
 
 ! !DESCRIPTION:
 !  This routine calculates the buoyancy differences at model levels.
@@ -3741,8 +2869,8 @@ end subroutine interior_convection
    real (r8), dimension(nx_block,ny_block,km,nt), intent(in) :: &
       TRCR                ! tracers at current time
 
-   integer (int_kind), intent(in) :: &
-      bid                 ! local block address for this block
+   type (block), intent(in) :: &
+      this_block          ! block information for current block
 
 ! !OUTPUT PARAMETERS:
 
@@ -3761,7 +2889,8 @@ end subroutine interior_convection
    integer (int_kind) :: &
       k,                 &! vertical level index
       i,j,               &! horizontal indices
-      kprev, klvl, ktmp   ! indices for 2-level TEMPK array
+      kprev, klvl, ktmp, &! indices for 2-level TEMPK array
+      bid                 ! local block index
 
    real (r8), dimension(nx_block,ny_block) :: &
       RHO1,              &! density of sfc t,s displaced to k
@@ -3782,6 +2911,8 @@ end subroutine interior_convection
 
    TEMPSFC = merge(-c2,TRCR(:,:,1,1),TRCR(:,:,1,1) < -c2)
 
+   bid = this_block%local_id
+
    klvl  = 2
    kprev = 1
 
@@ -3799,11 +2930,11 @@ end subroutine interior_convection
       TEMPK(:,:,klvl) = merge(-c2,TRCR(:,:,k,1),TRCR(:,:,k,1) < -c2)
 
       call state(k, k, TEMPSFC,          TRCR(:,:,1  ,2), &
-                       bid, RHOFULL=RHO1)
+                       this_block, RHOFULL=RHO1)
       call state(k, k, TEMPK(:,:,kprev), TRCR(:,:,k-1,2), &
-                       bid, RHOFULL=RHOKM)
+                       this_block, RHOFULL=RHOKM)
       call state(k, k, TEMPK(:,:,klvl),  TRCR(:,:,k  ,2), &
-                       bid, RHOFULL=RHOK)
+                       this_block, RHOFULL=RHOK)
 
       do j=1,ny_block
       do i=1,nx_block
@@ -3868,6 +2999,7 @@ end subroutine interior_convection
 !-----------------------------------------------------------------------
 
    integer (int_kind) :: &
+      n,                 &! local dummy index for tracer
       bid                 ! local block address
 
 !-----------------------------------------------------------------------
@@ -3876,8 +3008,7 @@ end subroutine interior_convection
 !
 !-----------------------------------------------------------------------
 
-!this is not the way to check whether kpp was chosen - Ben
-!   if (.not. allocated(KPP_SRC)) return
+   if (.not. allocated(KPP_SRC)) return
 
 !-----------------------------------------------------------------------
 !
@@ -3888,6 +3019,10 @@ end subroutine interior_convection
    bid = this_block%local_id
 
    SRCARRAY = SRCARRAY + KPP_SRC(:,:,k,:,bid)
+
+   do n=1,nt
+      call accumulate_tavg_field(KPP_SRC(:,:,k,n,bid),tavg_KPP_SRC(n),bid,k)
+   enddo
 
 !-----------------------------------------------------------------------
 !EOC
@@ -3965,22 +3100,22 @@ end subroutine interior_convection
 
    if ( overwrite_hblt  .and.  ( .not.present(KBL)  .or.        &
                                  .not.present(HBLT) ) ) then      
-     message = 'incorrect sub-routine arguments for smooth_hblt, error # 1'
+     message = 'incorrect subroutine arguments for smooth_hblt, error # 1'
      call exit_POP (sigAbort, trim(message))
    endif
 
    if ( .not.overwrite_hblt  .and.  .not.present(SMOOTH_OUT) ) then 
-     message = 'incorrect sub-routine arguments for smooth_hblt, error # 2'
+     message = 'incorrect subroutine arguments for smooth_hblt, error # 2'
      call exit_POP (sigAbort, trim(message))
    endif
 
    if ( use_hmxl .and. .not.present(SMOOTH_OUT) ) then          
-     message = 'incorrect sub-routine arguments for smooth_hblt, error # 3'
+     message = 'incorrect subroutine arguments for smooth_hblt, error # 3'
      call exit_POP (sigAbort, trim(message))
    endif
 
    if ( overwrite_hblt  .and.  use_hmxl ) then                  
-     message = 'incorrect sub-routine arguments for smooth_hblt, error # 4'
+     message = 'incorrect subroutine arguments for smooth_hblt, error # 4'
      call exit_POP (sigAbort, trim(message))
    endif
 
@@ -4082,6 +3217,324 @@ end subroutine interior_convection
 !-----------------------------------------------------------------------
 
  end subroutine smooth_hblt
+
+!***********************************************************************
+!BOP
+! !IROUTINE: compute_niw_energy_flux
+! !INTERFACE:
+
+ subroutine compute_niw_energy_flux (VISC,VDC,UUU,VVV,KE_mix,UCUR,VCUR,KE_cur,  &
+                                     DBLOC, KPP_HBLT,KBL,En,this_block)
+
+! !DESCRIPTION:
+!  Compute niw energy flux
+!
+! !REVISION HISTORY:
+!  same as module
+
+! !INPUT PARAMETERS:
+   real (r8), dimension(nx_block,ny_block,km), intent(in) :: &
+      UUU,VVV,    &! velocities at mix time
+      UCUR,VCUR    ! velocities at current time
+
+   real (r8), dimension(nx_block,ny_block), intent(in) :: &
+      KPP_HBLT   
+
+   type (block), intent(in) :: &
+      this_block   ! block information for current block
+
+! !INPUT/OUTPUT PARAMETERS:
+   integer (int_kind), dimension(nx_block,ny_block), intent(inout) :: &
+      KBL          ! index of first lvl below hbl
+
+   real (r8), dimension(nx_block,ny_block,0:km+1), intent(inout) :: &
+      VISC         ! viscosity
+
+    real (r8), dimension(nx_block,ny_block,0:km+1,2),intent(inout) :: &
+      VDC          ! diffusivity for tracer diffusion
+
+    real (r8), dimension(nx_block,ny_block), intent(inout) :: &
+      KE_mix,     &! kinetic energy at mix time
+      KE_cur,     &! kinetic energy at cur time
+      En           ! En for boundary layer kinetic energy
+
+   real (r8), dimension(nx_block,ny_block,km), intent(inout) :: &
+      DBLOC        ! buoyancy difference between adjacent levels
+
+
+! !OUTPUT PARAMETERS:
+
+
+!EOP
+!BOC
+!-----------------------------------------------------------------------
+!
+!     local variables
+!
+!-----------------------------------------------------------------------
+   character (char_len) ::  &
+      message
+
+   integer (int_kind) :: &
+      i,j,               &! horizontal indices
+      k,                 &! vertical level index
+      bid                 ! block id
+
+   real (r8) ::  &
+      factor              ! temporary scalar factor
+
+     bid = this_block%local_id
+
+!-----------------------------------------------------------------------
+!  compute niw energy flux internally using blke method; blke means
+!  "boundary layer kinetic energy".
+!-----------------------------------------------------------------------
+
+     KE_mix = c0
+
+     if( niw_energy_type .eq. 'blke' ) then
+
+!-----------------------------------------------------------------------
+!  compute boundary layer kinetic energy for mix (mixing) time
+!-----------------------------------------------------------------------
+
+       call blke(UUU,VVV,KBL,KE_mix)
+
+!-----------------------------------------------------------------------
+!  compute boundary layer kinetic energy for cur (current) time
+!-----------------------------------------------------------------------
+
+       call blke(UCUR,VCUR,KBL,KE_cur)
+
+!-----------------------------------------------------------------------
+!  compute En for boundary layer KE, enforcing positivity. En is the
+!  energy flux for generating near-inertial waves. Note, the factor
+!  multiplying the kinetic energy (KE) tendency is an empirical scaling
+!  factor to map the total time-step change in boundary layer kinetic 
+!  energy into that fraction which generates near-inertial waves.
+!-----------------------------------------------------------------------
+
+       En(:,:) = 0.05_r8 * (KE_cur(:,:)-KE_mix(:,:))/dtt
+       where( En < c0 )
+         En(:,:) = -c1 * En(:,:)
+       endwhere
+
+
+!-----------------------------------------------------------------------
+!  limit En to > 10 and < -10 degrees latitude. Near-inertial waves do
+!  not generate mixing close to the equator.
+!-----------------------------------------------------------------------
+
+       do j=1,ny_block
+         do i=1,nx_block
+
+            if( TLATD(i,j,bid) > -5.0_r8 .and. TLATD(i,j,bid) < 5.0_r8 ) then
+             En(i,j) = c0
+            endif
+
+            if( TLATD(i,j,bid) > -10.0_r8 .and. TLATD(i,j,bid) < 10.0_r8 ) then
+              En(i,j) = En(i,j) * NIW_COS_FACTOR(i,j,bid)
+
+            endif
+
+         enddo
+       enddo
+
+!-----------------------------------------------------------------------
+!  write En for boundary layer KE to history file, converting 
+!  erg/cm2/sec to Watts/m2
+!-----------------------------------------------------------------------
+
+       call accumulate_tavg_field(En/c1000,tavg_En,bid,1)
+
+!-----------------------------------------------------------------------
+!  include other factors for niw parameterization in final definition 
+!  of En. These other factors account for various fractions of En that 
+!  result in diffusivity forming mixing in the column.
+!-----------------------------------------------------------------------
+
+       En(:,:) = NIW_COEF(:,:,bid) * En(:,:)
+
+   else ! niw_energy_type
+
+!-----------------------------------------------------------------------
+!  write En for boundary layer KE to history file,
+!  converting erg/cm2/sec to Watts/m2
+!-----------------------------------------------------------------------
+
+       En(:,:) = NIW_ENERGY_FLUX(:,:,bid)
+       call accumulate_tavg_field(En/c1000,tavg_En,bid,1)
+
+!-----------------------------------------------------------------------
+!  use external pre-defined niw energy source flux, including other
+!  factors for niw parameterization in final definition of En
+!-----------------------------------------------------------------------
+
+       En(:,:) = NIW_COEF(:,:,bid) * NIW_ENERGY_FLUX(:,:,bid)
+
+     endif ! niw_energy_type
+
+!-----------------------------------------------------------------------
+!  write mix time KE to history file
+!-----------------------------------------------------------------------
+
+     call accumulate_tavg_field(KE_mix,tavg_KE_BL,bid,1)
+
+
+!-----------------------------------------------------------------------
+!
+!  set background diffusivities and viscosities
+!
+!-----------------------------------------------------------------------
+
+     call iw_reset(VISC, VDC, this_block)
+
+!-----------------------------------------------------------------------
+!
+!  compute mixing due to near inertial waves and combine with original
+!  background values.
+!
+!-----------------------------------------------------------------------
+
+     call niw_mix(DBLOC, KPP_HBLT, KBL, En, VISC, VDC, this_block)
+
+!-----------------------------------------------------------------------
+
+ end subroutine compute_niw_energy_flux
+
+!***********************************************************************
+!BOP
+! !IROUTINE: blke
+! !INTERFACE:
+
+ subroutine blke(UUU, VVV, KBL, KE)
+
+! !DESCRIPTION:
+!  Computes boundary layer kinetic energy (per unit area)
+!
+! !REVISION HISTORY:
+!  same as module
+
+! !INPUT PARAMETERS:
+
+   real (r8), dimension(nx_block,ny_block,km), intent(in) :: &
+      UUU               ! U velocities at current time
+
+   real (r8), dimension(nx_block,ny_block,km), intent(in) :: &
+      VVV               ! V velocities at current time
+
+   integer (int_kind), dimension(nx_block,ny_block), intent(in) :: &
+      KBL               ! index of first lvl below hbl
+
+   real (r8), dimension(nx_block,ny_block) :: &
+      KE                  ! kinetic energy
+
+
+!EOP
+!BOC
+!-----------------------------------------------------------------------
+!
+!  local variables
+!
+!-----------------------------------------------------------------------
+
+   integer (int_kind) :: &
+      k                   ! index for vertical levels
+
+
+!-----------------------------------------------------------------------
+!
+!  compute total ke above mixed layer
+!
+!-----------------------------------------------------------------------
+
+   KE = c0
+   do k = 1,km
+     where ( k <= KBL )
+       KE(:,:) = KE(:,:) + &
+         0.5_r8 * rho_sw * (UUU(:,:,k)**2 + VVV(:,:,k)**2) * dz(k)
+     endwhere
+   end do
+
+!-----------------------------------------------------------------------
+!EOC
+
+ end subroutine blke
+
+!***********************************************************************
+!BOP
+! !IROUTINE: iw_reset
+! !INTERFACE:
+
+ subroutine iw_reset(VISC, VDC, this_block)
+
+! !DESCRIPTION:
+!  Initialize viscosity and diffusivity coefficients to background values.
+!
+! !REVISION HISTORY:
+!  same as module
+
+! !INPUT PARAMETERS:
+! !INPUT/OUTPUT PARAMETERS:
+
+   real (r8), dimension(nx_block,ny_block,0:km+1), intent(inout) :: & 
+      VISC       ! viscosity
+
+   real (r8), dimension(nx_block,ny_block,0:km+1,2), intent(inout) :: & 
+      VDC        ! diffusivity for tracer diffusion
+
+   type (block), intent(in) :: &
+      this_block          ! block information for current block
+
+!EOP
+!BOC
+!-----------------------------------------------------------------------
+!
+!  local variables
+!
+!-----------------------------------------------------------------------
+
+   integer (int_kind) :: &
+      k,                 &! index for vertical levels
+      i,j,               &! horizontal loop indices
+      bid                 ! local block index
+
+!-----------------------------------------------------------------------
+!
+!  reset mixing to background values
+!
+!-----------------------------------------------------------------------
+
+   bid = this_block%local_id
+
+    do k=1,km
+
+      VISC(:,:,k  ) = bckgrnd_vvc(:,:,k,bid)
+      VDC (:,:,k,1) = bckgrnd_vdc(:,:,k,bid)
+      VDC (:,:,k,2) = bckgrnd_vdc(:,:,k,bid)
+
+      ! k index shifted because bckgrnd_vdc and bckgrnd_vvc are at cell bottom
+      ! while output axis is at cell top
+      call accumulate_tavg_field(bckgrnd_vdc(:,:,k,bid),tavg_VDC_BCK,bid,k)
+      call accumulate_tavg_field(bckgrnd_vvc(:,:,k,bid),tavg_VVC_BCK,bid,k)
+
+    end do ! k
+
+!-----------------------------------------------------------------------
+!
+!  fill extra coefficients for blmix
+!
+!-----------------------------------------------------------------------
+
+   VISC(:,:,0  ) = c0
+   VDC (:,:,0,:) = c0
+   VISC(:,:,km+1  ) = c0 
+   VDC (:,:,km+1,:) = c0 
+
+!-----------------------------------------------------------------------
+!EOC
+ 
+ end subroutine iw_reset
 
 !***********************************************************************
 
