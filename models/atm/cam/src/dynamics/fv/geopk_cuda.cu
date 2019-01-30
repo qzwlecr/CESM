@@ -13,6 +13,6 @@ void calpk_(double* pk,double* pe,double* akap){
 }
 
 extern "C" 
-void calpkCuda_(double*pk,double*pe,double*akap,int* km, int* i1, int* i2,int* j){
+void calpkCuda_(double*pk,double*pe,double*akap,int* km, int* i1, int* i2,int* jfirst,int* jp){
 
 }

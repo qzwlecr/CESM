@@ -110,18 +110,12 @@
          enddo
       enddo
 
-!$omp  parallel do      &
-!$omp  default(shared)  &
-!$omp  private(i1, i2, ixj, i, j, k )
 
-!     do 2000 j=jfirst,jlast
-      do 2000 ixj=1, jp
+do 2000 ixj=1, jp
 
          j  = jfirst + (ixj-1)/nxu
          i1 = ifirst + it * mod(ixj-1, nxu)
          i2 = i1 + it - 1
-
-
 ! Top down
          do k=2,km+1
             do i=i1,i2
@@ -134,6 +128,13 @@
             enddo
          enddo
 
+2000  continue
+
+do L2 ixj=1, jp
+
+   j  = jfirst + (ixj-1)/nxu
+   i1 = ifirst + it * mod(ixj-1, nxu)
+   i2 = i1 + it - 1
          do k=1,km+1
             do i=i1,i2
                pk(i,j,k) = pe(i,k,j)**akap
@@ -141,7 +142,13 @@
                ! call calpk(pk(i,j,k), pe(i,k,j), akap);
             enddo
          enddo
-         !call calpkCuda(pk,pe,akap,km,i1,i2,j)  或者整个传参？
+         !call calpkCuda(pk,pe,akap,km,i1,i2,jfirst,jp)  或者整个传参？
+L2  continue
+
+do L3 ixj=1, jp
+   j  = jfirst + (ixj-1)/nxu
+   i1 = ifirst + it * mod(ixj-1, nxu)
+   i2 = i1 + it - 1
 
 ! Bottom up
          do k=1,km
@@ -159,7 +166,8 @@
                wz(i,j,k) = wz(i,j,k)+hs(i,j)
             enddo
          enddo
-2000  continue
+
+L3  continue
 
       return
 !EOC
