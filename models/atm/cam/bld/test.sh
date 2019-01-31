@@ -1,5 +1,5 @@
 #!/bin/bash
-echo 'you need to download tar cam53_f19c4aqpgro_ys.tar.gz in sftp first'
+echo 'you need to download tar cam53_f19c4aqpgro_ys.tar.gz and cam.zip from sftp first'
 ./cuda-build.sh
 
 export INC_MPI=/media/rgy/win-file/document/computer/HPC/cesm/openmpi/include
@@ -25,6 +25,7 @@ export FC=mpifort
 gmake > gmake.log
 
 echo "now link the cam"
+rm ./cam
 mpifort -o /media/rgy/win-file/document/computer/HPC/cesm/CESM/models/atm/cam/bld/cam \
 C_interface_mod.o ESMF.o ESMF_AlarmClockMod.o ESMF_AlarmMod.o ESMF_BaseMod.o ESMF_BaseTimeMod.o ESMF_CalendarMod.o \
 ESMF_ClockMod.o ESMF_FractionMod.o ESMF_ShrTimeMod.o ESMF_Stubs.o ESMF_TimeIntervalMod.o ESMF_TimeMod.o FVperf_module.o \
@@ -48,9 +49,10 @@ ghostmodule.o glc_comp_mct.o gptl.o gptl_papi.o gravity_waves_sources.o gw_drag.
 mpirun ./cam
 #pwd
 #ls ../../../../tools/cprnc
+echo "cprncdf 有bug，需要手动改"
 ./cprncdf -X ../../../../tools/cprnc/  f19c4aqpgro_cam53_ys_intel.nc h0.nc  > RMST_f1.9_cmp_ibm_5.0
-
- ./cprncplt -b -t -pltitle "cam5.0, FV-1.9x2.5, port validation" \
-   -l "perturbation: cam5.0(ibm)","difference: cam5.0(ibm) - cam5.0(pc/lf95)" \
-   RMST_f19c4aqpgro_cam53_ys_intel RMST_f1.9_cmp_ibm_5.0
+cat ./RMST_f1.9_cmp_ibm_5.0
+#  ./cprncplt -b -t -pltitle "cam5.0, FV-1.9x2.5, port validation" \
+#    -l "perturbation: cam5.0(ibm)","difference: cam5.0(ibm) - cam5.0(pc/lf95)" \
+#    RMST_f19c4aqpgro_cam53_ys_intel RMST_f1.9_cmp_ibm_5.0
 

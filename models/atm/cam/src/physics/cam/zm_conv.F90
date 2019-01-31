@@ -3671,7 +3671,7 @@ elemental subroutine qmmr_hPa(t, p1, es, qm)
                                ! (vapor mass over dry mass, kg/kg)
   real(r8)  p
   real(r8)  tboil
-  tboil = 373.16_r8
+  tboil = 373.16_r8 !只看到了在wv_saturation.F90 里对这个有这样的初始化，所以我就把它这样写死了
   p=p1*100._r8
 
   es = 10._r8**(-7.90298_r8*(tboil/t-1._r8)+ &

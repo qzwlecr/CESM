@@ -97,9 +97,9 @@ while( <$cprnc_out> ) {
 # Check that the case names were found.  If not it could be due to using an old
 # version of cprnc which produced a different output format.
 if ($found_case_names) {
-    print "$case1\n";
-    print "$case2\n";
-    print "$var\n";
+    print "#$case1\n";
+    print "#$case2\n";
+    print "#$var\n";
 }else{ 
     die "Didn't find case names in cprnc output.  This could be due\n".
 	"to using an old version of cprnc.\n";
@@ -107,7 +107,7 @@ if ($found_case_names) {
 
 # Resume search of output and create arrays of step no. and rms diffs.
 my @nstep;
-my @rmsDiff;
+my @rmsDiff=0;
 while( <$cprnc_out> ) { 
     if ( /NSTEPH:/ ) {
 	my @line = split;
@@ -119,10 +119,11 @@ while( <$cprnc_out> ) {
 	push @rmsDiff, $line[$#line];
     }
 }
-
-for( my $i = 0; $i <= $#nstep; ++$i ) {
+    #print "got  @rmsDiff \n";
+#rgy : fix bug， for the NSTEPH didn't work， 97 is for cam test only!
+for( my $i = 0; $i <= 97; ++$i ) {
     if ( $rmsDiff[$i] == 0. ) { next; }
-    print "$nstep[$i] $rmsDiff[$i]\n";
+    print "$i $rmsDiff[$i]\n";
 }
 
 
