@@ -17,7 +17,7 @@ cd ..
 #echo "move cuda.o to the obj dir!"
 #cp ./models/atm/cam/bld/*_cuda.o ../EXP1/bld/cesm/obj
 #cd 
-#../openmpi/bin/mpifort -o ../EXP1/bld/cesm.exe ../EXP1/bld/cesm/obj/*.o  -L../EXP1/bld/lib/ -latm  -L../EXP1/bld/lib/ -lice  -L../EXP1/bld/lib/ -llnd  -L../EXP1/bld/lib/ -locn  -L../EXP1/bld/lib/ -lrof  -L../EXP1/bld/lib/ -lglc  -L../EXP1/bld/lib/ -lwav -L../EXP1/bld/gnu/openmpi/nodebug/nothreads/MCT/noesmf/a1l1r1i1o1g1w1/csm_share -lcsm_share -L../EXP1/bld/gnu/openmpi/nodebug/nothreads/lib -lpio -lgptl -lmct -lmpeu -L../netcdf-build/lib -lnetcdf -lnetcdff  -L/usr/local/cuda/lib64/ -lcuda -lcudart  -L../openmpi/lib -lmpi  -lstdc++ || echo 'cuda link failed!!' 
+#../openmpi/bin/mpifort -o ../EXP1/bld/cesm.exe ../EXP1/bld/cesm/obj/*.o  -L../EXP1/bld/lib/ -latm  -L../EXP1/bld/lib/ -lice  -L../EXP1/bld/lib/ -llnd  -L../EXP1/bld/lib/ -locn  -L../EXP1/bld/lib/ -lrof  -L../EXP1/bld/lib/ -lglc  -L../EXP1/bld/lib/ -lwav -L../EXP1/bld/gnu/openmpi/nodebug/nothreads/MCT/noesmf/a1l1r1i1o1g1w1/csm_share -lcsm_share -L../EXP1/bld/gnu/openmpi/nodebug/nothreads/lib -lpio -lgptl -lmct -lmpeu -L../netcdf-build/lib -lnetcdf -lnetcdff  -L/opt/cuda/lib64/ -lcuda -L../openmpi/lib -lmpi  -lstdc++ || echo 'cuda link failed!!' 
 
 exit 0
 echo "run!!!"

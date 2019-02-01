@@ -1,18 +1,26 @@
+cmake_minimum_required(VERSION 3.13)
 PROJECT(CPRNC C Fortran)
 
 ENABLE_LANGUAGE(Fortran) 
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/CMake)
 
+set (NETCDF_F90 "YES")
+find_package (NetCDF REQUIRED)
+include_directories(${NetCDF_INCLUDES})
+#target_link_libraries (uses_f90_interface ${NETCDF_LIBRARIES})
+#target_link_libraries (only_uses_c_interface ${NETCDF_LIBRARIES_C}) 
+message("fuckit ${NetCDF_LIBRARIES}")
 # Defining NETCDF_LIBRARIES and NETCDF_INCLUDE_DIR enables bypassing
-#   the search for Netcdf
-IF (NOT DEFINED NETCDF_LIBRARIES OR NOT DEFINED NETCDF_INCLUDE_DIR)
-  FIND_PACKAGE(Netcdf REQUIRED)
-  SET(NETCDF_INCLUDE_DIR ${Netcdf_INCLUDE_DIR})
-  SET(NETCDF_LIBRARIES ${Netcdf_LIBRARIES})
-ENDIF ()
+##   the search for Netcdf
+#IF (NOT DEFINED NETCDF_LIBRARIES OR NOT DEFINED NETCDF_INCLUDE_DIR)
+#  FIND_PACKAGE(Netcdf REQUIRED)
+#  SET(NETCDF_INCLUDE_DIR ${Netcdf_INCLUDE_DIR})
+#  SET(NETCDF_LIBRARIES ${Netcdf_LIBRARIES})
+#ENDIF ()
+
+include_directories(/usr/include)
+link_directories(/usr/lib)
 
 ADD_CUSTOM_COMMAND(
   OUTPUT ${PROJECT_BINARY_DIR}/compare_vars_mod.F90
@@ -48,7 +56,7 @@ SET (CPRNC_SRCS
 ADD_EXECUTABLE(cprnc ${CPRNC_SRCS})
 ADD_DEPENDENCIES(cprnc COMPARE_VARS)
 
-TARGET_LINK_LIBRARIES(cprnc ${NETCDF_LIBRARIES})
+TARGET_LINK_LIBRARIES(cprnc netcdff)
 
 INSTALL(TARGETS cprnc
         RUNTIME DESTINATION bin)
