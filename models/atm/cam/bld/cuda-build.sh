@@ -1,5 +1,5 @@
 #! /bin/bash
-cd /media/rgy/win-file/document/computer/HPC/cesm/CESM/models/atm/cam/bld/
+cd /home/mike/workspace/asc19/CESM/models/atm/cam/bld/
 echo "cuda!"
 nvcc   -ccbin gcc-7 -c ../src/utils/fft99_cuda.cu  -I/usr/local/cuda/inc -L/usr/local/cuda/lib -lcufft -o fft99_cuda.o
 #runtime as static --cudart static

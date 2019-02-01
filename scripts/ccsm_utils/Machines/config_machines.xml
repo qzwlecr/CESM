@@ -60,12 +60,12 @@
         <CESMSCRATCHROOT>/media/rgy/win-file/document/computer/HPC/cesm/</CESMSCRATCHROOT>
         <RUNDIR>/media/rgy/win-file/document/computer/HPC/cesm/$CASE/run</RUNDIR>
         <EXEROOT>/media/rgy/win-file/document/computer/HPC/cesm/$CASE/bld</EXEROOT>
-        <DIN_LOC_ROOT>/media/rgy/win-file/document/computer/HPC/cesm/inputdata/$CASE</DIN_LOC_ROOT>
+        <DIN_LOC_ROOT>/home/mike/workspace/asc19/inputdata/$CASE</DIN_LOC_ROOT>
         <DOUT_S>TRUE</DOUT_S>
         <DOUT_S_ROOT>/media/rgy/win-file/document/computer/HPC/cesm/$CASE/outputdata/short</DOUT_S_ROOT>
         <DOUT_L_MSROOT>/media/rgy/win-file/document/computer/HPC/cesm/$CASE/outputdata/long</DOUT_L_MSROOT>
         <CCSM_BASELINE>/media/rgy/win-file/document/computer/HPC/cesm/ccsm_baselines</CCSM_BASELINE>
-        <CCSM_CPRNC>/media/rgy/win-file/document/computer/HPC/cesm/CESM/tools/cprnc/cprnc</CCSM_CPRNC>
+        <CCSM_CPRNC>/home/mike/workspace/asc19/CESM/tools/cprnc/cprnc</CCSM_CPRNC>
         <SUPPORTED_BY>zouyoo -at- outlook.com</SUPPORTED_BY>
         <GMAKE_J>2</GMAKE_J>
         <MAX_TASKS_PER_NODE>2</MAX_TASKS_PER_NODE>

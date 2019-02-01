@@ -1,6 +1,6 @@
 #! /bin/csh -f
 #build cuda here!
-cd /media/rgy/win-file/document/computer/HPC/cesm/CESM/models/atm/cam/bld/
+cd /home/mike/workspace/asc19/CESM/models/atm/cam/bld/
 ./cuda-build.sh
 ls | grep cuda
 #所有的.cu都要用*_cuda.cu 结尾，因为编译脚本就是这么判断的, *_cuda.cu->*_cuda.o
