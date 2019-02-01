@@ -35,6 +35,5 @@ CXX=mpCC_r  \
 LDFLAGS="-lm -btextpsize:64k -bdatapsize:64k -bstackpsize:64k -bbigtoc" \
 LIBS="-lC_r -lxlf90_r" \
 --with-trilinos=/contrib/trilinos/10.6.2 \
---with-netcdf=/contrib/netcdf/4.1.3_seq/ \
 --enable-mpi="yes" \
 --with-blas=-lblas   
