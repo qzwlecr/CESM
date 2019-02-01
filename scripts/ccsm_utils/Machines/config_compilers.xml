@@ -877,7 +877,7 @@ for mct, etc.
   <SFC>gfortran</SFC>
   <SCC>gcc</SCC>
   <SCXX>g++</SCXX>
-  <ADD_SLIBS> -lnetcdf -lnetcdff  -L/usr/local/cuda/lib64/ -lcuda -lcudart -lstdc++
+  <ADD_SLIBS> -lnetcdf -lnetcdff  -L/usr/local/cuda/lib64/ -lcuda  -lstdc++
 </ADD_SLIBS> 
 </compiler>
 </config_compilers>

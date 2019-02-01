@@ -4313,7 +4313,8 @@ subroutine ccsm_run()
       endif
 
       !----------------------------------------------------------
-      ! ocn -> cpl, loose coupling (concurrent type mode)
+      ! ocn -> cpl
+      !, loose coupling (concurrent type mode)
       !----------------------------------------------------------
 
       if (.not.ocean_tight_coupling) then
