@@ -1,12 +1,11 @@
 #!/bin/bash
 
-export LD_LIBRARY_PATH=/media/rgy/win-file/document/computer/HPC/cesm/netcdf-build/lib:${LD_LIBRARY_PATH}:/media/rgy/win-file/document/computer/HPC/cesm/openmpi/lib/
-#add the netcdf lib here!
 
 #if rebuild
 rm -rf EXP1
 rm -rf ../EXP1
 ./scripts/create_newcase -case EXP1 -res 0.47x0.63_gx1v6 -compset E1850CN -mach single-pc || exit 1
+exit
 cd EXP1
 ./xmlchange -file env_run.xml -id DIN_LOC_ROOT -val /home/mike/workspace/asc19/inputdata/inputdata_EXP1
 ./xmlchange -file env_run.xml -id DOCN_SOM_FILENAME -val pop_frc.gx1v6.091112.nc
