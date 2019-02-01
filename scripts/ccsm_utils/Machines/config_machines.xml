@@ -57,14 +57,14 @@
         <OS>LINUX</OS>
         <COMPILERS>gnu</COMPILERS>
         <MPILIBS>openmpi</MPILIBS>
-        <CESMSCRATCHROOT>/media/rgy/win-file/document/computer/HPC/cesm/</CESMSCRATCHROOT>
-        <RUNDIR>/media/rgy/win-file/document/computer/HPC/cesm/$CASE/run</RUNDIR>
-        <EXEROOT>/media/rgy/win-file/document/computer/HPC/cesm/$CASE/bld</EXEROOT>
+        <CESMSCRATCHROOT>/home/mike/workspace/asc19/</CESMSCRATCHROOT>
+        <RUNDIR>/home/mike/workspace/asc19/$CASE/run</RUNDIR>
+        <EXEROOT>/home/mike/workspace/asc19/$CASE/bld</EXEROOT>
         <DIN_LOC_ROOT>/home/mike/workspace/asc19/inputdata/$CASE</DIN_LOC_ROOT>
         <DOUT_S>TRUE</DOUT_S>
-        <DOUT_S_ROOT>/media/rgy/win-file/document/computer/HPC/cesm/$CASE/outputdata/short</DOUT_S_ROOT>
-        <DOUT_L_MSROOT>/media/rgy/win-file/document/computer/HPC/cesm/$CASE/outputdata/long</DOUT_L_MSROOT>
-        <CCSM_BASELINE>/media/rgy/win-file/document/computer/HPC/cesm/ccsm_baselines</CCSM_BASELINE>
+        <DOUT_S_ROOT>/home/mike/workspace/asc19/$CASE/outputdata/short</DOUT_S_ROOT>
+        <DOUT_L_MSROOT>/home/mike/workspace/asc19/$CASE/outputdata/long</DOUT_L_MSROOT>
+        <CCSM_BASELINE>/home/mike/workspace/asc19/ccsm_baselines</CCSM_BASELINE>
         <CCSM_CPRNC>/home/mike/workspace/asc19/CESM/tools/cprnc/cprnc</CCSM_CPRNC>
         <SUPPORTED_BY>zouyoo -at- outlook.com</SUPPORTED_BY>
         <GMAKE_J>2</GMAKE_J>
