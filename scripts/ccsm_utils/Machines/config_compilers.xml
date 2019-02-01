@@ -879,5 +879,6 @@ for mct, etc.
   <SCXX>g++</SCXX>
   <ADD_SLIBS> -lnetcdf -lnetcdff  -L/usr/local/cuda/lib64/ -lcuda  -lstdc++
 </ADD_SLIBS> 
+  <MPI_PATH>/home/mike/tmp/openmpi</MPI_PATH>
 </compiler>
 </config_compilers>
