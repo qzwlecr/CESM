@@ -2186,6 +2186,11 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
       do i=1,ndayc
             tauray(i) = trayoslp*(pflx(i,k+1)-pflx(i,k))
             taugab(i) = abh2o*uh2o(i,k) + abo3*uo3(i,k) + abco2*uco2(i,k) + abo2*uo2(i,k)
+      end do
+   end do
+
+   do k=0,pver
+      do i=1,ndayc
             tautot = tauxcl(i,k) + tauxci(i,k) + tauray(i) + taugab(i) + aer_tau(i,k)
             
             tmp1   = wcl(i,k)*tauxcl(i,k)

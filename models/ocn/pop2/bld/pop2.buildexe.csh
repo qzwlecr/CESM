@@ -11,8 +11,12 @@ echo  Copy the necessary files into $OBJROOT/ocn/source
 echo -----------------------------------------------------------------
 
 cd $OBJROOT/ocn/source
-
+#nvcc   -ccbin gcc-7  -c ./*.cu -o .o  || exit 2
 cp -fp $CODEROOT/ocn/pop2/source/*.F90  .
+cp -fp $CODEROOT/ocn/pop2/source/*.cu  .
+cp -fp $CODEROOT/ocn/pop2/source/*.c  .
+cp -fp $CODEROOT/ocn/pop2/source/*.cc  .
+cp -fp $CODEROOT/ocn/pop2/source/*.h  .
 cp -fp $CODEROOT/ocn/pop2/mpi/*.F90  .
 cp -fp $CODEROOT/ocn/pop2/drivers/cpl_share/*.F90  .
 if ($COMP_INTERFACE == 'MCT') then
