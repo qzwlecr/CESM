@@ -1,0 +1,2339 @@
+you need to download tar cam53_f19c4aqpgro_ys.tar.gz and cam.zip from sftp first
+cuda!
+you need to build cprnc in tools/cprnc first
+[ 12%] Built target COMPARE_VARS
+[100%] Built target cprnc
+MCT configure is done.
+creating /home/mike/workspace/asc19/CESM/models/atm/cam/bld/Filepath
+creating /home/mike/workspace/asc19/CESM/models/atm/cam/bld/Makefile
+creating /home/mike/workspace/asc19/CESM/models/atm/cam/bld/config.h
+creating /home/mike/workspace/asc19/CESM/models/atm/cam/bld/config_cache.xml
+CAM configure done.
+now link the cam
+(seq_comm_setcomm)  initialize ID (  1 GLOBAL          ) pelist   =     0     1     1 ( npes =     2) ( nthreads =  1)
+(seq_comm_setcomm)  initialize ID (  2 CPL             ) pelist   =     0     1     1 ( npes =     2) ( nthreads =  1)
+(seq_comm_setcomm)  initialize ID ( 17 ATM             ) pelist   =     0     1     1 ( npes =     2) ( nthreads =  1)
+(seq_comm_joincomm) initialize ID ( 18 CPLATM          ) join IDs =     2    17       ( npes =     2) ( nthreads =  1)
+(seq_comm_jcommarr) initialize ID (  3 ALLATMID        ) join multiple comp IDs       ( npes =     2) ( nthreads =  1)
+(seq_comm_joincomm) initialize ID ( 10 CPLALLATMID     ) join IDs =     2     3       ( npes =     2) ( nthreads =  1)
+(seq_comm_setcomm)  initialize ID ( 19 LND             ) pelist   =     0     1     1 ( npes =     2) ( nthreads =  1)
+(seq_comm_joincomm) initialize ID ( 20 CPLLND          ) join IDs =     2    19       ( npes =     2) ( nthreads =  1)
+(seq_comm_jcommarr) initialize ID (  4 ALLLNDID        ) join multiple comp IDs       ( npes =     2) ( nthreads =  1)
+(seq_comm_joincomm) initialize ID ( 11 CPLALLLNDID     ) join IDs =     2     4       ( npes =     2) ( nthreads =  1)
+(seq_comm_setcomm)  initialize ID ( 21 OCN             ) pelist   =     0     1     1 ( npes =     2) ( nthreads =  1)
+(seq_comm_joincomm) initialize ID ( 22 CPLOCN          ) join IDs =     2    21       ( npes =     2) ( nthreads =  1)
+(seq_comm_jcommarr) initialize ID (  5 ALLOCNID        ) join multiple comp IDs       ( npes =     2) ( nthreads =  1)
+(seq_comm_joincomm) initialize ID ( 12 CPLALLOCNID     ) join IDs =     2     5       ( npes =     2) ( nthreads =  1)
+(seq_comm_setcomm)  initialize ID ( 23 ICE             ) pelist   =     0     1     1 ( npes =     2) ( nthreads =  1)
+(seq_comm_joincomm) initialize ID ( 24 CPLICE          ) join IDs =     2    23       ( npes =     2) ( nthreads =  1)
+(seq_comm_jcommarr) initialize ID (  6 ALLICEID        ) join multiple comp IDs       ( npes =     2) ( nthreads =  1)
+(seq_comm_joincomm) initialize ID ( 13 CPLALLICEID     ) join IDs =     2     6       ( npes =     2) ( nthreads =  1)
+(seq_comm_setcomm)  initialize ID ( 25 GLC             ) pelist   =     0     1     1 ( npes =     2) ( nthreads =  1)
+(seq_comm_joincomm) initialize ID ( 26 CPLGLC          ) join IDs =     2    25       ( npes =     2) ( nthreads =  1)
+(seq_comm_jcommarr) initialize ID (  7 ALLGLCID        ) join multiple comp IDs       ( npes =     2) ( nthreads =  1)
+(seq_comm_joincomm) initialize ID ( 14 CPLALLGLCID     ) join IDs =     2     7       ( npes =     2) ( nthreads =  1)
+(seq_comm_setcomm)  initialize ID ( 27 ROF             ) pelist   =     0     1     1 ( npes =     2) ( nthreads =  1)
+(seq_comm_joincomm) initialize ID ( 28 CPLROF          ) join IDs =     2    27       ( npes =     2) ( nthreads =  1)
+(seq_comm_jcommarr) initialize ID (  8 ALLROFID        ) join multiple comp IDs       ( npes =     2) ( nthreads =  1)
+(seq_comm_joincomm) initialize ID ( 15 CPLALLROFID     ) join IDs =     2     8       ( npes =     2) ( nthreads =  1)
+(seq_comm_setcomm)  initialize ID ( 29 WAV             ) pelist   =     0     1     1 ( npes =     2) ( nthreads =  1)
+(seq_comm_joincomm) initialize ID ( 30 CPLWAV          ) join IDs =     2    29       ( npes =     2) ( nthreads =  1)
+(seq_comm_jcommarr) initialize ID (  9 ALLWAVID        ) join multiple comp IDs       ( npes =     2) ( nthreads =  1)
+(seq_comm_joincomm) initialize ID ( 16 CPLALLWAVID     ) join IDs =     2     9       ( npes =     2) ( nthreads =  1)
+(seq_comm_printcomms)     1     0     2     1  GLOBAL:
+(seq_comm_printcomms)     2     0     2     1  CPL:
+(seq_comm_printcomms)     3     0     2     1  ALLATMID:
+(seq_comm_printcomms)     4     0     2     1  ALLLNDID:
+(seq_comm_printcomms)     5     0     2     1  ALLOCNID:
+(seq_comm_printcomms)     6     0     2     1  ALLICEID:
+(seq_comm_printcomms)     7     0     2     1  ALLGLCID:
+(seq_comm_printcomms)     8     0     2     1  ALLROFID:
+(seq_comm_printcomms)     9     0     2     1  ALLWAVID:
+(seq_comm_printcomms)    10     0     2     1  CPLALLATMID:
+(seq_comm_printcomms)    11     0     2     1  CPLALLLNDID:
+(seq_comm_printcomms)    12     0     2     1  CPLALLOCNID:
+(seq_comm_printcomms)    13     0     2     1  CPLALLICEID:
+(seq_comm_printcomms)    14     0     2     1  CPLALLGLCID:
+(seq_comm_printcomms)    15     0     2     1  CPLALLROFID:
+(seq_comm_printcomms)    16     0     2     1  CPLALLWAVID:
+(seq_comm_printcomms)    17     0     2     1  ATM:
+(seq_comm_printcomms)    18     0     2     1  CPLATM:
+(seq_comm_printcomms)    19     0     2     1  LND:
+(seq_comm_printcomms)    20     0     2     1  CPLLND:
+(seq_comm_printcomms)    21     0     2     1  OCN:
+(seq_comm_printcomms)    22     0     2     1  CPLOCN:
+(seq_comm_printcomms)    23     0     2     1  ICE:
+(seq_comm_printcomms)    24     0     2     1  CPLICE:
+(seq_comm_printcomms)    25     0     2     1  GLC:
+(seq_comm_printcomms)    26     0     2     1  CPLGLC:
+(seq_comm_printcomms)    27     0     2     1  ROF:
+(seq_comm_printcomms)    28     0     2     1  CPLROF:
+(seq_comm_printcomms)    29     0     2     1  WAV:
+(seq_comm_printcomms)    30     0     2     1  CPLWAV:
+(seq_mct_drv) USE_ESMF_LIB is NOT set, using esmf_wrf_timemgr
+ No cpl_modelio.nml found, using defaults for pio settings
+ CPL              : pio_numiotasks =            1
+ CPL              : pio_stride =            4
+ CPL              : pio_root =            1
+ CPL              : pio_iotype =            6
+ CPL              : iosys            4           2
+ No atm_modelio.nml found, using defaults for pio settings
+ ATM              : pio_numiotasks =            1
+ ATM              : pio_stride =            4
+ ATM              : pio_root =            1
+ ATM              : pio_iotype =            6
+ ATM              : iosys            5           2
+ No lnd_modelio.nml found, using defaults for pio settings
+ LND              : pio_numiotasks =            1
+ LND              : pio_stride =            4
+ LND              : pio_root =            1
+ LND              : pio_iotype =            6
+ LND              : iosys            9           2
+ No ocn_modelio.nml found, using defaults for pio settings
+ OCN              : pio_numiotasks =            1
+ OCN              : pio_stride =            4
+ OCN              : pio_root =            1
+ OCN              : pio_iotype =            6
+ OCN              : iosys           13           2
+ No ice_modelio.nml found, using defaults for pio settings
+ ICE              : pio_numiotasks =            1
+ ICE              : pio_stride =            4
+ ICE              : pio_root =            1
+ ICE              : pio_iotype =            6
+ ICE              : iosys           17           2
+ No glc_modelio.nml found, using defaults for pio settings
+ GLC              : pio_numiotasks =            1
+ GLC              : pio_stride =            4
+ GLC              : pio_root =            1
+ GLC              : pio_iotype =            6
+ GLC              : iosys           21           2
+ No rof_modelio.nml found, using defaults for pio settings
+ ROF              : pio_numiotasks =            1
+ ROF              : pio_stride =            4
+ ROF              : pio_root =            1
+ ROF              : pio_iotype =            6
+ ROF              : iosys           25           2
+ No wav_modelio.nml found, using defaults for pio settings
+ WAV              : pio_numiotasks =            1
+ WAV              : pio_stride =            4
+ WAV              : pio_root =            1
+ WAV              : pio_iotype =            6
+ WAV              : iosys           29           2
+(seq_mct_drv) : ------------------------------------------------------------
+(seq_mct_drv) :         NCAR CPL7 Community Earth System Model (CESM)  
+(seq_mct_drv) : ------------------------------------------------------------
+(seq_mct_drv) :      (Online documentation is available on the CCSM         
+(seq_mct_drv) :       Models page: http://www.cesm.ucar.edu/models/         
+(seq_mct_drv) :       License information is available as a link from above 
+(seq_mct_drv) : ------------------------------------------------------------
+(seq_mct_drv) :                 DATE 02/03/19 TIME 14:01:28
+(seq_mct_drv) : ------------------------------------------------------------
+  
+  
+ (t_initf) Read in prof_inparm namelist from: drv_in
+8 MB memory   alloc in MB is             8.00
+8 MB memory dealloc in MB is             0.00
+Memory block size conversion in bytes is           993.44
+seq_flds_mod: read seq_cplflds_inparm namelist from: drv_in
+seq_flds_mod: read seq_cplflds_userspec namelist from: drv_in
+8 MB memory   alloc in MB is             8.00
+8 MB memory dealloc in MB is             0.00
+Memory block size conversion in bytes is           922.64
+(shr_carma_readnl) Read in carma_inparm namelist from: drv_flds_in
+(seq_drydep_read) Read in megan_emis_readnl namelist from: drv_flds_in
+(seq_drydep_read) Read in drydep_inparm namelist from: drv_flds_in
+ seq_drydep_read: drydep_method: xactive_lnd
+(seq_drydep_read) No dry deposition fields will be transfered
+seq_flds_mod: seq_flds_a2x_states= 
+Sa_z:Sa_u:Sa_v:Sa_tbot:Sa_ptem:Sa_shum:Sa_pbot:Sa_dens:Sa_pslv:Sa_co2prog:Sa_co2diag
+seq_flds_mod: seq_flds_a2x_fluxes= 
+Faxa_rainc:Faxa_rainl:Faxa_snowc:Faxa_snowl:Faxa_lwdn:Faxa_swndr:Faxa_swvdr:Faxa_swndf:Faxa_swvdf:Faxa_swnet:Faxa_bcphidry:Faxa_bcphodry:Faxa_bcphiwet:Faxa_ocphidry:Faxa_ocphodry:Faxa_ocphiwet:Faxa_dstwet1:Faxa_dstwet2:Faxa_dstwet3:Faxa_dstwet4:Faxa_dstdry1:Faxa_dstdry2:Faxa_dstdry3:Faxa_dstdry4
+seq_flds_mod: seq_flds_x2a_states= 
+Sf_lfrac:Sf_ifrac:Sf_ofrac:Sx_avsdr:Sx_anidr:Sx_avsdf:Sx_anidf:Sx_tref:Sx_qref:So_t:Sx_t:Sl_fv:Sl_ram1:Sl_snowh:Si_snowh:So_ssq:So_re:Sx_u10:So_ustar
+seq_flds_mod: seq_flds_x2a_fluxes= 
+Faxx_taux:Faxx_tauy:Faxx_lat:Faxx_sen:Faxx_lwup:Faxx_evap:Fall_flxdst1:Fall_flxdst2:Fall_flxdst3:Fall_flxdst4
+seq_flds_mod: seq_flds_l2x_states= 
+Sl_avsdr:Sl_anidr:Sl_avsdf:Sl_anidf:Sl_tref:Sl_qref:Sl_t:Sl_fv:Sl_ram1:Sl_snowh:Sl_u10
+seq_flds_mod: seq_flds_l2x_fluxes= 
+Fall_swnet:Fall_taux:Fall_tauy:Fall_lat:Fall_sen:Fall_lwup:Fall_evap:Fall_flxdst1:Fall_flxdst2:Fall_flxdst3:Fall_flxdst4:Flrl_rofliq:Flrl_rofice
+seq_flds_mod: seq_flds_x2l_states= 
+Sa_z:Sa_u:Sa_v:Sa_tbot:Sa_ptem:Sa_shum:Sa_pbot:Slrr_volr:Sa_co2prog:Sa_co2diag
+seq_flds_mod: seq_flds_x2l_fluxes= 
+Faxa_rainc:Faxa_rainl:Faxa_snowc:Faxa_snowl:Faxa_lwdn:Faxa_swndr:Faxa_swvdr:Faxa_swndf:Faxa_swvdf:Faxa_bcphidry:Faxa_bcphodry:Faxa_bcphiwet:Faxa_ocphidry:Faxa_ocphodry:Faxa_ocphiwet:Faxa_dstwet1:Faxa_dstwet2:Faxa_dstwet3:Faxa_dstwet4:Faxa_dstdry1:Faxa_dstdry2:Faxa_dstdry3:Faxa_dstdry4:Flrr_flood
+seq_flds_mod: seq_flds_i2x_states= 
+Si_avsdr:Si_anidr:Si_avsdf:Si_anidf:Si_tref:Si_qref:Si_t:Si_snowh:Si_u10:Si_ifrac
+seq_flds_mod: seq_flds_i2x_fluxes= 
+Faii_swnet:Fioi_swpen:Faii_taux:Fioi_taux:Faii_tauy:Fioi_tauy:Faii_lat:Faii_sen:Faii_lwup:Faii_evap:Fioi_melth:Fioi_meltw:Fioi_salt
+seq_flds_mod: seq_flds_x2i_states= 
+Sa_z:Sa_u:Sa_v:Sa_tbot:Sa_ptem:Sa_shum:Sa_pbot:Sa_dens:So_t:So_s:So_u:So_v:So_dhdx:So_dhdy
+seq_flds_mod: seq_flds_x2i_fluxes= 
+Faxa_rain:Faxa_snow:Faxa_lwdn:Faxa_swndr:Faxa_swvdr:Faxa_swndf:Faxa_swvdf:Faxa_bcphidry:Faxa_bcphodry:Faxa_bcphiwet:Faxa_ocphidry:Faxa_ocphodry:Faxa_ocphiwet:Faxa_dstwet1:Faxa_dstwet2:Faxa_dstwet3:Faxa_dstwet4:Faxa_dstdry1:Faxa_dstdry2:Faxa_dstdry3:Faxa_dstdry4:Fioo_q
+seq_flds_mod: seq_flds_o2x_states= 
+So_t:So_s:So_u:So_v:So_dhdx:So_dhdy:So_bldepth
+seq_flds_mod: seq_flds_o2x_fluxes= 
+Fioo_q
+seq_flds_mod: seq_flds_x2o_states= 
+Sa_pslv:So_duu10n:Si_ifrac:Sw_lamult:Sw_ustokes:Sw_vstokes:Sw_hstokes
+seq_flds_mod: seq_flds_x2o_fluxes= 
+Faxa_rain:Faxa_snow:Faxa_prec:Faxa_lwdn:Foxx_swnet:Faxa_bcphidry:Faxa_bcphodry:Faxa_bcphiwet:Faxa_ocphidry:Faxa_ocphodry:Faxa_ocphiwet:Faxa_dstwet1:Faxa_dstwet2:Faxa_dstwet3:Faxa_dstwet4:Faxa_dstdry1:Faxa_dstdry2:Faxa_dstdry3:Faxa_dstdry4:Foxx_taux:Foxx_tauy:Foxx_lat:Foxx_sen:Foxx_lwup:Foxx_evap:Fioi_melth:Fioi_meltw:Fioi_salt:Forr_roff:Forr_ioff
+seq_flds_mod: seq_flds_s2x_states= 
+
+seq_flds_mod: seq_flds_s2x_fluxes= 
+
+seq_flds_mod: seq_flds_x2s_states= 
+
+seq_flds_mod: seq_flds_x2s_fluxes= 
+
+seq_flds_mod: seq_flds_g2x_states= 
+
+seq_flds_mod: seq_flds_g2x_fluxes= 
+
+seq_flds_mod: seq_flds_x2g_states= 
+
+seq_flds_mod: seq_flds_x2g_fluxes= 
+
+seq_flds_mod: seq_flds_xao_states= 
+So_tref:So_qref:So_ssq:So_re:So_u10:So_duu10n:So_ustar
+seq_flds_mod: seq_flds_xao_albedo= 
+So_avsdr:So_anidr:So_avsdf:So_anidf
+seq_flds_mod: seq_flds_r2x_states= 
+Slrr_volr
+seq_flds_mod: seq_flds_r2x_fluxes= 
+Forr_roff:Forr_ioff:Flrr_flood
+seq_flds_mod: seq_flds_x2r_states= 
+
+seq_flds_mod: seq_flds_x2r_fluxes= 
+Flrl_rofliq:Flrl_rofice
+seq_flds_mod: seq_flds_w2x_states= 
+Sw_lamult:Sw_ustokes:Sw_vstokes:Sw_hstokes
+seq_flds_mod: seq_flds_w2x_fluxes= 
+
+seq_flds_mod: seq_flds_x2w_states= 
+Sa_u:Sa_v:Sa_tbot:Si_ifrac:So_t:So_u:So_v:So_bldepth
+seq_flds_mod: seq_flds_x2w_fluxes= 
+
+(seq_infodata_Init) 
+ read seq_infodata_inparm namelist from: drv_in
+(shr_orb_params) Calculate characteristics of the orbit:
+(shr_orb_params) SVN $Id: shr_orb_mod.F90 25434 2010-11-04 22:46:24Z tcraig $
+(shr_orb_params) Calculate orbit for year:      1990
+(shr_orb_params) ------ Computed Orbital Parameters ------
+(shr_orb_params) Eccentricity      =   1.670772E-02
+(shr_orb_params) Obliquity (deg)   =   2.344107E+01
+(shr_orb_params) Obliquity (rad)   =   4.091238E-01
+(shr_orb_params) Long of perh(deg) =   1.027242E+02
+(shr_orb_params) Long of perh(rad) =   4.934468E+00
+(shr_orb_params) Long at v.e.(rad) =  -3.250364E-02
+(shr_orb_params) -----------------------------------------
+  
+Status of infodata after seq_infodata_init
+(seq_infodata_print) Start type               = startup
+(seq_infodata_print) Case name                = cam5.0_port
+(seq_infodata_print) Case description         = 
+(seq_infodata_print) Model version            = unknown
+(seq_infodata_print) Username                 = unknown
+(seq_infodata_print) Hostname                 = unknown
+(seq_infodata_print) Timing Dir               = .
+(seq_infodata_print) Timing Checkpoint Dir    = .
+(seq_infodata_print) Restart case name        = 
+(seq_infodata_print) atm_ideal_phys           =   F
+(seq_infodata_print) atm adiabatic mode       =   F
+(seq_infodata_print) aqua_planet mode         =   T
+(seq_infodata_print) aqua_planet analytic sst =          1
+(seq_infodata_print) brnch_retain_casename    =   F
+(seq_infodata_print) read_restart flag        =   F
+(seq_infodata_print) Restart pointer file     = rpointer.drv
+(seq_infodata_print) Restart file (full path) = str_undefined
+(seq_infodata_print) single_column            =   F
+(seq_infodata_print) scmlat                   =   -999.00000000000    
+(seq_infodata_print) scmlon                   =   -999.00000000000    
+(seq_infodata_print) Log output end name      = .log
+(seq_infodata_print) Output path dir          = ./
+(seq_infodata_print) perpetual                =   T
+(seq_infodata_print) perpetual_ymd            =        321
+(seq_infodata_print) orb_mode                 = fixed_year
+(seq_infodata_print) orb_iyear                =       1990
+(seq_infodata_print) orb_eccen                =   0.16707719799281E-01
+(seq_infodata_print) orb_obliq                =    23.441068451147    
+(seq_infodata_print) orb_mvelp                =    102.72418532768    
+(seq_infodata_print) orb_obliqr               =   0.40912382465788    
+(seq_infodata_print) orb_mvelpp               =    4.9344679089867    
+(seq_infodata_print) orb_lambm0               =  -0.32503635878519E-01
+(seq_infodata_print) flux_epbal               = off
+(seq_infodata_print) flux_albav               =   F
+(seq_infodata_print) samegrid_ao              =   T
+(seq_infodata_print) samegrid_ro              =   F
+(seq_infodata_print) samegrid_al              =   T
+(seq_infodata_print) samegrid_aw              =   F
+(seq_infodata_print) samegrid_ow              =   F
+(seq_infodata_print) shr_map_dopole           =   T
+(seq_infodata_print) vect_map                 = npfix
+(seq_infodata_print) aoflux_grid              = ocn
+(seq_infodata_print) cpl_decomp               =    0
+(seq_infodata_print) ocean_tight_coupling     =   T
+(seq_infodata_print) cpl_cdf64                =   T
+(seq_infodata_print) do_budgets               =   F
+(seq_infodata_print) do_histinit              =   F
+(seq_infodata_print) budget_inst              =    0
+(seq_infodata_print) budget_daily             =    0
+(seq_infodata_print) budget_month             =    1
+(seq_infodata_print) budget_ann               =    1
+(seq_infodata_print) budget_ltann             =    1
+(seq_infodata_print) budget_ltend             =    0
+(seq_infodata_print) histaux_a2x              =   F
+(seq_infodata_print) histaux_a2x3hr           =   F
+(seq_infodata_print) histaux_a2x3hrp          =   F
+(seq_infodata_print) histaux_a2x24hr          =   F
+(seq_infodata_print) histaux_s2x1yr           =   F
+(seq_infodata_print) histaux_l2x              =   F
+(seq_infodata_print) histaux_r2x              =   F
+(seq_infodata_print) drv_threading            =   F
+(seq_infodata_print) eps_frac                 =   0.10000000000000E-01
+(seq_infodata_print) eps_amask                =   0.10000000000000E-12
+(seq_infodata_print) eps_agrid                =   0.10000000000000E-11
+(seq_infodata_print) eps_aarea                =   0.90000000000000E-06
+(seq_infodata_print) eps_omask                =   0.10000000000000E-05
+(seq_infodata_print) eps_ogrid                =   0.10000000000000E-01
+(seq_infodata_print) eps_oarea                =   0.10000000000000    
+(seq_infodata_print) reprosum_use_ddpdd       =   F
+(seq_infodata_print) reprosum_diffmax         =  -0.99999999392253E-08
+(seq_infodata_print) reprosum_recompute       =   F
+(seq_infodata_print) mct_usealltoall          =   F
+(seq_infodata_print) mct_usevector            =   F
+(seq_infodata_print) info_debug               =    1
+(seq_infodata_print) bfbflag                  =   F
+(seq_infodata_print) esmf_map_flag            =   F
+(seq_infodata_print) dead_comps               =   F
+(seq_infodata_print) run_barriers             =   F
+(seq_infodata_print) atm_present              =   T
+(seq_infodata_print) atm_prognostic           =   F
+(seq_infodata_print) lnd_present              =   F
+(seq_infodata_print) lnd_prognostic           =   F
+(seq_infodata_print) rof_present              =   F
+(seq_infodata_print) rof_prognostic           =   F
+(seq_infodata_print) flood_present            =   F
+(seq_infodata_print) ocn_present              =   T
+(seq_infodata_print) ocn_prognostic           =   F
+(seq_infodata_print) ocnrof_prognostic        =   F
+(seq_infodata_print) ice_present              =   F
+(seq_infodata_print) ice_prognostic           =   F
+(seq_infodata_print) glc_present              =   F
+(seq_infodata_print) glc_prognostic           =   F
+(seq_infodata_print) sno_present              =   F
+(seq_infodata_print) sno_prognostic           =   F
+(seq_infodata_print) wav_present              =   F
+(seq_infodata_print) wav_prognostic           =   F
+(seq_infodata_print) atm_nx                   =          0
+(seq_infodata_print) atm_ny                   =          0
+(seq_infodata_print) lnd_nx                   =          0
+(seq_infodata_print) lnd_ny                   =          0
+(seq_infodata_print) rof_nx                   =          0
+(seq_infodata_print) rof_ny                   =          0
+(seq_infodata_print) ice_nx                   =          0
+(seq_infodata_print) ice_ny                   =          0
+(seq_infodata_print) ocn_nx                   =          0
+(seq_infodata_print) ocn_ny                   =          0
+(seq_infodata_print) glc_nx                   =          0
+(seq_infodata_print) glc_ny                   =          0
+(seq_infodata_print) sno_nx                   =          0
+(seq_infodata_print) sno_ny                   =          0
+(seq_infodata_print) wav_nx                   =          0
+(seq_infodata_print) wav_ny                   =          0
+(seq_infodata_print) nextsw_cday              =   -1.0000000000000    
+(seq_infodata_print) precip_fact              =    1.0000000000000    
+(seq_infodata_print) atm_aero                 =   F
+(seq_infodata_print) atm_phase                =    1
+(seq_infodata_print) lnd_phase                =    1
+(seq_infodata_print) ocn_phase                =    1
+(seq_infodata_print) ice_phase                =    1
+(seq_infodata_print) glc_phase                =    1
+(seq_infodata_print) rof_phase                =    1
+(seq_infodata_print) wav_phase                =    1
+(seq_infodata_print) glcrun_alarm             =   F
+(seq_infodata_print) glc_g2supdate            =   F
+  
+(seq_timemgr_clockInit) Read in seq_timemgr_inparm namelist from: drv_in
+ 
+(seq_timemgr_clockInit) Clock Init Settings:
+(seq_timemgr_clockInit) calendar       = NO_LEAP
+(seq_timemgr_clockInit) stop_option    = ndays
+(seq_timemgr_clockInit) stop_n         =          2
+(seq_timemgr_clockInit) stop_ymd       =   99990101
+(seq_timemgr_clockInit) stop_tod       =          0
+(seq_timemgr_clockInit) restart_option = monthly
+(seq_timemgr_clockInit) restart_n      =         -1
+(seq_timemgr_clockInit) restart_ymd    =         -1
+(seq_timemgr_clockInit) end_restart    =   T
+(seq_timemgr_clockInit) history_option = never
+(seq_timemgr_clockInit) history_n      =         -1
+(seq_timemgr_clockInit) history_ymd    =         -1
+(seq_timemgr_clockInit) histavg_option = never
+(seq_timemgr_clockInit) histavg_n      =         -1
+(seq_timemgr_clockInit) histavg_ymd    =         -1
+(seq_timemgr_clockInit) tprof_option   = never
+(seq_timemgr_clockInit) tprof_n        =         -1
+(seq_timemgr_clockInit) tprof_ymd      =         -1
+(seq_timemgr_clockInit) start_ymd      =        101
+(seq_timemgr_clockInit) start_tod      =          0
+(seq_timemgr_clockInit) ref_ymd        =        101
+(seq_timemgr_clockInit) ref_tod        =          0
+(seq_timemgr_clockInit) atm_cpl_dt     =       1800
+(seq_timemgr_clockInit) lnd_cpl_dt     =       1800
+(seq_timemgr_clockInit) ice_cpl_dt     =       1800
+(seq_timemgr_clockInit) ocn_cpl_dt     =       1800
+(seq_timemgr_clockInit) glc_cpl_dt     =       1800
+(seq_timemgr_clockInit) rof_cpl_dt     =       1800
+(seq_timemgr_clockInit) wav_cpl_dt     =       1800
+(seq_timemgr_clockInit) atm_cpl_offset =          0
+(seq_timemgr_clockInit) lnd_cpl_offset =          0
+(seq_timemgr_clockInit) ice_cpl_offset =          0
+(seq_timemgr_clockInit) ocn_cpl_offset =          0
+(seq_timemgr_clockInit) glc_cpl_offset =          0
+(seq_timemgr_clockInit) rof_cpl_offset =          0
+(seq_timemgr_clockInit) wav_cpl_offset =          0
+ 
+(seq_timemgr_clockPrint) calendar      = NO_LEAP
+(seq_timemgr_clockPrint) end_restart   =   T
+
+(seq_timemgr_clockPrint) Clock = drv            1
+(seq_timemgr_clockPrint)   Start Time  = 00000101   00000
+(seq_timemgr_clockPrint)   Curr Time   = 00000101   00000
+(seq_timemgr_clockPrint)   Ref Time    = 00000101   00000
+(seq_timemgr_clockPrint)   Stop Time   = 00000103   00000
+(seq_timemgr_clockPrint)   Step number =        0
+(seq_timemgr_clockPrint)   Dtime       =     1800
+(seq_timemgr_clockPrint)   Alarm =  1  seq_timemgr_alarm_run
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000101   01800
+(seq_timemgr_clockPrint)     Intervl yms =        0       0        1800
+(seq_timemgr_clockPrint)   Alarm =  2  seq_timemgr_alarm_stop
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000103   00000
+(seq_timemgr_clockPrint)     Intervl yms =        0       0      172800
+(seq_timemgr_clockPrint)   Alarm =  3  seq_timemgr_alarm_datestop
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 99990101   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  4  seq_timemgr_alarm_restart
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000201   00000
+(seq_timemgr_clockPrint)     Intervl yms =        0       1           0
+(seq_timemgr_clockPrint)   Alarm =  5  seq_timemgr_alarm_history
+(seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
+(seq_timemgr_clockPrint)     Next Time   = 99991201   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  6  seq_timemgr_alarm_histavg
+(seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
+(seq_timemgr_clockPrint)     Next Time   = 99991201   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  7  seq_timemgr_alarm_tprof
+(seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
+(seq_timemgr_clockPrint)     Next Time   = 99991201   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  8  seq_timemgr_alarm_atmrun
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000101   01800
+(seq_timemgr_clockPrint)     Intervl yms =        0       0        1800
+(seq_timemgr_clockPrint)   Alarm =  9  seq_timemgr_alarm_lndrun
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000101   01800
+(seq_timemgr_clockPrint)     Intervl yms =        0       0        1800
+(seq_timemgr_clockPrint)   Alarm = 10  seq_timemgr_alarm_rofrun
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000101   01800
+(seq_timemgr_clockPrint)     Intervl yms =        0       0        1800
+(seq_timemgr_clockPrint)   Alarm = 11  seq_timemgr_alarm_icerun
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000101   01800
+(seq_timemgr_clockPrint)     Intervl yms =        0       0        1800
+(seq_timemgr_clockPrint)   Alarm = 12  seq_timemgr_alarm_wavrun
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000101   01800
+(seq_timemgr_clockPrint)     Intervl yms =        0       0        1800
+(seq_timemgr_clockPrint)   Alarm = 13  seq_timemgr_alarm_glcrun
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000101   01800
+(seq_timemgr_clockPrint)     Intervl yms =        0       0        1800
+(seq_timemgr_clockPrint)   Alarm = 14  seq_timemgr_alarm_ocnrun
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000101   01800
+(seq_timemgr_clockPrint)     Intervl yms =        0       0        1800
+(seq_timemgr_clockPrint)   Alarm = 15  seq_timemgr_alarm_ocnnext
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000101   01800
+(seq_timemgr_clockPrint)     Intervl yms =        0       0        1800
+ 
+(seq_timemgr_clockPrint) Clock = atm            2
+(seq_timemgr_clockPrint)   Start Time  = 00000101   00000
+(seq_timemgr_clockPrint)   Curr Time   = 00000101   00000
+(seq_timemgr_clockPrint)   Ref Time    = 00000101   00000
+(seq_timemgr_clockPrint)   Stop Time   = 00000103   00000
+(seq_timemgr_clockPrint)   Step number =        0
+(seq_timemgr_clockPrint)   Dtime       =     1800
+(seq_timemgr_clockPrint)   Alarm =  1  seq_timemgr_alarm_run
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000101   01800
+(seq_timemgr_clockPrint)     Intervl yms =        0       0        1800
+(seq_timemgr_clockPrint)   Alarm =  2  seq_timemgr_alarm_stop
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000103   00000
+(seq_timemgr_clockPrint)     Intervl yms =        0       0      172800
+(seq_timemgr_clockPrint)   Alarm =  3  seq_timemgr_alarm_datestop
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 99990101   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  4  seq_timemgr_alarm_restart
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000201   00000
+(seq_timemgr_clockPrint)     Intervl yms =        0       1           0
+(seq_timemgr_clockPrint)   Alarm =  5  seq_timemgr_alarm_history
+(seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
+(seq_timemgr_clockPrint)     Next Time   = 99991201   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  6  seq_timemgr_alarm_histavg
+(seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
+(seq_timemgr_clockPrint)     Next Time   = 99991201   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  7  seq_timemgr_alarm_tprof
+(seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
+(seq_timemgr_clockPrint)     Next Time   = 99991201   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+ 
+(seq_timemgr_clockPrint) Clock = lnd            3
+(seq_timemgr_clockPrint)   Start Time  = 00000101   00000
+(seq_timemgr_clockPrint)   Curr Time   = 00000101   00000
+(seq_timemgr_clockPrint)   Ref Time    = 00000101   00000
+(seq_timemgr_clockPrint)   Stop Time   = 00000103   00000
+(seq_timemgr_clockPrint)   Step number =        0
+(seq_timemgr_clockPrint)   Dtime       =     1800
+(seq_timemgr_clockPrint)   Alarm =  1  seq_timemgr_alarm_run
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000101   01800
+(seq_timemgr_clockPrint)     Intervl yms =        0       0        1800
+(seq_timemgr_clockPrint)   Alarm =  2  seq_timemgr_alarm_stop
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000103   00000
+(seq_timemgr_clockPrint)     Intervl yms =        0       0      172800
+(seq_timemgr_clockPrint)   Alarm =  3  seq_timemgr_alarm_datestop
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 99990101   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  4  seq_timemgr_alarm_restart
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000201   00000
+(seq_timemgr_clockPrint)     Intervl yms =        0       1           0
+(seq_timemgr_clockPrint)   Alarm =  5  seq_timemgr_alarm_history
+(seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
+(seq_timemgr_clockPrint)     Next Time   = 99991201   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  6  seq_timemgr_alarm_histavg
+(seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
+(seq_timemgr_clockPrint)     Next Time   = 99991201   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  7  seq_timemgr_alarm_tprof
+(seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
+(seq_timemgr_clockPrint)     Next Time   = 99991201   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+ 
+(seq_timemgr_clockPrint) Clock = ocn            4
+(seq_timemgr_clockPrint)   Start Time  = 00000101   00000
+(seq_timemgr_clockPrint)   Curr Time   = 00000101   00000
+(seq_timemgr_clockPrint)   Ref Time    = 00000101   00000
+(seq_timemgr_clockPrint)   Stop Time   = 00000103   00000
+(seq_timemgr_clockPrint)   Step number =        0
+(seq_timemgr_clockPrint)   Dtime       =     1800
+(seq_timemgr_clockPrint)   Alarm =  1  seq_timemgr_alarm_run
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000101   01800
+(seq_timemgr_clockPrint)     Intervl yms =        0       0        1800
+(seq_timemgr_clockPrint)   Alarm =  2  seq_timemgr_alarm_stop
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000103   00000
+(seq_timemgr_clockPrint)     Intervl yms =        0       0      172800
+(seq_timemgr_clockPrint)   Alarm =  3  seq_timemgr_alarm_datestop
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 99990101   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  4  seq_timemgr_alarm_restart
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000201   00000
+(seq_timemgr_clockPrint)     Intervl yms =        0       1           0
+(seq_timemgr_clockPrint)   Alarm =  5  seq_timemgr_alarm_history
+(seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
+(seq_timemgr_clockPrint)     Next Time   = 99991201   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  6  seq_timemgr_alarm_histavg
+(seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
+(seq_timemgr_clockPrint)     Next Time   = 99991201   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  7  seq_timemgr_alarm_tprof
+(seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
+(seq_timemgr_clockPrint)     Next Time   = 99991201   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+ 
+(seq_timemgr_clockPrint) Clock = ice            5
+(seq_timemgr_clockPrint)   Start Time  = 00000101   00000
+(seq_timemgr_clockPrint)   Curr Time   = 00000101   00000
+(seq_timemgr_clockPrint)   Ref Time    = 00000101   00000
+(seq_timemgr_clockPrint)   Stop Time   = 00000103   00000
+(seq_timemgr_clockPrint)   Step number =        0
+(seq_timemgr_clockPrint)   Dtime       =     1800
+(seq_timemgr_clockPrint)   Alarm =  1  seq_timemgr_alarm_run
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000101   01800
+(seq_timemgr_clockPrint)     Intervl yms =        0       0        1800
+(seq_timemgr_clockPrint)   Alarm =  2  seq_timemgr_alarm_stop
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000103   00000
+(seq_timemgr_clockPrint)     Intervl yms =        0       0      172800
+(seq_timemgr_clockPrint)   Alarm =  3  seq_timemgr_alarm_datestop
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 99990101   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  4  seq_timemgr_alarm_restart
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000201   00000
+(seq_timemgr_clockPrint)     Intervl yms =        0       1           0
+(seq_timemgr_clockPrint)   Alarm =  5  seq_timemgr_alarm_history
+(seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
+(seq_timemgr_clockPrint)     Next Time   = 99991201   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  6  seq_timemgr_alarm_histavg
+(seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
+(seq_timemgr_clockPrint)     Next Time   = 99991201   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  7  seq_timemgr_alarm_tprof
+(seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
+(seq_timemgr_clockPrint)     Next Time   = 99991201   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+ 
+(seq_timemgr_clockPrint) Clock = glc            6
+(seq_timemgr_clockPrint)   Start Time  = 00000101   00000
+(seq_timemgr_clockPrint)   Curr Time   = 00000101   00000
+(seq_timemgr_clockPrint)   Ref Time    = 00000101   00000
+(seq_timemgr_clockPrint)   Stop Time   = 00000103   00000
+(seq_timemgr_clockPrint)   Step number =        0
+(seq_timemgr_clockPrint)   Dtime       =     1800
+(seq_timemgr_clockPrint)   Alarm =  1  seq_timemgr_alarm_run
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000101   01800
+(seq_timemgr_clockPrint)     Intervl yms =        0       0        1800
+(seq_timemgr_clockPrint)   Alarm =  2  seq_timemgr_alarm_stop
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000103   00000
+(seq_timemgr_clockPrint)     Intervl yms =        0       0      172800
+(seq_timemgr_clockPrint)   Alarm =  3  seq_timemgr_alarm_datestop
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 99990101   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  4  seq_timemgr_alarm_restart
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000201   00000
+(seq_timemgr_clockPrint)     Intervl yms =        0       1           0
+(seq_timemgr_clockPrint)   Alarm =  5  seq_timemgr_alarm_history
+(seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
+(seq_timemgr_clockPrint)     Next Time   = 99991201   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  6  seq_timemgr_alarm_histavg
+(seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
+(seq_timemgr_clockPrint)     Next Time   = 99991201   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  7  seq_timemgr_alarm_tprof
+(seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
+(seq_timemgr_clockPrint)     Next Time   = 99991201   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+ 
+(seq_timemgr_clockPrint) Clock = wav            7
+(seq_timemgr_clockPrint)   Start Time  = 00000101   00000
+(seq_timemgr_clockPrint)   Curr Time   = 00000101   00000
+(seq_timemgr_clockPrint)   Ref Time    = 00000101   00000
+(seq_timemgr_clockPrint)   Stop Time   = 00000103   00000
+(seq_timemgr_clockPrint)   Step number =        0
+(seq_timemgr_clockPrint)   Dtime       =     1800
+(seq_timemgr_clockPrint)   Alarm =  1  seq_timemgr_alarm_run
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000101   01800
+(seq_timemgr_clockPrint)     Intervl yms =        0       0        1800
+(seq_timemgr_clockPrint)   Alarm =  2  seq_timemgr_alarm_stop
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000103   00000
+(seq_timemgr_clockPrint)     Intervl yms =        0       0      172800
+(seq_timemgr_clockPrint)   Alarm =  3  seq_timemgr_alarm_datestop
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 99990101   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  4  seq_timemgr_alarm_restart
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000201   00000
+(seq_timemgr_clockPrint)     Intervl yms =        0       1           0
+(seq_timemgr_clockPrint)   Alarm =  5  seq_timemgr_alarm_history
+(seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
+(seq_timemgr_clockPrint)     Next Time   = 99991201   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  6  seq_timemgr_alarm_histavg
+(seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
+(seq_timemgr_clockPrint)     Next Time   = 99991201   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  7  seq_timemgr_alarm_tprof
+(seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
+(seq_timemgr_clockPrint)     Next Time   = 99991201   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+ 
+(seq_timemgr_clockPrint) Clock = rof            8
+(seq_timemgr_clockPrint)   Start Time  = 00000101   00000
+(seq_timemgr_clockPrint)   Curr Time   = 00000101   00000
+(seq_timemgr_clockPrint)   Ref Time    = 00000101   00000
+(seq_timemgr_clockPrint)   Stop Time   = 00000103   00000
+(seq_timemgr_clockPrint)   Step number =        0
+(seq_timemgr_clockPrint)   Dtime       =     1800
+(seq_timemgr_clockPrint)   Alarm =  1  seq_timemgr_alarm_run
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000101   01800
+(seq_timemgr_clockPrint)     Intervl yms =        0       0        1800
+(seq_timemgr_clockPrint)   Alarm =  2  seq_timemgr_alarm_stop
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000103   00000
+(seq_timemgr_clockPrint)     Intervl yms =        0       0      172800
+(seq_timemgr_clockPrint)   Alarm =  3  seq_timemgr_alarm_datestop
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 99990101   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  4  seq_timemgr_alarm_restart
+(seq_timemgr_clockPrint)     Prev Time   = 00000101   00000
+(seq_timemgr_clockPrint)     Next Time   = 00000201   00000
+(seq_timemgr_clockPrint)     Intervl yms =        0       1           0
+(seq_timemgr_clockPrint)   Alarm =  5  seq_timemgr_alarm_history
+(seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
+(seq_timemgr_clockPrint)     Next Time   = 99991201   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  6  seq_timemgr_alarm_histavg
+(seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
+(seq_timemgr_clockPrint)     Next Time   = 99991201   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+(seq_timemgr_clockPrint)   Alarm =  7  seq_timemgr_alarm_tprof
+(seq_timemgr_clockPrint)     Prev Time   = 00001201   00000
+(seq_timemgr_clockPrint)     Next Time   = 99991201   00000
+(seq_timemgr_clockPrint)     Intervl yms =     9999       0           0
+ 
+  
+(seq_mct_drv) : Initialize each component: atm, lnd, rof, ocn, ice, glc, wav
+(seq_mct_drv) : Initialize atm component ATM
+           2 pes participating in computation
+ -----------------------------------
+ TASK#  NAME
+  0  fluorinedog
+  1  fluorinedog
+ CAM atmosphere model initialization
+ Read in cam_inparm namelist from: atm_in
+ radiation_setopts: *** NOTE: Extra overhead invoked putting a/e numbers on restart dataset. ***    To avoid, make mod(nhtfrq,iradae) = 0
+ SPMD SWAP_COMM OPTIONS: 
+   swap_comm_protocol =            4
+   swap_comm_maxreq   =          128
+ SPMD FLOW CONTROL GATHER OPTION: 
+   fc_gather_flow_cntl =           64
+ cld_sediment_readnl: cldsed_ice_stokes_fac =   0.50000000000000000     
+ 
+rad_cnst_readnl: Radiation constituent lists:
+ 
+ list_init1: namelist input for climate list
+   rad namelist spec: A:Q:H2O
+   rad namelist spec: N:O2:O2
+   rad namelist spec: N:CO2:CO2
+   rad namelist spec: N:ozone:O3
+   rad namelist spec: N:N2O:N2O
+   rad namelist spec: N:CH4:CH4
+   rad namelist spec: N:CFC11:CFC11
+   rad namelist spec: N:CFC12:CFC12
+   rad namelist spec: N:sulf:.//atm/cam/physprops/sulfate_camrt_c080918.nc
+   rad namelist spec: N:dust1:.//atm/cam/physprops/dust1_camrt_c080918.nc
+   rad namelist spec: N:dust2:.//atm/cam/physprops/dust2_camrt_c080918.nc
+   rad namelist spec: N:dust3:.//atm/cam/physprops/dust3_camrt_c080918.nc
+   rad namelist spec: N:dust4:.//atm/cam/physprops/dust4_camrt_c080918.nc
+   rad namelist spec: N:bcar1:.//atm/cam/physprops/bcpho_camrt_c080918.nc
+   rad namelist spec: N:bcar2:.//atm/cam/physprops/bcphi_camrt_c080918.nc
+   rad namelist spec: N:ocar1:.//atm/cam/physprops/ocpho_camrt_c080918.nc
+   rad namelist spec: N:ocar2:.//atm/cam/physprops/ocphi_camrt_c080918.nc
+   rad namelist spec: N:SSLTA:.//atm/cam/physprops/ssam_camrt_c080918.nc
+   rad namelist spec: N:SSLTC:.//atm/cam/physprops/sscm_camrt_c080918.nc
+ 
+ gas list for climate calculations
+   A:H2O   has constituents name:Q
+   N:O3    has pbuf name:ozone
+   N:O2    has pbuf name:O2
+   N:CO2   has pbuf name:CO2
+   N:N2O   has pbuf name:N2O
+   N:CH4   has pbuf name:CH4
+   N:CFC11 has pbuf name:CFC11
+   N:CFC12 has pbuf name:CFC12
+ 
+ bulk aerosol list for climate calculations
+   N:sulf optics and phys props in :.//atm/cam/physprops/sulfate_camrt_c080918.nc
+   N:dust1 optics and phys props in :.//atm/cam/physprops/dust1_camrt_c080918.nc
+   N:dust2 optics and phys props in :.//atm/cam/physprops/dust2_camrt_c080918.nc
+   N:dust3 optics and phys props in :.//atm/cam/physprops/dust3_camrt_c080918.nc
+   N:dust4 optics and phys props in :.//atm/cam/physprops/dust4_camrt_c080918.nc
+   N:bcar1 optics and phys props in :.//atm/cam/physprops/bcpho_camrt_c080918.nc
+   N:bcar2 optics and phys props in :.//atm/cam/physprops/bcphi_camrt_c080918.nc
+   N:ocar1 optics and phys props in :.//atm/cam/physprops/ocpho_camrt_c080918.nc
+   N:ocar2 optics and phys props in :.//atm/cam/physprops/ocphi_camrt_c080918.nc
+   N:SSLTA optics and phys props in :.//atm/cam/physprops/ssam_camrt_c080918.nc
+   N:SSLTC optics and phys props in :.//atm/cam/physprops/sscm_camrt_c080918.nc
+ 
+ modal aerosol list for climate calculations
+  Mode Definitions
+ solar_data_readnl: solar_const (W/m2) =    1361.2700000000000     
+  ------------------------------------------
+      *** INPUT VARIABLES (CAM_INPARM) ***
+  ------------------------------------------
+          Initial run
+  ********** CASE = cam5.0_port **********
+                                                                                                                                                                                                                                                                 
+ Initial dataset is: .//atm/cam/inic/fv/cami_0000-01-01_1.9x2.5_L26_APE_c080203.nc
+ Topography dataset is: .//atm/cam/topo/USGS-gtopo30_1.9x2.5_remap_c050602.nc
+ Time-invariant (absorption/emissivity) factor dataset is: .//atm/cam/rad/abs_ems_factors_fastvx.c030508.nc
+ Run type flag (NSREST) 0=initial, 1=restart, 3=branch            0
+ Summary of restart module options:
+   Restart pointer file is: ./rpointer.atm
+ Initial conditions history files will be written yearly.
+Lowest level for dry adiabatic adjust (NLVDRY)         3
+ Frequency of Shortwave Radiation calc. (IRADSW)         2
+ Frequency of Longwave Radiation calc. (IRADLW)          2
+ Frequency of Absorptivity/Emissivity calc. (IRADAE)    24
+ Run model in "AQUA_PLANET" mode
+ pergro for cloud water is true
+  ********** Time Manager Configuration **********
+   Calendar type:            NO_LEAP
+   Timestep size (seconds):          1800
+   Start date (yr mon day tod):                0           1           1           0
+   Stop date (yr mon day tod):                 0           1           3           0
+   Reference date (yr mon day tod):            0           1           1           0
+   Current step number:                 0
+   Current date (yr mon day tod):              0           1           1           0
+   Use perpetual diurnal cycle date (yr mon day):            0           3          21
+  ************************************************
+ Advected constituent list:
+   1  Q         Specific humidity                                                                                                                 wet
+   2  CLDLIQ    Grid box averaged cloud liquid amount                                                                                             wet
+   3  CLDICE    Grid box averaged cloud ice amount                                                                                                wet
+ (GETFIL): attempting to find local file cami_0000-01-01_1.9x2.5_L26_APE_c080203.nc
+ (GETFIL): using .//atm/cam/inic/fv/cami_0000-01-01_1.9x2.5_L26_APE_c080203.nc
+ Opened existing file .//atm/cam/inic/fv/cami_0000-01-01_1.9x2.5_L26_APE_c080203.nc       65536
+ (GETFIL): attempting to find local file USGS-gtopo30_1.9x2.5_remap_c050602.nc
+ (GETFIL): using .//atm/cam/topo/USGS-gtopo30_1.9x2.5_remap_c050602.nc
+ Opened existing file .//atm/cam/topo/USGS-gtopo30_1.9x2.5_remap_c050602.nc      131072
+ NetCDF: Invalid dimension ID or name
+ Layer Locations (*1000) 
+   1    2.1941              0.0000              2.1941
+                  3.5446              0.0000              3.5446
+   2    4.8952              0.0000              4.8952
+                  7.3888              0.0000              7.3888
+   3    9.8824              0.0000              9.8824
+                 13.9672              0.0000             13.9672
+   4   18.0520              0.0000             18.0520
+                 23.9446              0.0000             23.9446
+   5   29.8372              0.0000             29.8372
+                 37.2303              0.0000             37.2303
+   6   44.6233              0.0000             44.6233
+                 53.1146              0.0000             53.1146
+   7   61.6059              0.0000             61.6059
+                 70.0592              0.0000             70.0592
+   8   78.5124              0.0000             78.5124
+                 77.9126              7.5265             85.4391
+   9   77.3127             15.0531             92.3658
+                 76.6070             23.9077            100.5147
+  10   75.9013             32.7623            108.6636
+                 75.0711             43.1793            118.2503
+  11   74.2409             53.5962            127.8371
+                 73.2642             65.8512            139.1154
+  12   72.2874             78.1063            150.3937
+                 71.1384             92.5237            163.6621
+  13   69.9893            106.9411            176.9304
+                 68.6375            123.9024            192.5399
+  14   67.2857            140.8637            208.1494
+                 65.6954            160.8179            226.5133
+  15   64.1051            180.7720            244.8771
+                 62.2342            204.2470            266.4812
+  16   60.3632            227.7220            288.0852
+                 58.1622            255.3391            313.5013
+  17   55.9611            282.9562            338.9173
+                 53.3717            315.4463            368.8180
+  18   50.7823            347.9364            398.7187
+                 47.7359            386.1593            433.8952
+  19   44.6896            424.3822            469.0718
+                 41.1058            469.3495            510.4553
+  20   37.5219            514.3168            551.8387
+                 33.3057            567.2185            600.5242
+  21   29.0895            620.1202            649.2097
+                 24.9684            671.8279            696.7963
+  22   20.8474            723.5355            744.3829
+                 17.0959            770.6062            787.7021
+  23   13.3444            817.6768            831.0212
+                 10.2147            856.9461            867.1608
+  24    7.0850            896.2153            903.3003
+                  4.8032            924.8457            929.6489
+  25    2.5214            953.4761            955.9975
+                  1.2607            969.2942            970.5548
+  26    0.0000            985.1122            985.1122
+                  0.0000            992.5561            992.5561
+  27    0.0000           1000.0000           1000.0000
+ reference pressures (Pa)
+   1       219.4067
+                          354.4638       270.1142
+   2       489.5209
+                          738.8814       498.7209
+   3       988.2418
+                         1396.7214       816.9592
+   4      1805.2010
+                         2394.4625      1178.5230
+   5      2983.7240
+                         3723.0290      1478.6100
+   6      4462.3340
+                         5311.4605      1698.2530
+   7      6160.5870
+                         7005.9150      1690.6560
+   8      7851.2430
+                         8543.9115      1385.3370
+   9      9236.5800
+                        10051.4695      1629.7790
+  10     10866.3590
+                        11825.0335      1917.3490
+  11     12783.7080
+                        13911.5395      2255.6630
+  12     15039.3710
+                        16366.2070      2653.6720
+  13     17693.0430
+                        19253.9935      3121.9010
+  14     20814.9440
+                        22651.3265      3672.7650
+  15     24487.7090
+                        26648.1155      4320.8130
+  16     28808.5220
+                        31350.1265      5083.2090
+  17     33891.7310
+                        36881.7980      5980.1340
+  18     39871.8650
+                        43389.5225      7035.3150
+  19     46907.1800
+                        51045.5255      8276.6910
+  20     55183.8710
+                        60052.4200      9737.0980
+  21     64920.9690
+                        69679.6290      9517.3200
+  22     74438.2890
+                        78770.2060      8663.8340
+  23     83102.1230
+                        86716.0760      7227.9060
+  24     90330.0290
+                        92964.8875      5269.7170
+  25     95599.7460
+                        97055.4830      2911.4740
+  26     98511.2200
+                        99255.6100      1488.7800
+  27    100000.0000
+ Read in dyn_fv_inparm namelist from: atm_in
+ Read in spmd_fv_inparm namelist from: atm_in
+ WARNING : npr_yz not present - using 1-D domain decomposition
+ Decomposing tracers into            1  groups
+ non-transpose geopk communication method =  F
+ Z-parallel non-transpose geopk communication method =  F
+ decomposition is effectively 1D - skipping transposes
+ modcomm transpose method =            0
+ modcomm geopk method =            0
+ modcomm gatscat method =            0
+ modc_sw_dynrun =            0
+ modc_hs_dynrun =  T
+ modc_send_dynrun =  T
+ modc_mxreq_dynrun =           -1
+ modc_sw_cdcore =            0
+ modc_hs_cdcore =  T
+ modc_send_cdcore =  T
+ modc_mxreq_cdcore =           -1
+ modc_sw_gather =            1
+ modc_hs_gather =  T
+ modc_send_gather =  T
+ modc_mxreq_gather =           64
+ modc_sw_scatter =            0
+ modc_hs_scatter =  F
+ modc_send_scatter =  T
+ modc_mxreq_scatter =           -1
+ modc_sw_tracer =            0
+ modc_hs_tracer =  T
+ modc_send_tracer =  T
+ modc_mxreq_tracer =           -1
+ modc_onetwo =            2
+ modc_tracers =            3
+ MOD_COMM - modcam_npryz =            2           1           1           2
+ MOD_COMM - modcam_tagoffset =            2
+ MOD_COMM - modcam_method modcam_geopk modcam_gatscat modcam_maxirr =            0           0           0           3
+ Using local dynamic storage for mod_comm window
+ Mod_comm - ghostrat =    1.1250000000000000     
+ Mod_comm - geopkrat =    1.0000000000000000     
+ (MOD_COMM) - mod_comm not being used for dynamcis-physics transposes
+ Mod_comm - tracmax dpvarmax totvar tracbmax =            1           0           1           1
+ Mod_comm - r4 windows disabled
+ Mod_comm t1_win window size =        46656
+ Mod_comm r8_win window size =       803067
+ Mod_comm r4_win window size =            1
+ Mod_comm i4_win window size =            1
+ nlat_p(           0 ) =           48
+ nlat_p(           1 ) =           48
+ procid            0  assigned           48  latitude values from           1  through           48
+ procid            1  assigned           48  latitude values from          49  through           96
+ <<<n=         144 >>>
+ <<<n=         144 >>>
+ initcom: lat, clat, w            1  -1.5707963267948966        1.3669500753099584E-004
+ initcom: lat, clat, w            2  -1.5377269304413197        1.0933358441641561E-003
+ initcom: lat, clat, w            3  -1.5046575340877433        2.1854761416350010E-003
+ initcom: lat, clat, w            4  -1.4715881377341662        3.2752266530317042E-003
+ initcom: lat, clat, w            5  -1.4385187413805893        4.3613957521696500E-003
+ initcom: lat, clat, w            6  -1.4054493450270127        5.4427957290861251E-003
+ initcom: lat, clat, w            7  -1.3723799486734360        6.5182440887829873E-003
+ initcom: lat, clat, w            8  -1.3393105523198594        7.5865648442688949E-003
+ initcom: lat, clat, w            9  -1.3062411559662823        8.6465898024823407E-003
+ initcom: lat, clat, w           10  -1.2731717596127057        9.6971598416946136E-003
+ initcom: lat, clat, w           11  -1.2401023632591288        1.0737126178992251E-002
+ initcom: lat, clat, w           12  -1.2070329669055522        1.1765351626454090E-002
+ initcom: lat, clat, w           13  -1.1739635705519755        1.2780711834649683E-002
+ initcom: lat, clat, w           14  -1.1408941741983984        1.3782096522098608E-002
+ initcom: lat, clat, w           15  -1.1078247778448218        1.4768410689347089E-002
+ initcom: lat, clat, w           16  -1.0747553814912449        1.5738575816334643E-002
+ initcom: lat, clat, w           17  -1.0416859851376683        1.6691531041738150E-002
+ initcom: lat, clat, w           18  -1.0086165887840914        1.7626234323010470E-002
+ initcom: lat, clat, w           19 -0.97554719243051469        1.8541663575836087E-002
+ initcom: lat, clat, w           20 -0.94247779607693793        1.9436817791767758E-002
+ initcom: lat, clat, w           21 -0.90940839972336118        2.0310718132812267E-002
+ initcom: lat, clat, w           22 -0.87633900336978443        2.1162409001777793E-002
+ initcom: lat, clat, w           23 -0.84326960701620757        2.1990959087203055E-002
+ initcom: lat, clat, w           24 -0.81020021066263093        2.2795462381734466E-002
+ initcom: lat, clat, w           25 -0.77713081430905406        2.3575039172831214E-002
+ initcom: lat, clat, w           26 -0.74406141795547742        2.4328837004717663E-002
+ initcom: lat, clat, w           27 -0.71099202160190056        2.5056031610531826E-002
+ initcom: lat, clat, w           28 -0.67792262524832381        2.5755827813648602E-002
+ initcom: lat, clat, w           29 -0.64485322889474717        2.6427460397194569E-002
+ initcom: lat, clat, w           30 -0.61178383254117030        2.7070194940800429E-002
+ initcom: lat, clat, w           31 -0.57871443618759355        2.7683328623679060E-002
+ initcom: lat, clat, w           32 -0.54564503983401669        2.8266190993150087E-002
+ initcom: lat, clat, w           33 -0.51257564348043994        2.8818144697770109E-002
+ initcom: lat, clat, w           34 -0.47950624712686324        2.9338586184266990E-002
+ initcom: lat, clat, w           35 -0.44643685077328643        2.9826946357516093E-002
+ initcom: lat, clat, w           36 -0.41336745441970973        3.0282691202838108E-002
+ initcom: lat, clat, w           37 -0.38029805806613298        3.0705322369935895E-002
+ initcom: lat, clat, w           38 -0.34722866171255601        3.1094377717833077E-002
+ initcom: lat, clat, w           39 -0.31415926535897931        3.1449431820218587E-002
+ initcom: lat, clat, w           40 -0.28108986900540261        3.1770096430644990E-002
+ initcom: lat, clat, w           41 -0.24802047265182586        3.2056020907068133E-002
+ initcom: lat, clat, w           42 -0.21495107629824917        3.2306892595271308E-002
+ initcom: lat, clat, w           43 -0.18188167994467216        3.2522437170746515E-002
+ initcom: lat, clat, w           44 -0.14881228359109547        3.2702418938664934E-002
+ initcom: lat, clat, w           45 -0.11574288723751877        3.2846641091606149E-002
+ initcom: lat, clat, w           46  -8.2673490883942033E-002   3.2954945924763210E-002
+ initcom: lat, clat, w           47  -4.9604094530365322E-002   3.3027215008391286E-002
+ initcom: lat, clat, w           48  -1.6534698176788359E-002   3.3063369317308286E-002
+ initcom: lat, clat, w           49   1.6534698176788359E-002   3.3063369317308161E-002
+ initcom: lat, clat, w           50   4.9604094530365080E-002   3.3027215008391175E-002
+ initcom: lat, clat, w           51   8.2673490883941797E-002   3.2954945924763196E-002
+ initcom: lat, clat, w           52  0.11574288723751851        3.2846641091606260E-002
+ initcom: lat, clat, w           53  0.14881228359109547        3.2702418938665073E-002
+ initcom: lat, clat, w           54  0.18188167994467216        3.2522437170746377E-002
+ initcom: lat, clat, w           55  0.21495107629824892        3.2306892595271225E-002
+ initcom: lat, clat, w           56  0.24802047265182561        3.2056020907068078E-002
+ initcom: lat, clat, w           57  0.28108986900540234        3.1770096430645101E-002
+ initcom: lat, clat, w           58  0.31415926535897931        3.1449431820218754E-002
+ initcom: lat, clat, w           59  0.34722866171255601        3.1094377717832966E-002
+ initcom: lat, clat, w           60  0.38029805806613276        3.0705322369935728E-002
+ initcom: lat, clat, w           61  0.41336745441970940        3.0282691202838108E-002
+ initcom: lat, clat, w           62  0.44643685077328615        2.9826946357516204E-002
+ initcom: lat, clat, w           63  0.47950624712686313        2.9338586184267101E-002
+ initcom: lat, clat, w           64  0.51257564348043994        2.8818144697770165E-002
+ initcom: lat, clat, w           65  0.54564503983401658        2.8266190993149864E-002
+ initcom: lat, clat, w           66  0.57871443618759333        2.7683328623679060E-002
+ initcom: lat, clat, w           67  0.61178383254117008        2.7070194940800429E-002
+ initcom: lat, clat, w           68  0.64485322889474694        2.6427460397194680E-002
+ initcom: lat, clat, w           69  0.67792262524832370        2.5755827813648713E-002
+ initcom: lat, clat, w           70  0.71099202160190045        2.5056031610531715E-002
+ initcom: lat, clat, w           71  0.74406141795547709        2.4328837004717552E-002
+ initcom: lat, clat, w           72  0.77713081430905373        2.3575039172831103E-002
+ initcom: lat, clat, w           73  0.81020021066263059        2.2795462381734577E-002
+ initcom: lat, clat, w           74  0.84326960701620723        2.1990959087203277E-002
+ initcom: lat, clat, w           75  0.87633900336978454        2.1162409001777793E-002
+ initcom: lat, clat, w           76  0.90940839972336118        2.0310718132812267E-002
+ initcom: lat, clat, w           77  0.94247779607693793        1.9436817791767758E-002
+ initcom: lat, clat, w           78  0.97554719243051469        1.8541663575836087E-002
+ initcom: lat, clat, w           79   1.0086165887840914        1.7626234323010359E-002
+ initcom: lat, clat, w           80   1.0416859851376681        1.6691531041738261E-002
+ initcom: lat, clat, w           81   1.0747553814912449        1.5738575816334643E-002
+ initcom: lat, clat, w           82   1.1078247778448216        1.4768410689346978E-002
+ initcom: lat, clat, w           83   1.1408941741983982        1.3782096522098497E-002
+ initcom: lat, clat, w           84   1.1739635705519751        1.2780711834649683E-002
+ initcom: lat, clat, w           85   1.2070329669055522        1.1765351626454312E-002
+ initcom: lat, clat, w           86   1.2401023632591288        1.0737126178992251E-002
+ initcom: lat, clat, w           87   1.2731717596127057        9.6971598416946136E-003
+ initcom: lat, clat, w           88   1.3062411559662823        8.6465898024822296E-003
+ initcom: lat, clat, w           89   1.3393105523198590        7.5865648442688949E-003
+ initcom: lat, clat, w           90   1.3723799486734358        6.5182440887830984E-003
+ initcom: lat, clat, w           91   1.4054493450270125        5.4427957290860141E-003
+ initcom: lat, clat, w           92   1.4385187413805893        4.3613957521697611E-003
+ initcom: lat, clat, w           93   1.4715881377341657        3.2752266530317042E-003
+ initcom: lat, clat, w           94   1.5046575340877426        2.1854761416348900E-003
+ initcom: lat, clat, w           95   1.5377269304413197        1.0933358441642671E-003
+ initcom: lat, clat, w           96   1.5707963267948966        1.3669500753099584E-004
+ Number of longitudes per latitude =          144
+ PHYS_GRID_INIT:  Using PCOLS=          16   phys_loadbalance=           2   phys_twin_algorithm=           1   phys_alltoall=          -1   chunks_per_thread=           1
+ chem_surfvals_init: ghg surface values are fixed as follows
+   co2 volume mixing ratio =    3.6699999999999998E-004
+   ch4 volume mixing ratio =    1.7600000000000001E-006
+   n2o volume mixing ratio =    3.1600000000000002E-007
+   f11 volume mixing ratio =    6.5344999999999995E-010
+   f12 volume mixing ratio =    5.3500000000000001E-010
+ INITIALIZE_RADBUFFER: ntoplw =           1  pressure:   354.46380000000096     
+ Creating new decomp:            2602096144
+ Creating new decomp:         3602026095144
+ Creating new decomp:         3602026096144
+  print_energy_errors is set F
+ Creating new decomp:            2605096144
+ Creating new decomp:         3605026096144
+ Creating new decomp:         3605027096144
+  *** SATURATION VAPOR PRESSURE TABLE COMPLETED ***
+ (GETFIL): attempting to find local file sulfate_camrt_c080918.nc
+ (GETFIL): using .//atm/cam/physprops/sulfate_camrt_c080918.nc
+ Opened existing file .//atm/cam/physprops/sulfate_camrt_c080918.nc      196608
+  _______ hygroscopic growth in visible band _______
+  SO4
+     rh    ext (m^2 kg^-1)      ssa      asm
+  0.000         4616.169    1.000    0.723
+  0.801        11600.732    1.000    0.776
+  0.836        13589.177    1.000    0.780
+  0.858        14955.007    1.000    0.782
+  0.873        16030.351    1.000    0.784
+  0.885        16932.104    1.000    0.785
+  0.896        17716.501    1.000    0.787
+  0.904        18793.425    1.000    0.788
+  0.912        20147.668    1.000    0.789
+  0.919        21433.545    1.000    0.789
+  0.925        22661.829    1.000    0.790
+  0.930        23841.009    1.000    0.791
+  0.935        24977.701    1.000    0.792
+  0.940        26076.765    1.000    0.792
+  0.944        27143.059    1.000    0.793
+  0.948        28179.419    1.000    0.793
+  0.952        29865.051    1.000    0.794
+  0.956        32025.655    1.000    0.794
+  0.959        34215.073    1.000    0.794
+  0.963        36431.281    1.000    0.794
+  0.966        38673.531    1.000    0.794
+  0.969        40941.777    1.000    0.795
+  0.971        43235.163    1.000    0.795
+  0.974        45552.030    1.000    0.795
+  0.977        47895.406    1.000    0.795
+  0.979        50260.984    1.000    0.795
+  0.982        54428.129    1.000    0.795
+  0.984        59717.533    1.000    0.795
+  0.986        65324.565    1.000    0.794
+  0.988        71249.469    1.000    0.794
+  0.990        77493.667    1.000    0.794
+  0.992        84066.083    1.000    0.794
+  0.994        90974.384    1.000    0.794
+  0.996        98224.714    1.000    0.793
+  0.998       105821.395    1.000    0.793
+  1.000       113591.102    1.000    0.793
+ bulk_props_init: finished for SULFATE
+ (GETFIL): attempting to find local file dust1_camrt_c080918.nc
+ (GETFIL): using .//atm/cam/physprops/dust1_camrt_c080918.nc
+ Opened existing file .//atm/cam/physprops/dust1_camrt_c080918.nc      196608
+ bulk_props_init: finished for DUST1
+ (GETFIL): attempting to find local file dust2_camrt_c080918.nc
+ (GETFIL): using .//atm/cam/physprops/dust2_camrt_c080918.nc
+ Opened existing file .//atm/cam/physprops/dust2_camrt_c080918.nc      196608
+ bulk_props_init: finished for DUST2
+ (GETFIL): attempting to find local file dust3_camrt_c080918.nc
+ (GETFIL): using .//atm/cam/physprops/dust3_camrt_c080918.nc
+ Opened existing file .//atm/cam/physprops/dust3_camrt_c080918.nc      196608
+ bulk_props_init: finished for DUST3
+ (GETFIL): attempting to find local file dust4_camrt_c080918.nc
+ (GETFIL): using .//atm/cam/physprops/dust4_camrt_c080918.nc
+ Opened existing file .//atm/cam/physprops/dust4_camrt_c080918.nc      196608
+ bulk_props_init: finished for DUST4
+ (GETFIL): attempting to find local file bcpho_camrt_c080918.nc
+ (GETFIL): using .//atm/cam/physprops/bcpho_camrt_c080918.nc
+ bulk_props_init: finished for BCPHO
+ (GETFIL): attempting to find local file bcphi_camrt_c080918.nc
+ Opened existing file .//atm/cam/physprops/bcpho_camrt_c080918.nc      196608
+ (GETFIL): using .//atm/cam/physprops/bcphi_camrt_c080918.nc
+ Opened existing file .//atm/cam/physprops/bcphi_camrt_c080918.nc      196608
+ Opened existing file .//atm/cam/physprops/ocpho_camrt_c080918.nc      196608
+ bulk_props_init: finished for BCPHI
+ (GETFIL): attempting to find local file ocpho_camrt_c080918.nc
+ (GETFIL): using .//atm/cam/physprops/ocpho_camrt_c080918.nc
+ bulk_props_init: finished for OCPHO
+ (GETFIL): attempting to find local file ocphi_camrt_c080918.nc
+ (GETFIL): using .//atm/cam/physprops/ocphi_camrt_c080918.nc
+ Opened existing file .//atm/cam/physprops/ocphi_camrt_c080918.nc      196608
+ bulk_props_init: finished for OCPHI
+ (GETFIL): attempting to find local file ssam_camrt_c080918.nc
+ (GETFIL): using .//atm/cam/physprops/ssam_camrt_c080918.nc
+ Opened existing file .//atm/cam/physprops/ssam_camrt_c080918.nc      196608
+ bulk_props_init: finished for SSAM
+ (GETFIL): attempting to find local file sscm_camrt_c080918.nc
+ (GETFIL): using .//atm/cam/physprops/sscm_camrt_c080918.nc
+ Opened existing file .//atm/cam/physprops/sscm_camrt_c080918.nc      196608
+ bulk_props_init: finished for SSCM
+ 
+rad_cnst_init: checking for radiative constituents
+ ozone is prescribed in :ozone_1.9x2.5_L26_2000clim_c091112.nc
+ trcdata_init: data type: CYCLICAL file: ozone_1.9x2.5_L26_2000clim_c091112.nc
+ (GETFIL): attempting to find local file ozone_1.9x2.5_L26_2000clim_c091112.nc
+ (GETFIL): using .//atm/cam/ozone/ozone_1.9x2.5_L26_2000clim_c091112.nc
+ Opened existing file .//atm/cam/ozone/ozone_1.9x2.5_L26_2000clim_c091112.nc      196608
+ open_trc_datafile: .//atm/cam/ozone/ozone_1.9x2.5_L26_2000clim_c091112.nc
+ NetCDF: Invalid dimension ID or name
+ trcdata_init: file%has_ps =  T
+ aero is prescribed in :aero_1.9x2.5_L26_2000clim_c091112.nc
+ trcdata_init: data type: CYCLICAL file: aero_1.9x2.5_L26_2000clim_c091112.nc
+ (GETFIL): attempting to find local file aero_1.9x2.5_L26_2000clim_c091112.nc
+ (GETFIL): using .//atm/cam/chem/trop_mozart_aero/aero/aero_1.9x2.5_L26_2000clim_c091112.nc
+ Opened existing file .//atm/cam/chem/trop_mozart_aero/aero/aero_1.9x2.5_L26_2000clim_c091112.nc      262144
+ open_trc_datafile: .//atm/cam/chem/trop_mozart_aero/aero/aero_1.9x2.5_L26_2000clim_c091112.nc
+ NetCDF: Invalid dimension ID or name
+ trcdata_init: file%has_ps =  T
+  
+ GW_INTI: pgwv =            0
+ GW_INTI: c(l) =    0.0000000000000000     
+ GW_INTI: effgw_oro =   0.12500000000000000     
+ GW_INTI: kwv =    6.2799999999999995E-005
+ GW_INTI: fcrit2 =    1.0000000000000000     
+  
+ KTOPBG  =           0
+ KBOTBG  =           8
+ KTOPORO =           0
+ KBOTORO =          26
+ Rayleigh friction - rayk0 =            2
+ Rayleigh friction - raykrange =    0.0000000000000000     
+ Rayleigh friction - raytau0 =    0.0000000000000000     
+ Rayleigh friction - krange =   0.50000000000000000     
+ Rayleigh friction - otau0 =    0.0000000000000000     
+ Rayleigh friction decay rate profile
+    k =            1    otau =    0.0000000000000000     
+    k =            2    otau =    0.0000000000000000     
+    k =            3    otau =    0.0000000000000000     
+    k =            4    otau =    0.0000000000000000     
+    k =            5    otau =    0.0000000000000000     
+    k =            6    otau =    0.0000000000000000     
+    k =            7    otau =    0.0000000000000000     
+    k =            8    otau =    0.0000000000000000     
+    k =            9    otau =    0.0000000000000000     
+    k =           10    otau =    0.0000000000000000     
+    k =           11    otau =    0.0000000000000000     
+    k =           12    otau =    0.0000000000000000     
+    k =           13    otau =    0.0000000000000000     
+    k =           14    otau =    0.0000000000000000     
+    k =           15    otau =    0.0000000000000000     
+    k =           16    otau =    0.0000000000000000     
+    k =           17    otau =    0.0000000000000000     
+    k =           18    otau =    0.0000000000000000     
+    k =           19    otau =    0.0000000000000000     
+    k =           20    otau =    0.0000000000000000     
+    k =           21    otau =    0.0000000000000000     
+    k =           22    otau =    0.0000000000000000     
+    k =           23    otau =    0.0000000000000000     
+    k =           24    otau =    0.0000000000000000     
+    k =           25    otau =    0.0000000000000000     
+    k =           26    otau =    0.0000000000000000     
+ Initializing vertical diffusion (vertical_diffusion_init)
+NTOP_EDDY  =  1     NBOT_EDDY  = 26
+ vertical_diffusion_init: eddy_diffusivity scheme:  Holtslag and Boville
+ INIT_HB_DIFF: PBL height will be limited to bottom            9  model levels. Top is    43389.522500000108       pascals
+ Opened existing file .//atm/cam/rad/abs_ems_factors_fastvx.c030508.nc      327680
+ (GETFIL): attempting to find local file abs_ems_factors_fastvx.c030508.nc
+ (GETFIL): using .//atm/cam/rad/abs_ems_factors_fastvx.c030508.nc
+ Opened existing file .//atm/cam/chem/trop_mozart/ub/clim_p_trop.nc      327680
+ convect_shallow_init: Hack shallow convection
+ MFINTI: Convection will be capped at intfc            5  which is    2983.7239999999988       pascals
+ tuning parameters hk_conv: cmftau   1800.0000000000000     
+ tuning parameters hk_conv: c0   1.0000000000000000E-004
+ tuning parameters cldfrc_init: inversion_cld_off F
+ tuning parameters cldfrc_init: dp1  0.10000000000000001      dp2   500.00000000000000      sh1   4.0000000000000001E-002 sh2   500.00000000000000     
+ tuning parameters cldfrc_init: rhminl  0.91000000000000003      rhminl_adj_land  0.10000000000000001      rhminh  0.80000000000000004      premit   75000.000000000000      premib   75000.000000000000     
+ tuning parameters cldfrc_init: iceopt           1 icecrit  0.94999999999999996     
+ cldfrc_init: model level nearest 700 mb is          21 which is   69679.629000000321      pascals
+ convect_deep initializing Zhang-McFarlane convection
+ ZM_CONV_INIT: Deep convection will be capped at intfc            5  which is    2983.7239999999988       pascals
+ tuning parameters zm_convi: tau   3600.0000000000000     
+ tuning parameters zm_convi: c0_lnd   3.5000000000000001E-003 , c0_ocn   3.5000000000000001E-003
+ tuning parameters zm_convi: ke   9.9999999999999995E-007
+ tuning parameters zm_convi: no_deep_pbl F
+ **** ZM: DILUTE Buoyancy Calculation ****
+ cloud water initialization by inimc complete 
+ tuning parameters cldwat: icritw   2.0000000000000001E-004 icritc   9.5000000000000005E-006 conke   5.0000000000000004E-006 r3lcrit   1.0000000000000001E-005
+ tuning parameters cldwat: capnw   400.00000000000000      capnc   150.00000000000000      capnsi   75.000000000000000      kconst   1180000.0000000000     
+ tuning parameters cldwat: effc  0.55000000000000004      alpha   1.4641000000000004      capc   442304.33300478570     
+ tuning parameters cldwat: critpr  0.50000000000000000      convfw   6.7250840906347040      cracw   5.3284989756340702      ciautb   5.0000000000000001E-004
+ (GETFIL): attempting to find local file clim_p_trop.nc
+ (GETFIL): using .//atm/cam/chem/trop_mozart/ub/clim_p_trop.nc
+ tropopause_init : days
+  16.000000      45.000000      75.000000      105.00000      136.00000    
+  166.00000      197.00000      228.00000      258.00000      289.00000    
+  319.00000      350.00000    
+ Using hyai & hybi from IC:KS=           7  PTOP=   219.40670000000080     
+ Total Mass=   1012.7555521504645      (mb), Dry Mass=   1010.8000097100731      (mb)
+ Total Precipitable Water =   19.941979739178606      (kg/m**2)
+ dry mass to be added =  -9.7100730636157097E-006
+ Total moist surface pressure after adjustment (mb) =    1012.7555424403914     
+  
+  ******* MASTER FIELD LIST *******
+    1 US                               m/s                26 A  Zonal wind, staggered
+    2 VS                               m/s                26 A  Meridional wind, staggered
+    3 US&IC                            m/s                26 I  Zonal wind, staggered
+    4 VS&IC                            m/s                26 I  Meridional wind, staggered
+    5 PS&IC                            Pa                  1 I  Surface pressure
+    6 T&IC                             K                  26 I  Temperature
+    7 Q&IC                             kg/kg              26 I  Specific humidity
+    8 CLDLIQ&IC                        kg/kg              26 I  Grid box averaged cloud liquid amount
+    9 CLDICE&IC                        kg/kg              26 I  Grid box averaged cloud ice amount
+   10 TAQ                              kg/kg/s            26 A  Q horz + vert + fixer tendency
+   11 TACLDLIQ                         kg/kg/s            26 A  CLDLIQ horz + vert + fixer tendency
+   12 TACLDICE                         kg/kg/s            26 A  CLDICE horz + vert + fixer tendency
+   13 DUH                              K/s                26 A  U horizontal diffusive heating
+   14 DVH                              K/s                26 A  V horizontal diffusive heating
+   15 ENGYCORR                         W/m2               26 A  Energy correction for over-all conservation
+   16 FU                               m/s2               26 A  Zonal wind forcing term
+   17 FV                               m/s2               26 A  Meridional wind forcing term
+   18 FU_S                             m/s2               26 A  Zonal wind forcing term on staggered grid
+   19 FV_S                             m/s2               26 A  Meridional wind forcing term on staggered grid
+   20 UTEND                            m/s2               26 A  U tendency
+   21 VTEND                            m/s2               26 A  V tendency
+   22 TTEND                            K/s                26 A  Total T tendency (all processes)
+   23 LPSTEN                           Pa/s                1 A  Surface pressure tendency
+   24 VAT                              K/s                26 A  Vertical advective tendency of T
+   25 KTOOP                            K/s                26 A  (Kappa*T)*(omega/P)
+   26 NSTEP                            timestep            1 A  Model timestep
+   27 PHIS                             m2/s2               1 I  Surface geopotential
+   28 PS                               Pa                  1 A  Surface pressure
+   29 T                                K                  26 A  Temperature
+   30 U                                m/s                26 A  Zonal wind
+   31 V                                m/s                26 A  Meridional wind
+   32 Q                                kg/kg              26 A  Specific humidity
+   33 TBP                              K                  26 A  Temperature (before physics)
+   34 QBP                              kg/kg              26 A  Specific humidity                                                                                                                (before physics)
+   35 TAP                              K                  26 A  Temperature (after physics)
+   36 UAP                              m/s                26 A  Zonal wind (after physics)
+   37 VAP                              m/s                26 A  Meridional wind (after physics)
+   38 QAP                              kg/kg              26 A  Specific humidity                                                                                                                (after physics)
+   39 TFIX                             K/s                 1 A  T fixer (T equivalent of Energy correction)
+   40 PTTEND_RESID                     K/s                26 A  T-tendency due to BAB kluge at end of tphysac (diagnostic not part of T-budget)
+   41 TTEND_TOT                        K/s                26 A  Total temperature tendency
+   42 TMCLDLIQ                         kg/m2               1 A  CLDLIQ column burden
+   43 TMCLDICE                         kg/m2               1 A  CLDICE column burden
+   44 Z3                               m                  26 A  Geopotential Height (above sea level)
+   45 Z1000                            m                   1 A  Geopotential Z at 700 mbar pressure surface
+   46 Z700                             m                   1 A  Geopotential Z at 700 mbar pressure surface
+   47 Z500                             m                   1 A  Geopotential Z at 500 mbar pressure surface
+   48 Z300                             m                   1 A  Geopotential Z at 300 mbar pressure surface
+   49 Z200                             m                   1 A  Geopotential Z at 200 mbar pressure surface
+   50 Z100                             m                   1 A  Geopotential Z at 100 mbar pressure surface
+   51 Z050                             m                   1 A  Geopotential Z at 50 mbar pressure surface
+   52 ZZ                               m2                 26 A  Eddy height variance
+   53 VZ                               m2/s               26 A  Meridional transport of geopotential energy
+   54 VT                               K m/s              26 A  Meridional heat transport
+   55 VU                               m2/s2              26 A  Meridional flux of zonal momentum
+   56 VV                               m2/s2              26 A  Meridional velocity squared
+   57 VQ                               m/skg/kg           26 A  Meridional water transport
+   58 QQ                               kg2/kg2            26 A  Eddy moisture variance
+   59 OMEGAV                           m Pa/s2            26 A  Vertical flux of meridional momentum
+   60 OMGAOMGA                         Pa2/s2             26 A  Vertical flux of vertical momentum
+   61 OMEGAQ                           kgPa/kgs           26 A  Vertical water transport
+   62 UU                               m2/s2              26 A  Zonal velocity squared
+   63 WSPEED                           m/s                26 X  Horizontal total wind speed maximum
+   64 WSPDSRFMX                        m/s                 1 X  Horizontal total wind speed maximum at the surface
+   65 WSPDSRFAV                        m/s                 1 A  Horizontal total wind speed average at the surface
+   66 OMEGA                            Pa/s               26 A  Vertical velocity (pressure)
+   67 OMEGAT                           K Pa/s             26 A  Vertical heat flux
+   68 OMEGAU                           m Pa/s2            26 A  Vertical flux of zonal momentum
+   69 OMEGA850                         Pa/s                1 A  Vertical velocity at 850 mbar pressure surface
+   70 OMEGA500                         Pa/s                1 A  Vertical velocity at 500 mbar pressure surface
+   71 MQ                               kg/m2              26 A  Water vapor mass in layer
+   72 TMQ                              kg/m2               1 A  Total (vertically integrated) precipitable water
+   73 RELHUM                           percent            26 A  Relative humidity
+   74 RHW                              percent            26 A  Relative humidity with respect to liquid
+   75 RHI                              percent            26 A  Relative humidity with respect to ice
+   76 RHCFMIP                          percent            26 A  Relative humidity with respect to water above 273 K, ice below 273 K
+   77 PSL                              Pa                  1 A  Sea level pressure
+   78 T850                             K                   1 A  Temperature at 850 mbar pressure surface
+   79 T500                             K                   1 A  Temperature at 500 mbar pressure surface
+   80 T300                             K                   1 A  Temperature at 300 mbar pressure surface
+   81 T200                             K                   1 A  Temperature at 200 mbar pressure surface
+   82 Q850                             kg/kg               1 A  Specific Humidity at 850 mbar pressure surface
+   83 Q200                             kg/kg               1 A  Specific Humidity at 700 mbar pressure surface
+   84 U850                             m/s                 1 A  Zonal wind at 850 mbar pressure surface
+   85 U250                             m/s                 1 A  Zonal wind at 250 mbar pressure surface
+   86 U200                             m/s                 1 A  Zonal wind at 200 mbar pressure surface
+   87 U010                             m/s                 1 A  Zonal wind at  10 mbar pressure surface
+   88 V850                             m/s                 1 A  Meridional wind at 850 mbar pressure surface
+   89 V200                             m/s                 1 A  Meridional wind at 200 mbar pressure surface
+   90 V250                             m/s                 1 A  Meridional wind at 250 mbar pressure surface
+   91 TT                               K2                 26 A  Eddy temperature variance
+   92 UBOT                             m/s                 1 A  Lowest model level zonal wind
+   93 VBOT                             m/s                 1 A  Lowest model level meridional wind
+   94 QBOT                             kg/kg               1 A  Lowest model level water vapor mixing ratio
+   95 ZBOT                             m                   1 A  Lowest model level height
+   96 ATMEINT                          J/m2                1 A  Vertically integrated total atmospheric energy
+   97 T1000                            K                   1 A  Temperature at 1000 mbar pressure surface
+   98 T925                             K                   1 A  Temperature at 925 mbar pressure surface
+   99 T700                             K                   1 A  Temperature at 700 mbar pressure surface
+  100 T010                             K                   1 A  Temperature at 10 mbar pressure surface
+  101 Q1000                            kg/kg               1 A  Specific Humidity at 1000 mbar pressure surface
+  102 Q925                             kg/kg               1 A  Specific Humidity at 925 mbar pressure surface
+  103 T7001000                         K                   1 A  Temperature difference 700 mb - 1000 mb
+  104 TH7001000                        K                   1 A  Theta difference 700 mb - 1000 mb
+  105 THE7001000                       K                   1 A  ThetaE difference 700 mb - 1000 mb
+  106 T8501000                         K                   1 A  Temperature difference 850 mb - 1000 mb
+  107 TH8501000                        K                   1 A  Theta difference 850 mb - 1000 mb
+  108 THE8501000                       K                   1 A  ThetaE difference 850 mb - 1000 mb
+  109 T9251000                         K                   1 A  Temperature difference 925 mb - 1000 mb
+  110 TH9251000                        K                   1 A  Theta difference 925 mb - 1000 mb
+  111 THE9251000                       K                   1 A  ThetaE difference 925 mb - 1000 mb
+  112 PDELDRY                          Pa                 26 A  Dry pressure difference between levels
+  113 PSDRY                            Pa                  1 A  Surface pressure
+  114 DTCOND                           K/s                26 A  T tendency - moist processes
+  115 DTCOND_24_COS                    K/s                26 A  T tendency - moist processes 24hr. cos coeff.
+  116 DTCOND_24_SIN                    K/s                26 A  T tendency - moist processes 24hr. sin coeff.
+  117 DTCOND_12_COS                    K/s                26 A  T tendency - moist processes 12hr. cos coeff.
+  118 DTCOND_12_SIN                    K/s                26 A  T tendency - moist processes 12hr. sin coeff.
+  119 DCQ                              kg/kg/s            26 A  Q tendency due to moist processes
+  120 PRECL                            m/s                 1 A  Large-scale (stable) precipitation rate (liq + ice)
+  121 PRECC                            m/s                 1 A  Convective precipitation rate (liq + ice)
+  122 PRECT                            m/s                 1 A  Total (convective and large-scale) precipitation rate (liq + ice)
+  123 PREC_PCW                         m/s                 1 A  LS_pcw precipitation rate
+  124 PREC_zmc                         m/s                 1 A  CV_zmc precipitation rate
+  125 PRECTMX                          m/s                 1 X  Maximum (convective and large-scale) precipitation rate (liq+ice)
+  126 PRECSL                           m/s                 1 A  Large-scale (stable) snow rate (water equivalent)
+  127 PRECSC                           m/s                 1 A  Convective snow rate (water equivalent)
+  128 PRECCav                          m/s                 1 A  Average large-scale precipitation (liq + ice)
+  129 PRECLav                          m/s                 1 A  Average convective precipitation  (liq + ice)
+  130 SHFLX                            W/m2                1 A  Surface sensible heat flux
+  131 LHFLX                            W/m2                1 A  Surface latent heat flux
+  132 QFLX                             kg/m2/s             1 A  Surface water flux
+  133 TAUX                             N/m2                1 A  Zonal surface stress
+  134 TAUY                             N/m2                1 A  Meridional surface stress
+  135 TREFHT                           K                   1 A  Reference height temperature
+  136 TREFHTMN                         K                   1 M  Minimum reference height temperature over output period
+  137 TREFHTMX                         K                   1 X  Maximum reference height temperature over output period
+  138 QREFHT                           kg/kg               1 A  Reference height humidity
+  139 U10                              m/s                 1 A  10m wind speed
+  140 RHREFHT                          fraction            1 A  Reference height relative humidity
+  141 LANDFRAC                         fraction            1 A  Fraction of sfc area covered by land
+  142 ICEFRAC                          fraction            1 A  Fraction of sfc area covered by sea-ice
+  143 OCNFRAC                          fraction            1 A  Fraction of sfc area covered by ocean
+  144 TREFMNAV                         K                   1 A  Average of TREFHT daily minimum
+  145 TREFMXAV                         K                   1 A  Average of TREFHT daily maximum
+  146 TS                               K                   1 A  Surface temperature (radiative)
+  147 TSMN                             K                   1 M  Minimum surface temperature over output period
+  148 TSMX                             K                   1 X  Maximum surface temperature over output period
+  149 SNOWHLND                         m                   1 A  Water equivalent snow depth
+  150 SNOWHICE                         m                   1 A  Snow depth over ice
+  151 TBOT                             K                   1 A  Lowest model level temperature
+  152 ASDIR                            1                   1 A  albedo: shortwave, direct
+  153 ASDIF                            1                   1 A  albedo: shortwave, diffuse
+  154 ALDIR                            1                   1 A  albedo: longwave, direct
+  155 ALDIF                            1                   1 A  albedo: longwave, diffuse
+  156 SST                              K                   1 A  sea surface temperature
+  157 PTTEND                           K/s                26 A  T total physics tendency
+  158 PTEQ                             kg/kg/s            26 A  Q total physics tendency
+  159 PTECLDLIQ                        kg/kg/s            26 A  CLDLIQ total physics tendency
+  160 PTECLDICE                        kg/kg/s            26 A  CLDICE total physics tendency
+  161 DMEQ                             kg/kg/s            26 A  Q dme adjustment tendency (FV)
+  162 DMECLDLIQ                        kg/kg/s            26 A  CLDLIQ dme adjustment tendency (FV)
+  163 DMECLDICE                        kg/kg/s            26 A  CLDICE dme adjustment tendency (FV)
+  164 QCWAT&IC                         kg/kg              26 I  q associated with cloud water
+  165 TCWAT&IC                         kg/kg              26 I  T associated with cloud water
+  166 LCWAT&IC                         kg/kg              26 I  Cloud water (ice + liq
+  167 CLOUD&IC                         fraction           26 I  Cloud fraction
+  168 CONCLD&IC                        fraction           26 I  Convective cloud fraction
+  169 TKE&IC                           m2/s2              27 I  Turbulent Kinetic Energy
+  170 CUSH&IC                          m                   1 I  Convective Scale Height
+  171 KVH&IC                           m2/s               27 I  Vertical diffusion diffusivities (heat/moisture)
+  172 KVM&IC                           m2/s               27 I  Vertical diffusion diffusivities (momentum)
+  173 PBLH&IC                          m                   1 I  PBL height
+  174 TPERT&IC                         K                   1 I  Perturbation temperature (eddies in PBL)
+  175 QPERT&IC                         kg/kg               1 I  Perturbation specific humidity (eddies in PBL)
+  176 TBOT&IC                          K                   1 I  Lowest model level temperature
+  177 a2x_BCPHIWET                     kg/m2/s             1 A  wetdep of hydrophilic black carbon
+  178 a2x_BCPHIDRY                     kg/m2/s             1 A  drydep of hydrophilic black carbon
+  179 a2x_BCPHODRY                     kg/m2/s             1 A  drydep of hydrophobic black carbon
+  180 a2x_OCPHIWET                     kg/m2/s             1 A  wetdep of hydrophilic organic carbon
+  181 a2x_OCPHIDRY                     kg/m2/s             1 A  drydep of hydrophilic organic carbon
+  182 a2x_OCPHODRY                     kg/m2/s             1 A  drydep of hydrophobic organic carbon
+  183 a2x_DSTWET1                      kg/m2/s             1 A  wetdep of dust (bin1)
+  184 a2x_DSTDRY1                      kg/m2/s             1 A  drydep of dust (bin1)
+  185 a2x_DSTWET2                      kg/m2/s             1 A  wetdep of dust (bin2)
+  186 a2x_DSTDRY2                      kg/m2/s             1 A  drydep of dust (bin2)
+  187 a2x_DSTWET3                      kg/m2/s             1 A  wetdep of dust (bin3)
+  188 a2x_DSTDRY3                      kg/m2/s             1 A  drydep of dust (bin3)
+  189 a2x_DSTWET4                      kg/m2/s             1 A  wetdep of dust (bin4)
+  190 a2x_DSTDRY4                      kg/m2/s             1 A  drydep of dust (bin4)
+  191 TS1                              K                   1 A  TS1      subsoil temperature
+  192 TS2                              K                   1 A  TS2      subsoil temperature
+  193 TS3                              K                   1 A  TS3      subsoil temperature
+  194 TS4                              K                   1 A  TS4      subsoil temperature
+  195 SICTHK                           m                   1 A  Sea ice thickness
+  196 TSICE                            K                   1 A  Ice temperature
+  197 TS1&IC                           K                   1 I  TS1      subsoil temperature
+  198 TS2&IC                           K                   1 I  TS2      subsoil temperature
+  199 TS3&IC                           K                   1 I  TS3      subsoil temperature
+  200 TS4&IC                           K                   1 I  TS4      subsoil temperature
+  201 SICTHK&IC                        m                   1 I  Sea ice thickness
+  202 TSICE&IC                         K                   1 I  Ice temperature
+  203 SNOWHICE&IC                      m                   1 I  Water equivalent snow depth
+  204 ICEFRAC&IC                       fraction            1 I  Fraction of sfc area covered by sea-ice
+  205 TSICERAD&IC                      K                   1 I  Radiatively equivalent ice temperature
+  206 TEINP                            W/m2                1 A  Total energy of physics input
+  207 TEOUT                            W/m2                1 A  Total energy of physics output
+  208 TEFIX                            W/m2                1 A  Total energy after fixer
+  209 DTCORE                           K/s                26 A  T tendency due to dynamical core
+  210 m_Q_c                            kg/m^2             26 A  Q mass per layer used in climate calculation
+  211 cb_Q_c                           kg/m^2              1 A  Q column burden used in climate calculation
+  212 m_ozone_c                        kg/m^2             26 A  ozone mass per layer used in climate calculation
+  213 cb_ozone_c                       kg/m^2              1 A  ozone column burden used in climate calculation
+  214 m_O2_c                           kg/m^2             26 A  O2 mass per layer used in climate calculation
+  215 cb_O2_c                          kg/m^2              1 A  O2 column burden used in climate calculation
+  216 m_CO2_c                          kg/m^2             26 A  CO2 mass per layer used in climate calculation
+  217 cb_CO2_c                         kg/m^2              1 A  CO2 column burden used in climate calculation
+  218 m_N2O_c                          kg/m^2             26 A  N2O mass per layer used in climate calculation
+  219 cb_N2O_c                         kg/m^2              1 A  N2O column burden used in climate calculation
+  220 m_CH4_c                          kg/m^2             26 A  CH4 mass per layer used in climate calculation
+  221 cb_CH4_c                         kg/m^2              1 A  CH4 column burden used in climate calculation
+  222 m_CFC11_c                        kg/m^2             26 A  CFC11 mass per layer used in climate calculation
+  223 cb_CFC11_c                       kg/m^2              1 A  CFC11 column burden used in climate calculation
+  224 m_CFC12_c                        kg/m^2             26 A  CFC12 mass per layer used in climate calculation
+  225 cb_CFC12_c                       kg/m^2              1 A  CFC12 column burden used in climate calculation
+  226 m_sulf_c                         kg/m^2             26 A  sulf mass per layer used in climate calculation
+  227 cb_sulf_c                        kg/m^2              1 A  sulf column burden used in climate calculation
+  228 m_dust1_c                        kg/m^2             26 A  dust1 mass per layer used in climate calculation
+  229 cb_dust1_c                       kg/m^2              1 A  dust1 column burden used in climate calculation
+  230 m_dust2_c                        kg/m^2             26 A  dust2 mass per layer used in climate calculation
+  231 cb_dust2_c                       kg/m^2              1 A  dust2 column burden used in climate calculation
+  232 m_dust3_c                        kg/m^2             26 A  dust3 mass per layer used in climate calculation
+  233 cb_dust3_c                       kg/m^2              1 A  dust3 column burden used in climate calculation
+  234 m_dust4_c                        kg/m^2             26 A  dust4 mass per layer used in climate calculation
+  235 cb_dust4_c                       kg/m^2              1 A  dust4 column burden used in climate calculation
+  236 m_bcar1_c                        kg/m^2             26 A  bcar1 mass per layer used in climate calculation
+  237 cb_bcar1_c                       kg/m^2              1 A  bcar1 column burden used in climate calculation
+  238 m_bcar2_c                        kg/m^2             26 A  bcar2 mass per layer used in climate calculation
+  239 cb_bcar2_c                       kg/m^2              1 A  bcar2 column burden used in climate calculation
+  240 m_ocar1_c                        kg/m^2             26 A  ocar1 mass per layer used in climate calculation
+  241 cb_ocar1_c                       kg/m^2              1 A  ocar1 column burden used in climate calculation
+  242 m_ocar2_c                        kg/m^2             26 A  ocar2 mass per layer used in climate calculation
+  243 cb_ocar2_c                       kg/m^2              1 A  ocar2 column burden used in climate calculation
+  244 m_SSLTA_c                        kg/m^2             26 A  SSLTA mass per layer used in climate calculation
+  245 cb_SSLTA_c                       kg/m^2              1 A  SSLTA column burden used in climate calculation
+  246 m_SSLTC_c                        kg/m^2             26 A  SSLTC mass per layer used in climate calculation
+  247 cb_SSLTC_c                       kg/m^2              1 A  SSLTC column burden used in climate calculation
+  248 AEROD_v                          1                   1 A  Total Aerosol Optical Depth in visible band
+  249 ODV_sulf                         1                   1 A  sulf optical depth in visible band
+  250 ODV_dust1                        1                   1 A  dust1 optical depth in visible band
+  251 ODV_dust2                        1                   1 A  dust2 optical depth in visible band
+  252 ODV_dust3                        1                   1 A  dust3 optical depth in visible band
+  253 ODV_dust4                        1                   1 A  dust4 optical depth in visible band
+  254 ODV_bcar1                        1                   1 A  bcar1 optical depth in visible band
+  255 ODV_bcar2                        1                   1 A  bcar2 optical depth in visible band
+  256 ODV_ocar1                        1                   1 A  ocar1 optical depth in visible band
+  257 ODV_ocar2                        1                   1 A  ocar2 optical depth in visible band
+  258 ODV_SSLTA                        1                   1 A  SSLTA optical depth in visible band
+  259 ODV_SSLTC                        1                   1 A  SSLTC optical depth in visible band
+  260 ozone                            mol/mol            26 I  prescribed ozone
+  261 sulf_D                           kg/kg              26 A  prescribed aero
+  262 bcar1_D                          kg/kg              26 A  prescribed aero
+  263 bcar2_D                          kg/kg              26 A  prescribed aero
+  264 ocar1_D                          kg/kg              26 A  prescribed aero
+  265 ocar2_D                          kg/kg              26 A  prescribed aero
+  266 sslt1_D                          kg/kg              26 A  prescribed aero
+  267 sslt2_D                          kg/kg              26 A  prescribed aero
+  268 sslt3_D                          kg/kg              26 A  prescribed aero
+  269 sslt4_D                          kg/kg              26 A  prescribed aero
+  270 dust1_D                          kg/kg              26 A  prescribed aero
+  271 dust2_D                          kg/kg              26 A  prescribed aero
+  272 dust3_D                          kg/kg              26 A  prescribed aero
+  273 dust4_D                          kg/kg              26 A  prescribed aero
+  274 TTGWORO                          K/s                26 A  T tendency - orographic gravity wave drag
+  275 UTGWORO                          m/s2               26 A  U tendency - orographic gravity wave drag
+  276 VTGWORO                          m/s2               26 A  V tendency - orographic gravity wave drag
+  277 TAUGWX                           N/m2                1 A  Zonal gravity wave surface stress
+  278 TAUGWY                           N/m2                1 A  Meridional gravity wave surface stress
+  279 HB_ri                            no                 26 A  Richardson Number (HB Scheme), I
+  280 VD01                             kg/kg/s            26 A  Vertical diffusion of Q
+  281 VDCLDLIQ                         kg/kg/s            26 A  Vertical diffusion of CLDLIQ
+  282 VDCLDICE                         kg/kg/s            26 A  Vertical diffusion of CLDICE
+  283 TKE                              m2/s2              27 A  Turbulent Kinetic Energy
+  284 PBLH                             m                   1 A  PBL height
+  285 TPERT                            K                   1 A  Perturbation temperature (eddies in PBL)
+  286 QPERT                            kg/kg               1 A  Perturbation specific humidity (eddies in PBL)
+  287 USTAR                            m/s                 1 A  Surface friction velocity
+  288 KVH                              m2/s               27 A  Vertical diffusion diffusivities (heat/moisture)
+  289 KVM                              m2/s               27 A  Vertical diffusion diffusivities (momentum)
+  290 KVT                              m2/s               27 A  Vertical diffusion kinematic molecular conductivity
+  291 CGS                              s/m2               27 A  Counter-gradient coeff on surface kinematic fluxes
+  292 DTVKE                            K/s                26 A  dT/dt vertical diffusion KE dissipation
+  293 DTV                              K/s                26 A  T vertical diffusion
+  294 DUV                              m/s2               26 A  U vertical diffusion
+  295 DVV                              m/s2               26 A  V vertical diffusion
+  296 QT                               kg/kg              26 A  Total water mixing ratio
+  297 SL                               J/kg               26 A  Liquid water static energy
+  298 SLV                              J/kg               26 A  Liq wat virtual static energy
+  299 SLFLX                            W/m2               27 A  Liquid static energy flux
+  300 QTFLX                            W/m2               27 A  Total water flux
+  301 UFLX                             W/m2               27 A  Zonal momentum flux
+  302 VFLX                             W/m2               27 A  Meridional momentm flux
+  303 WGUSTD                           m/s                 1 A  wind gusts from turbulence
+  304 qt_pre_PBL                       kg/kg              26 A  qt_prePBL
+  305 sl_pre_PBL                       J/kg               26 A  sl_prePBL
+  306 slv_pre_PBL                      J/kg               26 A  slv_prePBL
+  307 u_pre_PBL                        m/s                26 A  u_prePBL
+  308 v_pre_PBL                        m/s                26 A  v_prePBL
+  309 qv_pre_PBL                       kg/kg              26 A  qv_prePBL
+  310 ql_pre_PBL                       kg/kg              26 A  ql_prePBL
+  311 qi_pre_PBL                       kg/kg              26 A  qi_prePBL
+  312 t_pre_PBL                        K                  26 A  t_prePBL
+  313 rh_pre_PBL                       %                  26 A  rh_prePBL
+  314 qt_aft_PBL                       kg/kg              26 A  qt_afterPBL
+  315 sl_aft_PBL                       J/kg               26 A  sl_afterPBL
+  316 slv_aft_PBL                      J/kg               26 A  slv_afterPBL
+  317 u_aft_PBL                        m/s                26 A  u_afterPBL
+  318 v_aft_PBL                        m/s                26 A  v_afterPBL
+  319 qv_aft_PBL                       kg/kg              26 A  qv_afterPBL
+  320 ql_aft_PBL                       kg/kg              26 A  ql_afterPBL
+  321 qi_aft_PBL                       kg/kg              26 A  qi_afterPBL
+  322 t_aft_PBL                        K                  26 A  t_afterPBL
+  323 rh_aft_PBL                       %                  26 A  rh_afterPBL
+  324 slflx_PBL                        J/m2/s             27 A  sl flux by PBL
+  325 qtflx_PBL                        kg/m2/s            27 A  qt flux by PBL
+  326 uflx_PBL                         kg/m/s2            27 A  u flux by PBL
+  327 vflx_PBL                         kg/m/s2            27 A  v flux by PBL
+  328 slflx_cg_PBL                     J/m2/s             27 A  sl_cg flux by PBL
+  329 qtflx_cg_PBL                     kg/m2/s            27 A  qt_cg flux by PBL
+  330 uflx_cg_PBL                      kg/m/s2            27 A  u_cg flux by PBL
+  331 vflx_cg_PBL                      kg/m/s2            27 A  v_cg flux by PBL
+  332 qtten_PBL                        kg/kg/s            26 A  qt tendency by PBL
+  333 slten_PBL                        J/kg/s             26 A  sl tendency by PBL
+  334 uten_PBL                         m/s2               26 A  u tendency by PBL
+  335 vten_PBL                         m/s2               26 A  v tendency by PBL
+  336 qvten_PBL                        kg/kg/s            26 A  qv tendency by PBL
+  337 qlten_PBL                        kg/kg/s            26 A  ql tendency by PBL
+  338 qiten_PBL                        kg/kg/s            26 A  qi tendency by PBL
+  339 tten_PBL                         K/s                26 A  T tendency by PBL
+  340 rhten_PBL                        %/s                26 A  RH tendency by PBL
+  341 SOLIN                            W/m2                1 A  Solar insolation
+  342 SOLL                             W/m2                1 A  Solar downward near infrared direct  to surface
+  343 SOLS                             W/m2                1 A  Solar downward visible direct  to surface
+  344 SOLLD                            W/m2                1 A  Solar downward near infrared diffuse to surface
+  345 SOLSD                            W/m2                1 A  Solar downward visible diffuse to surface
+  346 QRS                              K/s                26 A  Solar heating rate
+  347 QRSC                             K/s                26 A  Clearsky solar heating rate
+  348 FSNS                             W/m2                1 A  Net solar flux at surface
+  349 FSNT                             W/m2                1 A  Net solar flux at top of model
+  350 FSNTOA                           W/m2                1 A  Net solar flux at top of atmosphere
+  351 FSUTOA                           W/m2                1 A  Upwelling solar flux at top of atmosphere
+  352 FSNTOAC                          W/m2                1 A  Clearsky net solar flux at top of atmosphere
+  353 FSDTOA                           W/m2                1 A  Downwelling solar flux at top of atmosphere
+  354 FSN200                           W/m2                1 A  Net shortwave flux at 200 mb
+  355 FSN200C                          W/m2                1 A  Clearsky net shortwave flux at 200 mb
+  356 FSNTC                            W/m2                1 A  Clearsky net solar flux at top of model
+  357 FSNSC                            W/m2                1 A  Clearsky net solar flux at surface
+  358 FSDSC                            W/m2                1 A  Clearsky downwelling solar flux at surface
+  359 FSDS                             W/m2                1 A  Downwelling solar flux at surface
+  360 FUS                              W/m2               27 I  Shortwave upward flux
+  361 FDS                              W/m2               27 I  Shortwave downward flux
+  362 FUSC                             W/m2               27 I  Shortwave clear-sky upward flux
+  363 FDSC                             W/m2               27 I  Shortwave clear-sky downward flux
+  364 FSNIRTOA                         W/m2                1 A  Net near-infrared flux (Nimbus-7 WFOV) at top of atmosphere
+  365 FSNRTOAC                         W/m2                1 A  Clearsky net near-infrared flux (Nimbus-7 WFOV) at top of atmosphere
+  366 FSNRTOAS                         W/m2                1 A  Net near-infrared flux (>= 0.7 microns) at top of atmosphere
+  367 FSNR                             W/m2                1 A  Net solar flux at tropopause
+  368 SWCF                             W/m2                1 A  Shortwave cloud forcing
+  369 TOT_CLD_VISTAU                   1                  26 A  Total gbx cloud visible sw optical depth
+  370 TOT_ICLD_VISTAU                  1                  26 A  Total in-cloud visible sw optical depth
+  371 LIQ_ICLD_VISTAU                  1                  26 A  Liquid in-cloud visible sw optical depth
+  372 ICE_ICLD_VISTAU                  1                  26 A  Ice in-cloud visible sw optical depth
+  373 QRL                              K/s                26 A  Longwave heating rate
+  374 QRLC                             K/s                26 A  Clearsky longwave heating rate
+  375 FLNS                             W/m2                1 A  Net longwave flux at surface
+  376 FLDS                             W/m2                1 A  Downwelling longwave flux at surface
+  377 FLNT                             W/m2                1 A  Net longwave flux at top of model
+  378 FLUT                             W/m2                1 A  Upwelling longwave flux at top of model
+  379 FLUTC                            W/m2                1 A  Clearsky upwelling longwave flux at top of model
+  380 FLNTC                            W/m2                1 A  Clearsky net longwave flux at top of model
+  381 FLN200                           W/m2                1 A  Net longwave flux at 200 mb
+  382 FLN200C                          W/m2                1 A  Clearsky net longwave flux at 200 mb
+  383 FLNR                             W/m2                1 A  Net longwave flux at tropopause
+  384 FLNSC                            W/m2                1 A  Clearsky net longwave flux at surface
+  385 FLDSC                            W/m2                1 A  Clearsky downwelling longwave flux at surface
+  386 LWCF                             W/m2                1 A  Longwave cloud forcing
+  387 FUL                              W/m2               27 I  Longwave upward flux
+  388 FDL                              W/m2               27 I  Longwave downward flux
+  389 FULC                             W/m2               27 I  Longwave clear-sky upward flux
+  390 FDLC                             W/m2               27 I  Longwave clear-sky downward flux
+  391 HR                               K/s                26 A  Heating rate needed for d(theta)/dt computation
+  392 ICLDIWP                          gram/m2            26 A  In-cloud ice water path
+  393 ICLDTWP                          gram/m2            26 A  In-cloud cloud total water path (liquid and ice)
+  394 GCLDLWP                          gram/m2            26 A  Grid-box cloud water path
+  395 TGCLDCWP                         gram/m2             1 A  Total grid-box cloud water path (liquid and ice)
+  396 TGCLDLWP                         gram/m2             1 A  Total grid-box cloud liquid water path
+  397 TGCLDIWP                         gram/m2             1 A  Total grid-box cloud ice water path
+  398 rel_cloud                        1/meter            26 I  effective radius of liq in cloud
+  399 rei_cloud                        1                  26 I  effective radius of ice in cloud
+  400 SETLWP                           gram/m2            26 A  Prescribed liquid water path
+  401 LWSH                             m                   1 A  Liquid water scale height
+  402 EFFCLD                           fraction           26 A  Effective cloud fraction
+  403 EMIS                             1                  26 A  cloud emissivity
+  404 CLOUD                            fraction           26 A  Cloud fraction
+  405 CLDTOT                           fraction            1 A  Vertically-integrated total cloud
+  406 CLDLOW                           fraction            1 A  Vertically-integrated low cloud
+  407 CLDMED                           fraction            1 A  Vertically-integrated mid-level cloud
+  408 CLDHGH                           fraction            1 A  Vertically-integrated high cloud
+  409 qt_pre_Cu                        kg/kg              26 I  qt_preCU
+  410 sl_pre_Cu                        J/kg               26 I  sl_preCU
+  411 slv_pre_Cu                       J/kg               26 I  slv_preCU
+  412 u_pre_Cu                         m/s                26 I  u_preCU
+  413 v_pre_Cu                         m/s                26 I  v_preCU
+  414 qv_pre_Cu                        kg/kg              26 I  qv_preCU
+  415 ql_pre_Cu                        kg/kg              26 I  ql_preCU
+  416 qi_pre_Cu                        kg/kg              26 I  qi_preCU
+  417 t_pre_Cu                         K                  26 I  t_preCU
+  418 rh_pre_Cu                        %                  26 I  rh_preCU
+  419 qt_aft_Cu                        kg/kg              26 I  qt_afterCU
+  420 sl_aft_Cu                        J/kg               26 I  sl_afterCU
+  421 slv_aft_Cu                       J/kg               26 I  slv_afterCU
+  422 u_aft_Cu                         m/s                26 I  u_afterCU
+  423 v_aft_Cu                         m/s                26 I  v_afterCU
+  424 qv_aft_Cu                        kg/kg              26 I  qv_afterCU
+  425 ql_aft_Cu                        kg/kg              26 I  ql_afterCU
+  426 qi_aft_Cu                        kg/kg              26 I  qi_afterCU
+  427 t_aft_Cu                         K                  26 I  t_afterCU
+  428 rh_aft_Cu                        %                  26 I  rh_afterCU
+  429 tten_Cu                          K/s                26 I  Temprtaure tendency by cumulus convection
+  430 rhten_Cu                         %/s                26 I  RH tendency by cumumus convection
+  431 CMFDT                            K/s                26 A  T tendency - shallow convection
+  432 CMFDQ                            kg/kg/s            26 A  QV tendency - shallow convection
+  433 CMFDLIQ                          kg/kg/s            26 A  Cloud liq tendency - shallow convection
+  434 CMFDICE                          kg/kg/s            26 A  Cloud ice tendency - shallow convection
+  435 CMFDQR                           kg/kg/s            26 A  Q tendency - shallow convection rainout
+  436 EVAPTCM                          K/s                26 A  T tendency - Evaporation/snow prod from Hack convection
+  437 FZSNTCM                          K/s                26 A  T tendency - Rain to snow conversion from Hack convection
+  438 EVSNTCM                          K/s                26 A  T tendency - Snow to rain prod from Hack convection
+  439 EVAPQCM                          kg/kg/s            26 A  Q tendency - Evaporation from Hack convection
+  440 QC                               kg/kg/s            26 A  Q tendency - shallow convection LW export
+  441 PRECSH                           m/s                 1 A  Shallow Convection precipitation rate
+  442 CMFMC                            kg/m2/s            27 A  Moist shallow convection mass flux
+  443 CMFSL                            W/m2               27 A  Moist shallow convection liquid water static energy flux
+  444 CMFLQ                            W/m2               27 A  Moist shallow convection total water flux
+  445 CIN                              J/kg                1 A  Convective inhibition
+  446 CBMF                             kg/m2/s             1 A  Cloud base mass flux
+  447 CLDTOP                           1                   1 I  Vertical index of cloud top
+  448 CLDBOT                           1                   1 I  Vertical index of cloud base
+  449 PCLDTOP                          1                   1 A  Pressure of cloud top
+  450 PCLDBOT                          1                   1 A  Pressure of cloud base
+  451 FREQSH                           fraction            1 A  Fractional occurance of shallow convection
+  452 HKFLXPRC                         kg/m2/s            27 A  Flux of precipitation from HK convection
+  453 HKFLXSNW                         kg/m2/s            27 A  Flux of snow from HK convection
+  454 HKNTPRPD                         kg/kg/s            26 A  Net precipitation production from HK convection
+  455 HKNTSNPD                         kg/kg/s            26 A  Net snow production from HK convection
+  456 HKEIHEAT                         W/kg               26 A  Heating by ice and evaporation in HK convection
+  457 PRECZ                            m/s                 1 A  total precipitation from ZM convection
+  458 ZMDT                             K/s                26 A  T tendency - Zhang-McFarlane moist convection
+  459 ZMDQ                             kg/kg/s            26 A  Q tendency - Zhang-McFarlane moist convection
+  460 ZMDICE                           kg/kg/s            26 A  Cloud ice tendency - Zhang-McFarlane convection
+  461 ZMDLIQ                           kg/kg/s            26 A  Cloud liq tendency - Zhang-McFarlane convection
+  462 EVAPTZM                          K/s                26 A  T tendency - Evaporation/snow prod from Zhang convection
+  463 FZSNTZM                          K/s                26 A  T tendency - Rain to snow conversion from Zhang convection
+  464 EVSNTZM                          K/s                26 A  T tendency - Snow to rain prod from Zhang convection
+  465 EVAPQZM                          kg/kg/s            26 A  Q tendency - Evaporation from Zhang-McFarlane moist convection
+  466 ZMFLXPRC                         kg/m2/s            27 A  Flux of precipitation from ZM convection
+  467 ZMFLXSNW                         kg/m2/s            27 A  Flux of snow from ZM convection
+  468 ZMNTPRPD                         kg/kg/s            26 A  Net precipitation production from ZM convection
+  469 ZMNTSNPD                         kg/kg/s            26 A  Net snow production from ZM convection
+  470 ZMEIHEAT                         W/kg               26 A  Heating by ice and evaporation in ZM convection
+  471 CMFMCDZM                         kg/m2/s            27 A  Convection mass flux from ZM deep
+  472 PRECCDZM                         m/s                 1 A  Convective precipitation rate from ZM deep
+  473 PCONVB                           Pa                  1 A  convection base pressure
+  474 PCONVT                           Pa                  1 A  convection top  pressure
+  475 CAPE                             J/kg                1 A  Convectively available potential energy
+  476 FREQZM                           fraction            1 A  Fractional occurance of ZM convection
+  477 ZMMTT                            K/s                26 A  T tendency - ZM convective momentum transport
+  478 ZMMTU                            m/s2               26 A  U tendency - ZM convective momentum transport
+  479 ZMMTV                            m/s2               26 A  V tendency - ZM convective momentum transport
+  480 ZMMU                             kg/m2/s            26 A  ZM convection updraft mass flux
+  481 ZMMD                             kg/m2/s            26 A  ZM convection downdraft mass flux
+  482 ZMUPGU                           m/s2               26 A  zonal force from ZM updraft pressure gradient term
+  483 ZMUPGD                           m/s2               26 A  zonal force from ZM downdraft pressure gradient term
+  484 ZMVPGU                           m/s2               26 A  meridional force from ZM updraft pressure gradient term
+  485 ZMVPGD                           m/s2               26 A  merdional force from ZM downdraft pressure gradient term
+  486 ZMICUU                           m/s                26 A  ZM in-cloud U updrafts
+  487 ZMICUD                           m/s                26 A  ZM in-cloud U downdrafts
+  488 ZMICVU                           m/s                26 A  ZM in-cloud V updrafts
+  489 ZMICVD                           m/s                26 A  ZM in-cloud V downdrafts
+  490 CLDLIQ                           kg/kg              26 A  Grid box averaged cloud liquid amount
+  491 SFCLDLIQ                         kg/m2/s             1 A  CLDLIQ surface flux
+  492 CLDICE                           kg/kg              26 A  Grid box averaged cloud ice amount
+  493 SFCLDICE                         kg/m2/s             1 A  CLDICE surface flux
+  494 CLDLIQAP                         kg/kg              26 A  CLDLIQ after physics
+  495 CLDICEAP                         kg/kg              26 A  CLDICE after physics
+  496 CLDLIQBP                         kg/kg              26 A  CLDLIQ before physics
+  497 CLDICEBP                         kg/kg              26 A  CLDICE before physics
+  498 FWAUT                            fraction           26 A  Relative importance of liquid autoconversion
+  499 FSAUT                            fraction           26 A  Relative importance of ice autoconversion
+  500 FRACW                            fraction           26 A  Relative importance of rain accreting liquid
+  501 FSACW                            fraction           26 A  Relative importance of snow accreting liquid
+  502 FSACI                            fraction           26 A  Relative importance of snow accreting ice
+  503 CME                              kg/kg/s            26 A  Rate of cond-evap within the cloud
+  504 CMEICE                           kg/kg/s            26 A  Rate of cond-evap of ice within the cloud
+  505 CMELIQ                           kg/kg/s            26 A  Rate of cond-evap of liq within the cloud
+  506 ICE2PR                           kg/kg/s            26 A  Rate of conversion of ice to precip
+  507 LIQ2PR                           kg/kg/s            26 A  Rate of conversion of liq to precip
+  508 ZMDLF                            kg/kg/s            26 A  Detrained liquid water from ZM convection
+  509 SHDLF                            kg/kg/s            26 A  Detrained liquid water from shallow convection
+  510 PRODPREC                         kg/kg/s            26 A  Rate of conversion of condensate to precip
+  511 EVAPPREC                         kg/kg/s            26 A  Rate of evaporation of falling precip
+  512 EVAPSNOW                         kg/kg/s            26 A  Rate of evaporation of falling snow
+  513 HPROGCLD                         W/kg               26 A  Heating from prognostic clouds
+  514 HCME                             W/kg               26 A  Heating from cond-evap within the cloud
+  515 HEVAP                            W/kg               26 A  Heating from evaporation of falling precip
+  516 HFREEZ                           W/kg               26 A  Heating rate due to freezing of precip
+  517 HMELT                            W/kg               26 A  Heating from snow melt
+  518 HREPART                          W/kg               26 A  Heating from cloud ice/liquid repartitioning
+  519 REPARTICE                        kg/kg/s            26 A  Cloud ice tendency from cloud ice/liquid repartitioning
+  520 REPARTLIQ                        kg/kg/s            26 A  Cloud liq tendency from cloud ice/liquid repartitioning
+  521 FICE                             fraction           26 A  Fractional ice content within cloud
+  522 ICWMR                            kg/kg              26 A  Prognostic in-cloud water mixing ratio
+  523 ICIMR                            kg/kg              26 A  Prognostic in-cloud ice mixing ratio
+  524 PCSNOW                           m/s                 1 A  Snow fall from prognostic clouds
+  525 DQSED                            kg/kg/s            26 A  Water vapor tendency from cloud sedimentation
+  526 DLSED                            kg/kg/s            26 A  Cloud liquid tendency from sedimentation
+  527 DISED                            kg/kg/s            26 A  Cloud ice tendency from sedimentation
+  528 HSED                             W/kg               26 A  Heating from cloud sediment evaporation
+  529 SNOWSED                          m/s                 1 A  Snow from cloud ice sedimentation
+  530 RAINSED                          m/s                 1 A  Rain from cloud liquid sedimentation
+  531 PRECSED                          m/s                 1 A  Precipitation from cloud sedimentation
+  532 CNVCLD                           fraction            1 A  Vertically integrated convective cloud amount
+  533 CLDST                            fraction           26 A  Stratus cloud fraction
+  534 CONCLD                           fraction           26 A  Convective cloud cover
+  535 AST                              fraction           26 A  Stratus cloud fraction
+  536 LIQCLDF                          fraction           26 A  Stratus Liquid cloud fraction
+  537 ICECLDF                          fraction           26 A  Stratus ICE cloud fraction
+  538 IWC                              kg/m3              26 A  Grid box average ice water content
+  539 LWC                              kg/m3              26 A  Grid box average liquid water content
+  540 ICWNC                            m-3                26 A  Prognostic in-cloud water number conc
+  541 ICINC                            m-3                26 A  Prognostic in-cloud ice number conc
+  542 EFFLIQ                           Micron             26 A  Prognostic droplet effective radius
+  543 EFFLIQ_IND                       Micron             26 A  Prognostic droplet effective radius (indirect effect)
+  544 EFFICE                           Micron             26 A  Prognostic ice effective radius
+  545 REL                              micron             26 A  effective liquid drop radius
+  546 REI                              micron             26 A  effective ice particle radius
+  547 LS_FLXPRC                        kg/m2/s            27 A  ls stratiform gbm interface rain+snow flux
+  548 LS_FLXSNW                        kg/m2/s            27 A  ls stratiform gbm interface snow flux
+  549 PRACWO                           1/s                26 A  Accretion of cloud water by rain
+  550 PSACWO                           1/s                26 A  Accretion of cloud water by snow
+  551 PSACIO                           1/s                26 A  Accretion of cloud ice by snow
+  552 CLDLIQSTR                        kg/kg              26 A  Stratiform CLDLIQ
+  553 CLDICESTR                        kg/kg              26 A  Stratiform CLDICE
+  554 CLDLIQCON                        kg/kg              26 A  Convective CLDLIQ
+  555 CLDICECON                        kg/kg              26 A  Convective CLDICE
+  556 SSLTA                            kg/kg              26 A  sea salt
+  557 SSLTC                            kg/kg              26 A  sea salt
+  558 TROP_P                           Pa                  1 A  Tropopause Pressure
+  559 TROP_T                           K                   1 A  Tropopause Temperature
+  560 TROP_Z                           m                   1 A  Tropopause Height
+  561 TROP_DZ                          m                  26 A  Relative Tropopause Height
+  562 TROP_PD                          probability        26 A  Tropopause Probabilty
+  563 TROP_FD                          probability         1 A  Tropopause Found
+  564 TROPP_P                          Pa                  1 A  Tropopause Pressure (primary)
+  565 TROPP_T                          K                   1 A  Tropopause Temperature (primary)
+  566 TROPP_Z                          m                   1 A  Tropopause Height (primary)
+  567 TROPP_DZ                         m                  26 A  Relalive Tropopause Height (primary)
+  568 TROPP_PD                         probability        26 A  Tropopause Distribution (primary)
+  569 TROPP_FD                         probability         1 A  Tropopause Found (primary)
+  570 hstobie_trop                     fraction of mode   26 I  Lowest level with stratospheric chemsitry
+  571 hstobie_linoz                    fraction of mode   26 I  Lowest possible Linoz level
+  572 hstobie_tropop                   fraction of mode   26 I  Troposphere boundary calculated in chemistry
+  573 SGH                              m                   1 I  Standard deviation of orography
+  574 SGH30                            m                   1 I  Standard deviation of 30s orography
+  575 DQP                              kg/kg/s            26 A  Specific humidity tendency due to precipitation
+ BLDFLD:nfmaster=         575
+ FLDLST: Tape            2  is empty
+ FLDLST: Tape            3  is empty
+ FLDLST: Tape            4  is empty
+ FLDLST: Tape            5  is empty
+ FLDLST: Tape            6  is empty
+ FLDLST: Tape            7  is empty
+  
+ FLDLST: History file            1  contains            2  fields
+  Write frequency:                            1
+  Filename specifier:              h%t.nc
+  Output precision:                double
+  Number of time samples per file:           97
+  Included fields are:
+    1 PS                               Pa                  1 I  Surface pressure                                                                                                                                                                                                                                                
+    2 T                                K                  26 I  Temperature                                                                                                                                                                                                                                                     
+  
+ FLDLST: History file            8  contains           15  fields
+  Write frequency:                 YEARLY   (INITIAL CONDITIONS)
+  Filename specifier:              %c.cam.i.%y-%m-%d-%s.nc
+  Output precision:                double
+  Number of time samples per file:            1
+  Included fields are:
+    1 CLDICE&IC                        kg/kg              26 I  Grid box averaged cloud ice amount                                                                                                                                                                                                                              
+    2 CLDLIQ&IC                        kg/kg              26 I  Grid box averaged cloud liquid amount                                                                                                                                                                                                                           
+    3 ICEFRAC&IC                       fraction            1 I  Fraction of sfc area covered by sea-ice                                                                                                                                                                                                                         
+    4 PS&IC                            Pa                  1 I  Surface pressure                                                                                                                                                                                                                                                
+    5 Q&IC                             kg/kg              26 I  Specific humidity                                                                                                                                                                                                                                               
+    6 SICTHK&IC                        m                   1 I  Sea ice thickness                                                                                                                                                                                                                                               
+    7 SNOWHICE&IC                      m                   1 I  Water equivalent snow depth                                                                                                                                                                                                                                     
+    8 T&IC                             K                  26 I  Temperature                                                                                                                                                                                                                                                     
+    9 TS1&IC                           K                   1 I  TS1      subsoil temperature                                                                                                                                                                                                                                    
+   10 TS2&IC                           K                   1 I  TS2      subsoil temperature                                                                                                                                                                                                                                    
+   11 TS3&IC                           K                   1 I  TS3      subsoil temperature                                                                                                                                                                                                                                    
+   12 TS4&IC                           K                   1 I  TS4      subsoil temperature                                                                                                                                                                                                                                    
+   13 TSICE&IC                         K                   1 I  Ice temperature                                                                                                                                                                                                                                                 
+   14 US&IC                            m/s                26 I  Zonal wind, staggered                                                                                                                                                                                                                                           
+   15 VS&IC                            m/s                26 I  Meridional wind, staggered                                                                                                                                                                                                                                      
+(seq_mct_drv) : Initialize lnd component LND
+(seq_mct_drv) : Initialize rof component ROF
+(seq_mct_drv) : Initialize ocn component OCN
+(seq_mct_drv) : Initialize ice component ICE
+(seq_mct_drv) : Initialize glc component GLC
+(seq_mct_drv) : Initialize wav component WAV
+(seq_mct_drv) : Determine final settings for presence of surface components
+  
+(seq_mct_drv) : After component initialization:
+(seq_mct_drv) : atm model present     =      T
+(seq_mct_drv) : lnd model present     =      F
+(seq_mct_drv) : ocn model present     =      T
+(seq_mct_drv) : ice model present     =      F
+(seq_mct_drv) : glc model present     =      F
+(seq_mct_drv) : sno model present     =      F
+(seq_mct_drv) : rof model present     =      F
+(seq_mct_drv) : rof/flood present     =      F
+(seq_mct_drv) : wav model present     =      F
+(seq_mct_drv) : atm model prognostic  =      T
+(seq_mct_drv) : lnd model prognostic  =      F
+(seq_mct_drv) : ocn model prognostic  =      F
+(seq_mct_drv) : ice model prognostic  =      F
+(seq_mct_drv) : glc model prognostic  =      F
+(seq_mct_drv) : sno model prognostic  =      F
+(seq_mct_drv) : rof model prognostic  =      F
+(seq_mct_drv) : ocn rof   prognostic  =      F
+(seq_mct_drv) : wav model prognostic  =      F
+(seq_mct_drv) : dead components       =      F
+(seq_mct_drv) : domain_check          =      T
+(seq_mct_drv) : atm_nx,atm_ny         =      144      96
+(seq_mct_drv) : lnd_nx,lnd_ny         =        0       0
+(seq_mct_drv) : rof_nx,rof_ny         =        0       0
+(seq_mct_drv) : ice_nx,ice_ny         =        0       0
+(seq_mct_drv) : ocn_nx,ocn_ny         =        0       0
+(seq_mct_drv) : glc_nx,glc_ny         =        0       0
+(seq_mct_drv) : sno_nx,sno_ny         =        0       0
+(seq_mct_drv) : wav_nx,wav_ny         =        0       0
+(seq_mct_drv) : skip init ocean run   =      T
+(seq_mct_drv) : ocean tight coupling  =      T
+(seq_mct_drv) : cpl_cdf64             =      T
+(seq_mct_drv) : do_histavg            =      F
+(seq_mct_drv) : atm_aero              =      T
+  
+  
+(seq_mct_drv) : creating gsmap_ax
+(seq_mctext_gsmapCreate) created new gsmap decomp_type =       2
+(seq_mctext_gsmapCreate)   ngseg/gsize        =    13824   13824
+(seq_mctext_gsmapCreate)   mpisize/active_pes =        2       2
+(seq_mctext_gsmapCreate)   avg seg per pe/ape =     6912    6912
+(seq_mctext_gsmapCreate)   nlseg/maxnlsegs    =     6912    6912
+(seq_mct_drv) : Initializing mapper_Ca2x       1
+(seq_map_init_rearrsplit)  gsmaps are not identical
+MCT::m_Router::initp_: GSMap indices not increasing...Will correct
+MCT::m_Router::initp_: RGSMap indices not increasing...Will correct
+(seq_mct_drv) : Initializing mapper_Cx2a       1
+(seq_map_init_rearrsplit)  gsmaps are not identical
+MCT::m_Router::initp_: RGSMap indices not increasing...Will correct
+MCT::m_Router::initp_: GSMap indices not increasing...Will correct
+(seq_mct_drv) : creating dom_ax
+  
+(seq_mct_drv) : creating gsmap_ox
+(seq_mctext_gsmapCreate) created new gsmap decomp_type =       2
+(seq_mctext_gsmapCreate)   ngseg/gsize        =    13824   13824
+(seq_mctext_gsmapCreate)   mpisize/active_pes =        2       2
+(seq_mctext_gsmapCreate)   avg seg per pe/ape =     6912    6912
+(seq_mctext_gsmapCreate)   nlseg/maxnlsegs    =     6912    6912
+(seq_mct_drv) : Initializing mapper_Co2x       1
+(seq_map_init_rearrsplit)  gsmaps are not identical
+MCT::m_Router::initp_: GSMap indices not increasing...Will correct
+MCT::m_Router::initp_: RGSMap indices not increasing...Will correct
+(seq_mct_drv) : Initializing mapper_Cx2o       1
+(seq_map_init_rearrsplit)  gsmaps are not identical
+MCT::m_Router::initp_: RGSMap indices not increasing...Will correct
+MCT::m_Router::initp_: GSMap indices not increasing...Will correct
+(seq_mct_drv) : creating dom_ox
+  
+(seq_mct_drv) : Initializing mapper_Sa2o
+(seq_map_init_rcfile)  called for mapper_Sa2o initialization
+  
+(seq_mct_drv) : Initializing mapper_Va2o
+(seq_map_init_rcfile)  called for mapper_Va2o initialization
+  
+(seq_mct_drv) : Initializing mapper_Fa2o
+(seq_map_init_rcfile)  called for mapper_Fa2o initialization
+  
+(seq_mct_drv) : Initializing mapper_So2a
+(seq_map_init_rcfile)  called for mapper_So2a initialization
+  
+(seq_mct_drv) : Initializing mapper_Fo2a
+(seq_map_init_rcfile)  called for mapper_Fo2a initialization
+  
+(seq_mct_drv) : Initializing mapper_Va2o vect
+(seq_map_initvect)  called for mapper_Va2o initvect
+(map_npFixNew4R)  compute bilinear weights & indicies for NP region.
+(map_npFixNew4R)  total npfix points found =          144
+  
+(seq_mct_drv) : Performing domain checking
+(seq_domain_check)  --- checking ocean maskfrac ---
+(seq_domain_check)  --- checking atm/ocn domains ---
+(seq_domain_check_grid)  the domain size is =         6912
+(seq_domain_check_grid)  maximum           difference for lat   0.00000000000000    
+(seq_domain_check_grid)  maximum allowable difference for lat  0.100000000000000E-11
+(seq_domain_check_grid)  the domain size is =         6912
+(seq_domain_check_grid)  maximum           difference for lon   0.00000000000000    
+(seq_domain_check_grid)  maximum allowable difference for lon  0.100000000000000E-11
+(seq_domain_check_grid)  the domain size is =         6912
+(seq_domain_check_grid)  maximum           difference for area   0.00000000000000    
+(seq_domain_check_grid)  maximum allowable difference for area  0.900000000000000E-06
+(seq_domain_check)  --- checking fractions in domains ---
+(seq_domain_check)  maximum           difference for ofrac sum    0.00000000000000    
+(seq_domain_check)  maximum           difference for ifrac sum    0.00000000000000    
+(seq_domain_check)  maximum allowable difference for  frac sum   0.100000000000000E-13
+(seq_domain_check)  maximum allowable tolerance for valid frac   0.100000000000000E-01
+(seq_domain_areafactinit) : min/max mdl2drv    1.00000000000000       1.00000000000000    areafact_a_ATM
+(seq_domain_areafactinit) : min/max drv2mdl    1.00000000000000       1.00000000000000    areafact_a_ATM
+(seq_domain_areafactinit) : min/max mdl2drv    1.00000000000000       1.00000000000000    areafact_o_OCN
+(seq_domain_areafactinit) : min/max drv2mdl    1.00000000000000       1.00000000000000    areafact_o_OCN
+  
+(seq_mct_drv) : Initializing fractions
+(seq_frac_check) [ocn init] afrac min/max   =    1.00000000000000000       1.00000000000000000    
+(seq_frac_check) [ocn init] ofrac min/max   =    1.00000000000000000       1.00000000000000000    
+(seq_frac_check) [ocn init] ifrac min/max   =    0.00000000000000000       0.00000000000000000    
+(seq_frac_check) [atm init] afrac min/max   =    1.00000000000000000       1.00000000000000000    
+(seq_frac_check) [atm init] lfrac min/max   =    0.00000000000000000       0.00000000000000000    
+(seq_frac_check) [atm init] ofrac min/max   =    1.00000000000000000       1.00000000000000000    
+(seq_frac_check) [atm init] ifrac min/max   =    0.00000000000000000       0.00000000000000000    
+(seq_frac_check) [atm init] lfrin min/max   =    0.00000000000000000       0.00000000000000000    
+(seq_frac_check) [atm init] sum min/max     =    1.00000000000000000       1.00000000000000000    
+(seq_frac_check) [atm init] sum ncnt/maxerr =        0   0.00000000000000000    
+  
+(seq_mct_drv) : Setting fractions
+  
+(seq_mct_drv) : Initializing atm/ocn flux component
+(seq_mct_drv) : Calling map_ocn2atm_mct for mapping o2x_ox(eoi) to o2x_ax(eoi)
+(seq_mct_drv) : Calling map_ocn2atm_mct for mapping xao_ox to xao_ax
+(seq_mct_drv) : Calling mrg_x2a_run_mct
+  atm field:          _avsdr, lnd merge:          _avsdr, ice merge:          _avsdr, xao merge:          _avsdr, ocn merge:           unset
+ field_atm,lmerge, imerge, xmerge, omerge= Sx_avsdr T T T T
+  atm field:          _anidr, lnd merge:          _anidr, ice merge:          _anidr, xao merge:          _anidr, ocn merge:           unset
+ field_atm,lmerge, imerge, xmerge, omerge= Sx_anidr T T T T
+  atm field:          _avsdf, lnd merge:          _avsdf, ice merge:          _avsdf, xao merge:          _avsdf, ocn merge:           unset
+ field_atm,lmerge, imerge, xmerge, omerge= Sx_avsdf T T T T
+  atm field:          _anidf, lnd merge:          _anidf, ice merge:          _anidf, xao merge:          _anidf, ocn merge:           unset
+ field_atm,lmerge, imerge, xmerge, omerge= Sx_anidf T T T T
+  atm field:           _tref, lnd merge:           _tref, ice merge:           _tref, xao merge:           _tref, ocn merge:           unset
+ field_atm,lmerge, imerge, xmerge, omerge= Sx_tref T T T T
+  atm field:           _qref, lnd merge:           _qref, ice merge:           _qref, xao merge:           _qref, ocn merge:           unset
+ field_atm,lmerge, imerge, xmerge, omerge= Sx_qref T T T T
+  atm field:              _t, lnd merge:              _t, ice merge:              _t, xao merge:           unset, ocn merge:              _t
+ field_atm,lmerge, imerge, xmerge, omerge= Sx_t T T T T
+  atm field:            _u10, lnd merge:            _u10, ice merge:            _u10, xao merge:            _u10, ocn merge:           unset
+ field_atm,lmerge, imerge, xmerge, omerge= Sx_u10 T T T T
+  atm field:           _taux, lnd merge:           _taux, ice merge:           _taux, xao merge:           _taux, ocn merge:           unset
+ field_atm,lmerge, imerge, xmerge, omerge= Faxx_taux T T T T
+  atm field:           _tauy, lnd merge:           _tauy, ice merge:           _tauy, xao merge:           _tauy, ocn merge:           unset
+ field_atm,lmerge, imerge, xmerge, omerge= Faxx_tauy T T T T
+  atm field:            _lat, lnd merge:            _lat, ice merge:            _lat, xao merge:            _lat, ocn merge:           unset
+ field_atm,lmerge, imerge, xmerge, omerge= Faxx_lat T T T T
+  atm field:            _sen, lnd merge:            _sen, ice merge:            _sen, xao merge:            _sen, ocn merge:           unset
+ field_atm,lmerge, imerge, xmerge, omerge= Faxx_sen T T T T
+  atm field:           _lwup, lnd merge:           _lwup, ice merge:           _lwup, xao merge:           _lwup, ocn merge:           unset
+ field_atm,lmerge, imerge, xmerge, omerge= Faxx_lwup T T T T
+  atm field:           _evap, lnd merge:           _evap, ice merge:           _evap, xao merge:           _evap, ocn merge:           unset
+ field_atm,lmerge, imerge, xmerge, omerge= Faxx_evap T T T T
+  atm field:        _flxdst1, lnd merge:        _flxdst1, ice merge:           unset, xao merge:           unset, ocn merge:           unset
+ field_atm,lmerge, imerge, xmerge, omerge= Fall_flxdst1 F T T T
+  atm field:        _flxdst2, lnd merge:        _flxdst2, ice merge:           unset, xao merge:           unset, ocn merge:           unset
+ field_atm,lmerge, imerge, xmerge, omerge= Fall_flxdst2 F T T T
+  atm field:        _flxdst3, lnd merge:        _flxdst3, ice merge:           unset, xao merge:           unset, ocn merge:           unset
+ field_atm,lmerge, imerge, xmerge, omerge= Fall_flxdst3 F T T T
+  atm field:        _flxdst4, lnd merge:        _flxdst4, ice merge:           unset, xao merge:           unset, ocn merge:           unset
+ field_atm,lmerge, imerge, xmerge, omerge= Fall_flxdst4 F T T T
+(seq_mct_drv) : Calling atm_init_mct phase 2
+(seq_mct_drv) : Initialize atm component phase 2 ATM
+ FV subcycling - nv, n2, nsplit, dt =            1           1           4   450.00000000000000     
+ Divergence damping: use 2nd order damping
+ nstep, te        0   0.33406526794911861E+10   0.33406526794911861E+10  -0.00000000000000000E+00   0.10127555424403916E+06
+ chem_surfvals_set: ncdate=          101  co2vmr=   3.6699999999999998E-004
+ chem_surfvals_set: ch4vmr=   1.7600000000000001E-006  n2ovmr=   3.1600000000000002E-007  f11vmr=   6.5344999999999995E-010  f12vmr=   5.3500000000000001E-010
+ READ_NEXT_TRCDATA ozone                           
+ READ_NEXT_TRCDATA sulf                            bcar1                           bcar2                           ocar1                           ocar2                           sslt1                           sslt2                           sslt3                           sslt4                           dust1                           dust2                           dust3                           dust4                           
+  
+(seq_mct_drv) : Model initialization complete 
+  
+WSHIST: writing time sample   0 to h-file 1 DATE=0000/01/01 NCSEC=     0
+
+ WSHIST: nhfil(           1 )=h0.nc
+ Opening netcdf history file h0.nc
+ Opened file h0.nc to write      327680
+ H_DEFINE: Successfully opened netcdf file 
+ nstep, te        1   0.33406353625022182E+10   0.33406393368257084E+10   0.21425318000328937E-03   0.10127547720577734E+06
+WSHIST: writing time sample   1 to h-file 1 DATE=0000/01/01 NCSEC=  1800
+
+ nstep, te        2   0.33406241949777236E+10   0.33406269079210286E+10   0.14625309838731942E-03   0.10127540867822709E+06
+WSHIST: writing time sample   2 to h-file 1 DATE=0000/01/01 NCSEC=  3600
+
+ nstep, te        3   0.33406114076751003E+10   0.33406145968443022E+10   0.17192625297119605E-03   0.10127534370128055E+06
+WSHIST: writing time sample   3 to h-file 1 DATE=0000/01/01 NCSEC=  5400
+
+ nstep, te        4   0.33405958168809838E+10   0.33405997361170588E+10   0.21128385974204409E-03   0.10127528289161483E+06
+WSHIST: writing time sample   4 to h-file 1 DATE=0000/01/01 NCSEC=  7200
+
+ nstep, te        5   0.33405809766942463E+10   0.33405847974172363E+10   0.20597319097982207E-03   0.10127522527992034E+06
+WSHIST: writing time sample   5 to h-file 1 DATE=0000/01/01 NCSEC=  9000
+
+ nstep, te        6   0.33405662944472108E+10   0.33405701286336608E+10   0.20669911266964235E-03   0.10127516976052889E+06
+WSHIST: writing time sample   6 to h-file 1 DATE=0000/01/01 NCSEC= 10800
+
+ nstep, te        7   0.33405514123323450E+10   0.33405555098230100E+10   0.22089381823974199E-03   0.10127512201377317E+06
+WSHIST: writing time sample   7 to h-file 1 DATE=0000/01/01 NCSEC= 12600
+
+ nstep, te        8   0.33405380606357760E+10   0.33405418028945675E+10   0.20174352922222862E-03   0.10127507379654031E+06
+WSHIST: writing time sample   8 to h-file 1 DATE=0000/01/01 NCSEC= 14400
+
+ nstep, te        9   0.33405240918444486E+10   0.33405281752540007E+10   0.22013490763450193E-03   0.10127503219922747E+06
+WSHIST: writing time sample   9 to h-file 1 DATE=0000/01/01 NCSEC= 16200
+
+ nstep, te       10   0.33405121146809149E+10   0.33405158852785573E+10   0.20327142320832715E-03   0.10127499476713623E+06
+WSHIST: writing time sample  10 to h-file 1 DATE=0000/01/01 NCSEC= 18000
+
+ nstep, te       11   0.33404996458311162E+10   0.33405035783367558E+10   0.21199989412501265E-03   0.10127495900875083E+06
+  
+       60000         101
+ Total Mass=   1012.7492287352288      (mb), Dry Mass=   1010.8000000000008      (mb)
+ Total Precipitable Water =   19.877594646916819      (kg/m**2)
+ PS max =    1050.3163234785668       min =    976.08234347100711     
+ U  max =    97.082409163987208       min =   -43.949750318670922     
+ V  max =    48.947135652338098       min =   -49.203466817992378     
+ T  max =    299.48043666660561       min =    183.31022568756103     
+ W (mb/day) max =    536.25870950474541       min =   -866.11684769672263     
+ Average Height (geopotential units) =    1225.9489946135614     
+ PRECC max =    47.349165837934315       min =    0.0000000000000000     
+ PRECL max =    54.410377723064620       min =    0.0000000000000000     
+ Total precp=   2.9105890730261690       CON=   1.5258893109554463       LS=   1.3846997620707229     
+  
+WSHIST: writing time sample  11 to h-file 1 DATE=0000/01/01 NCSEC= 19800
+
+ nstep, te       12   0.33404895107020311E+10   0.33404929321256113E+10   0.18444771924125170E-03   0.10127492287352288E+06
+WSHIST: writing time sample  12 to h-file 1 DATE=0000/01/01 NCSEC= 21600
+
+ nstep, te       13   0.33404785300324898E+10   0.33404822464409590E+10   0.20035031277474899E-03   0.10127489066041664E+06
+WSHIST: writing time sample  13 to h-file 1 DATE=0000/01/01 NCSEC= 23400
+
+ nstep, te       14   0.33404699337542028E+10   0.33404732646910028E+10   0.17956971764060412E-03   0.10127486192897616E+06
+WSHIST: writing time sample  14 to h-file 1 DATE=0000/01/01 NCSEC= 25200
+
+ nstep, te       15   0.33404608451322083E+10   0.33404643273161297E+10   0.18772345250809482E-03   0.10127483402566746E+06
+WSHIST: writing time sample  15 to h-file 1 DATE=0000/01/01 NCSEC= 27000
+
+ nstep, te       16   0.33404538086970706E+10   0.33404568484349728E+10   0.16387137001566793E-03   0.10127480637733042E+06
+WSHIST: writing time sample  16 to h-file 1 DATE=0000/01/01 NCSEC= 28800
+
+ nstep, te       17   0.33404462645183930E+10   0.33404494785147481E+10   0.17326563752352144E-03   0.10127477959311007E+06
+WSHIST: writing time sample  17 to h-file 1 DATE=0000/01/01 NCSEC= 30600
+
+ nstep, te       18   0.33404402394919915E+10   0.33404432065609398E+10   0.15995388944884713E-03   0.10127475506741238E+06
+WSHIST: writing time sample  18 to h-file 1 DATE=0000/01/01 NCSEC= 32400
+
+ nstep, te       19   0.33404338945192323E+10   0.33404370438227901E+10   0.16977814368954533E-03   0.10127473398360438E+06
+WSHIST: writing time sample  19 to h-file 1 DATE=0000/01/01 NCSEC= 34200
+
+ nstep, te       20   0.33404279868175464E+10   0.33404310999378114E+10   0.16782754448608315E-03   0.10127471423602017E+06
+WSHIST: writing time sample  20 to h-file 1 DATE=0000/01/01 NCSEC= 36000
+
+ nstep, te       21   0.33404221169859362E+10   0.33404251750062971E+10   0.16485715727747156E-03   0.10127469277623195E+06
+WSHIST: writing time sample  21 to h-file 1 DATE=0000/01/01 NCSEC= 37800
+
+ nstep, te       22   0.33404154185758467E+10   0.33404187250570140E+10   0.17825165540514201E-03   0.10127467316831174E+06
+WSHIST: writing time sample  22 to h-file 1 DATE=0000/01/01 NCSEC= 39600
+
+ nstep, te       23   0.33404091691401501E+10   0.33404123810655546E+10   0.17315420896076505E-03   0.10127465365172330E+06
+  
+      120000         101
+ Total Mass=   1012.7463518876829      (mb), Dry Mass=   1010.8000000000014      (mb)
+ Total Precipitable Water =   19.848257500197590      (kg/m**2)
+ PS max =    1048.6673333741696       min =    975.58587343816180     
+ U  max =    98.372069171884817       min =   -44.759655105006338     
+ V  max =    48.932882010656279       min =   -51.305648257738326     
+ T  max =    299.46243520642025       min =    183.99544489849254     
+ W (mb/day) max =    515.19798973135221       min =   -736.44273436405661     
+ Average Height (geopotential units) =    1225.9127945260254     
+ PRECC max =    50.467546634053072       min =    0.0000000000000000     
+ PRECL max =    53.809778331396622       min =    0.0000000000000000     
+ Total precp=   2.8253282987475226       CON=   1.4696774429867305       LS=   1.3556508557607920     
+  
+WSHIST: writing time sample  23 to h-file 1 DATE=0000/01/01 NCSEC= 41400
+
+ nstep, te       24   0.33404019114200568E+10   0.33404053788286753E+10   0.18692728832201780E-03   0.10127463518876828E+06
+WSHIST: writing time sample  24 to h-file 1 DATE=0000/01/01 NCSEC= 43200
+
+ nstep, te       25   0.33403950462371302E+10   0.33403984555179200E+10   0.18379366027742520E-03   0.10127461798589109E+06
+WSHIST: writing time sample  25 to h-file 1 DATE=0000/01/01 NCSEC= 45000
+
+ nstep, te       26   0.33403877819576979E+10   0.33403912579764161E+10   0.18739152247657006E-03   0.10127459989952810E+06
+WSHIST: writing time sample  26 to h-file 1 DATE=0000/01/01 NCSEC= 46800
+
+ nstep, te       27   0.33403806215635061E+10   0.33403841080008144E+10   0.18795321690602605E-03   0.10127458367454271E+06
+WSHIST: writing time sample  27 to h-file 1 DATE=0000/01/01 NCSEC= 48600
+
+ nstep, te       28   0.33403727545526671E+10   0.33403763092290759E+10   0.19163200981149202E-03   0.10127456516314838E+06
+WSHIST: writing time sample  28 to h-file 1 DATE=0000/01/01 NCSEC= 50400
+
+ nstep, te       29   0.33403651284034057E+10   0.33403686610664177E+10   0.19044530323167588E-03   0.10127454820895156E+06
+WSHIST: writing time sample  29 to h-file 1 DATE=0000/01/01 NCSEC= 52200
+
+ nstep, te       30   0.33403570391588593E+10   0.33403606624594989E+10   0.19533159692522784E-03   0.10127453085129097E+06
+WSHIST: writing time sample  30 to h-file 1 DATE=0000/01/01 NCSEC= 54000
+
+ nstep, te       31   0.33403491089664507E+10   0.33403526116038909E+10   0.18882669735524959E-03   0.10127451184760331E+06
+WSHIST: writing time sample  31 to h-file 1 DATE=0000/01/01 NCSEC= 55800
+
+ nstep, te       32   0.33403399940831323E+10   0.33403437262909122E+10   0.20120284139074274E-03   0.10127449228708350E+06
+WSHIST: writing time sample  32 to h-file 1 DATE=0000/01/01 NCSEC= 57600
+
+ nstep, te       33   0.33403313457604299E+10   0.33403349424213877E+10   0.19389556797252584E-03   0.10127447231216854E+06
+WSHIST: writing time sample  33 to h-file 1 DATE=0000/01/01 NCSEC= 59400
+
+ nstep, te       34   0.33403208056194549E+10   0.33403248004405222E+10   0.21536037477715275E-03   0.10127445247869653E+06
+WSHIST: writing time sample  34 to h-file 1 DATE=0000/01/01 NCSEC= 61200
+
+ nstep, te       35   0.33403108354780836E+10   0.33403146894639688E+10   0.20776800681531206E-03   0.10127443225135715E+06
+  
+      180000         101
+ Total Mass=   1012.7441263041686      (mb), Dry Mass=   1010.8000000000022      (mb)
+ Total Precipitable Water =   19.825561730243241      (kg/m**2)
+ PS max =    1047.2371106460173       min =    975.85281933232454     
+ U  max =    100.94436347245860       min =   -44.782867348846388     
+ V  max =    51.185594345512349       min =   -52.685770281430372     
+ T  max =    299.55200743097487       min =    184.15122870081805     
+ W (mb/day) max =    504.97155531689236       min =   -855.14365826740243     
+ Average Height (geopotential units) =    1225.8603958350279     
+ PRECC max =    51.933676299032932       min =    0.0000000000000000     
+ PRECL max =    53.575144202334478       min =    0.0000000000000000     
+ Total precp=   2.8524045463939034       CON=   1.4910178977604960       LS=   1.3613866486334072     
+  
+WSHIST: writing time sample  35 to h-file 1 DATE=0000/01/01 NCSEC= 63000
+
+ nstep, te       36   0.33402995514665303E+10   0.33403037135227170E+10   0.22437609057980647E-03   0.10127441263041687E+06
+WSHIST: writing time sample  36 to h-file 1 DATE=0000/01/01 NCSEC= 64800
+
+ nstep, te       37   0.33402887872859683E+10   0.33402928259222221E+10   0.21772257523868050E-03   0.10127439285351525E+06
+WSHIST: writing time sample  37 to h-file 1 DATE=0000/01/01 NCSEC= 66600
+
+ nstep, te       38   0.33402769931425138E+10   0.33402812439683614E+10   0.22916174705906727E-03   0.10127437219175926E+06
+WSHIST: writing time sample  38 to h-file 1 DATE=0000/01/01 NCSEC= 68400
+
+ nstep, te       39   0.33402653699240026E+10   0.33402695165496802E+10   0.22354437054993760E-03   0.10127435052385370E+06
+WSHIST: writing time sample  39 to h-file 1 DATE=0000/01/01 NCSEC= 70200
+
+ nstep, te       40   0.33402527014122219E+10   0.33402571643612247E+10   0.24059738943703931E-03   0.10127433154338885E+06
+WSHIST: writing time sample  40 to h-file 1 DATE=0000/01/01 NCSEC= 72000
+
+ nstep, te       41   0.33402404281675649E+10   0.33402447503442039E+10   0.23300840485094437E-03   0.10127431094069622E+06
+WSHIST: writing time sample  41 to h-file 1 DATE=0000/01/01 NCSEC= 73800
+
+ nstep, te       42   0.33402273699968781E+10   0.33402317088827567E+10   0.23390925774916015E-03   0.10127428574049646E+06
+WSHIST: writing time sample  42 to h-file 1 DATE=0000/01/01 NCSEC= 75600
+
+ nstep, te       43   0.33402144016527057E+10   0.33402188273994384E+10   0.23859197726672010E-03   0.10127426351648096E+06
+WSHIST: writing time sample  43 to h-file 1 DATE=0000/01/01 NCSEC= 77400
+
+ nstep, te       44   0.33402012653710089E+10   0.33402056586078315E+10   0.23683942479221505E-03   0.10127423938100637E+06
+WSHIST: writing time sample  44 to h-file 1 DATE=0000/01/01 NCSEC= 79200
+
+ nstep, te       45   0.33401880078856983E+10   0.33401924764815974E+10   0.24090208681845320E-03   0.10127421683904236E+06
+WSHIST: writing time sample  45 to h-file 1 DATE=0000/01/01 NCSEC= 81000
+
+ nstep, te       46   0.33401750537884264E+10   0.33401794252062578E+10   0.23566326974321515E-03   0.10127419353979705E+06
+WSHIST: writing time sample  46 to h-file 1 DATE=0000/01/01 NCSEC= 82800
+
+ nstep, te       47   0.33401619092253513E+10   0.33401663965848103E+10   0.24191373506792454E-03   0.10127417322971250E+06
+  
+      240000         101
+ Total Mass=   1012.7415258118103      (mb), Dry Mass=   1010.8000000000029      (mb)
+ Total Precipitable Water =   19.799042762991515      (kg/m**2)
+ PS max =    1047.1382181684685       min =    971.92105572255286     
+ U  max =    102.91823409848151       min =   -46.601390297418021     
+ V  max =    54.297038746429187       min =   -51.076767714169897     
+ T  max =    299.43827803470401       min =    183.87777015051992     
+ W (mb/day) max =    445.70639034998624       min =   -852.96540233691451     
+ Average Height (geopotential units) =    1225.8001511233861     
+ PRECC max =    52.832467001220643       min =    0.0000000000000000     
+ PRECL max =    77.706000830528353       min =    0.0000000000000000     
+ Total precp=   2.8541288057273047       CON=   1.4842485770640925       LS=   1.3698802286632124     
+  
+WSHIST: writing time sample  47 to h-file 1 DATE=0000/01/01 NCSEC= 84600
+
+ nstep, te       48   0.33401486976772304E+10   0.33401531942349124E+10   0.24240966119016413E-03   0.10127415258118104E+06
+ chem_surfvals_set: ncdate=          102  co2vmr=   3.6699999999999998E-004
+WSHIST: writing time sample  48 to h-file 1 DATE=0000/01/02 NCSEC=     0
+
+ nstep, te       49   0.33401355166993704E+10   0.33401400623743834E+10   0.24505762447873849E-03   0.10127413386408707E+06
+ tStamp_write: model date =      102       0 wall clock = 2019-02-03 14:04:36 avg dt =   173.27 dt =   173.27
+ memory_write: model date =      102       0 memory =     421.90 MB (highwater)         -0.00 MB (usage)  (pe=    0 comps= cpl ATM LND OCN ICE GLC ROF WAV)
+WSHIST: writing time sample  49 to h-file 1 DATE=0000/01/02 NCSEC=  1800
+
+ nstep, te       50   0.33401222564207563E+10   0.33401268012409410E+10   0.24501158906015992E-03   0.10127411388849614E+06
+WSHIST: writing time sample  50 to h-file 1 DATE=0000/01/02 NCSEC=  3600
+
+ nstep, te       51   0.33401091023492250E+10   0.33401136779345255E+10   0.24667018548293136E-03   0.10127409472394930E+06
+WSHIST: writing time sample  51 to h-file 1 DATE=0000/01/02 NCSEC=  5400
+
+ nstep, te       52   0.33400961034341927E+10   0.33401006423948684E+10   0.24469579570717334E-03   0.10127407539621938E+06
+WSHIST: writing time sample  52 to h-file 1 DATE=0000/01/02 NCSEC=  7200
+
+ nstep, te       53   0.33400831070228958E+10   0.33400876874871340E+10   0.24693330235568494E-03   0.10127405669218321E+06
+WSHIST: writing time sample  53 to h-file 1 DATE=0000/01/02 NCSEC=  9000
+
+ nstep, te       54   0.33400706821706986E+10   0.33400751127477450E+10   0.23885291374923330E-03   0.10127403746113596E+06
+WSHIST: writing time sample  54 to h-file 1 DATE=0000/01/02 NCSEC= 10800
+
+ nstep, te       55   0.33400581179465332E+10   0.33400625227987313E+10   0.23746613330692120E-03   0.10127401658298893E+06
+WSHIST: writing time sample  55 to h-file 1 DATE=0000/01/02 NCSEC= 12600
+
+ nstep, te       56   0.33400465822986722E+10   0.33400508230440159E+10   0.22861915606406765E-03   0.10127399721388448E+06
+WSHIST: writing time sample  56 to h-file 1 DATE=0000/01/02 NCSEC= 14400
+
+ nstep, te       57   0.33400348165674996E+10   0.33400391123224311E+10   0.23158477587706413E-03   0.10127397736676110E+06
+WSHIST: writing time sample  57 to h-file 1 DATE=0000/01/02 NCSEC= 16200
+
+ nstep, te       58   0.33400244263398438E+10   0.33400284713353748E+10   0.21806633990717648E-03   0.10127395886049545E+06
+WSHIST: writing time sample  58 to h-file 1 DATE=0000/01/02 NCSEC= 18000
+
+ nstep, te       59   0.33400137544387794E+10   0.33400179522982302E+10   0.22630729420479120E-03   0.10127394254170859E+06
+  
+       60000         102
+ Total Mass=   1012.7392610131153      (mb), Dry Mass=   1010.8000000000037      (mb)
+ Total Precipitable Water =   19.775947089499677      (kg/m**2)
+ PS max =    1047.3138710444784       min =    970.42424793061934     
+ U  max =    104.30850053165496       min =   -47.799082990736437     
+ V  max =    58.321067131152788       min =   -47.939659000779514     
+ T  max =    299.39757862381782       min =    183.65157846202990     
+ W (mb/day) max =    462.37050899436292       min =   -693.84030604857810     
+ Average Height (geopotential units) =    1225.7508543548468     
+ PRECC max =    51.209208896611507       min =    0.0000000000000000     
+ PRECL max =    53.930539442743616       min =    0.0000000000000000     
+ Total precp=   2.8349699391472298       CON=   1.4664524340348868       LS=   1.3685175051123430     
+  
+WSHIST: writing time sample  59 to h-file 1 DATE=0000/01/02 NCSEC= 19800
+
+ nstep, te       60   0.33400049210311260E+10   0.33400087209873595E+10   0.20485629956908195E-03   0.10127392610131155E+06
+WSHIST: writing time sample  60 to h-file 1 DATE=0000/01/02 NCSEC= 21600
+
+ nstep, te       61   0.33399955663821192E+10   0.33399994846022220E+10   0.21123196037428019E-03   0.10127390930847809E+06
