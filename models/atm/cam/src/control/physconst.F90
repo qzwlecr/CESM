@@ -58,28 +58,28 @@ module physconst
 !asc todo: test if change these to parameter would make the application much faster ?! 
    ! modifiable physical constants for aquaplanet
 
-   real(r8), public           :: gravit       = shr_const_g     ! gravitational acceleration (m/s**2)
-   real(r8), public           :: sday         = shr_const_sday  ! sec in siderial day ~ sec
-   real(r8), public           :: mwh2o        = shr_const_mwwv  ! molecular weight h2o
-   real(r8), public           :: cpwv         = shr_const_cpwv  ! specific heat of water vapor (J/K/kg)
-   real(r8), public           :: mwdry        = shr_const_mwdair! molecular weight dry air
-   real(r8), public           :: rearth       = shr_const_rearth! radius of earth (m)
-   real(r8), public           :: tmelt        = shr_const_tkfrz ! Freezing point of water (K)
+   real(r8), public, parameter :: gravit       = shr_const_g     ! gravitational acceleration (m/s**2)
+   real(r8), public, parameter :: sday         = shr_const_sday  ! sec in siderial day ~ sec
+   real(r8), public, parameter :: mwh2o        = shr_const_mwwv  ! molecular weight h2o
+   real(r8), public, parameter :: cpwv         = shr_const_cpwv  ! specific heat of water vapor (J/K/kg)
+   real(r8), public, parameter :: mwdry        = shr_const_mwdair! molecular weight dry air
+   real(r8), public, parameter :: rearth       = shr_const_rearth! radius of earth (m)
+   real(r8), public, parameter :: tmelt        = shr_const_tkfrz ! Freezing point of water (K)
 
 !---------------  Variables below here are derived from those above -----------------------
 
-   real(r8), public           :: rga          = 1._r8/shr_const_g                 ! reciprocal of gravit
-   real(r8), public           :: ra           = 1._r8/shr_const_rearth            ! reciprocal of earth radius
-   real(r8), public           :: omega        = shr_const_omega                   ! earth rot ~ rad/sec
-   real(r8), public           :: rh2o         = shr_const_rwv                     ! Water vapor gas constant ~ J/K/kg
-   real(r8), public           :: rair         = shr_const_rdair   ! Dry air gas constant     ~ J/K/kg
-   real(r8), public           :: epsilo       = shr_const_mwwv/shr_const_mwdair   ! ratio of h2o to dry air molecular weights 
-   real(r8), public           :: zvir         = shr_const_zvir                    ! (rh2o/rair) - 1
-   real(r8), public           :: cpvir        = shr_const_cpvir                   ! CPWV/CPDAIR - 1.0
-   real(r8), public           :: rhodair      = shr_const_rhodair                 ! density of dry air at STP  ~ kg/m^3
-   real(r8), public           :: cappa        = (shr_const_rgas/shr_const_mwdair)/shr_const_cpdair  ! R/Cp
-   real(r8), public           :: ez           ! Coriolis expansion coeff -> omega/sqrt(0.375)   
-   real(r8), public           :: Cpd_on_Cpv   = shr_const_cpdair/shr_const_cpwv
+   real(r8), public, parameter :: rga          = 1._r8/shr_const_g                 ! reciprocal of gravit
+   real(r8), public, parameter :: ra           = 1._r8/shr_const_rearth            ! reciprocal of earth radius
+   real(r8), public, parameter :: omega        = shr_const_omega                   ! earth rot ~ rad/sec
+   real(r8), public, parameter :: rh2o         = shr_const_rwv                     ! Water vapor gas constant ~ J/K/kg
+   real(r8), public, parameter :: rair         = shr_const_rdair   ! Dry air gas constant     ~ J/K/kg
+   real(r8), public, parameter :: epsilo       = shr_const_mwwv/shr_const_mwdair   ! ratio of h2o to dry air molecular weights 
+   real(r8), public, parameter :: zvir         = shr_const_zvir                    ! (rh2o/rair) - 1
+   real(r8), public, parameter :: cpvir        = shr_const_cpvir                   ! CPWV/CPDAIR - 1.0
+   real(r8), public, parameter :: rhodair      = shr_const_rhodair                 ! density of dry air at STP  ~ kg/m^3
+   real(r8), public, parameter :: cappa        = (shr_const_rgas/shr_const_mwdair)/shr_const_cpdair  ! R/Cp
+   real(r8), public, parameter :: ez           = omega / sqrt(0.375_r8)    ! Coriolis expansion coeff -> omega/sqrt(0.375)   
+   real(r8), public, parameter :: Cpd_on_Cpv   = shr_const_cpdair/shr_const_cpwv
 
 !---------------  Variables below here are for WACCM-X -----------------------
    real(r8), public, dimension(:,:,:), pointer :: cpairv ! composition dependent specific heat at constant pressure
@@ -149,85 +149,87 @@ contains
       character(len=*), parameter :: subname = 'physconst_readnl'
       logical       newg, newsday, newmwh2o, newcpwv, newmwdry, newrearth, newtmelt
 
-      ! Physical constants needing to be reset (ie. for aqua planet experiments)
-      namelist /physconst_nl/  cpwv, gravit, mwdry, mwh2o, rearth, sday, tmelt, tms_orocnst, tms_z0fac
+            write(iulog,*)'[ASC debug] Y00: physconst_readnl called!'
+            !stop 'physconst_readnl'
+!       ! Physical constants needing to be reset (ie. for aqua planet experiments)
+!       namelist /physconst_nl/  cpwv, gravit, mwdry, mwh2o, rearth, sday, tmelt, tms_orocnst, tms_z0fac
 
-      !-----------------------------------------------------------------------------
+!       !-----------------------------------------------------------------------------
 
-      if (masterproc) then
-         unitn = getunit()
-         open( unitn, file=trim(nlfile), status='old' )
-         call find_group_name(unitn, 'physconst_nl', status=ierr)
-         if (ierr == 0) then
-            read(unitn, physconst_nl, iostat=ierr)
-            if (ierr /= 0) then
-               call endrun(subname // ':: ERROR reading namelist')
-            end if
-         end if
-         close(unitn)
-         call freeunit(unitn)
-      end if
+!       if (masterproc) then
+!          unitn = getunit()
+!          open( unitn, file=trim(nlfile), status='old' )
+!          call find_group_name(unitn, 'physconst_nl', status=ierr)
+!          if (ierr == 0) then
+!             read(unitn, physconst_nl, iostat=ierr)
+!             if (ierr /= 0) then
+!                call endrun(subname // ':: ERROR reading namelist')
+!             end if
+!          end if
+!          close(unitn)
+!          call freeunit(unitn)
+!       end if
 
-#ifdef SPMD
-      ! Broadcast namelist variables
-      call mpibcast(cpwv,      1,                   mpir8,   0, mpicom)
-      call mpibcast(gravit,    1,                   mpir8,   0, mpicom)
-      call mpibcast(mwdry,     1,                   mpir8,   0, mpicom)
-      call mpibcast(mwh2o,     1,                   mpir8,   0, mpicom)
-      call mpibcast(rearth,    1,                   mpir8,   0, mpicom)
-      call mpibcast(sday,      1,                   mpir8,   0, mpicom)
-      call mpibcast(tmelt,     1,                   mpir8,   0, mpicom)
-      call mpibcast(tms_orocnst, 1,                 mpir8,   0, mpicom)
-      call mpibcast(tms_z0fac, 1,                   mpir8,   0, mpicom)
-#endif
+! #ifdef SPMD
+!       ! Broadcast namelist variables
+!       call mpibcast(cpwv,      1,                   mpir8,   0, mpicom)
+!       call mpibcast(gravit,    1,                   mpir8,   0, mpicom)
+!       call mpibcast(mwdry,     1,                   mpir8,   0, mpicom)
+!       call mpibcast(mwh2o,     1,                   mpir8,   0, mpicom)
+!       call mpibcast(rearth,    1,                   mpir8,   0, mpicom)
+!       call mpibcast(sday,      1,                   mpir8,   0, mpicom)
+!       call mpibcast(tmelt,     1,                   mpir8,   0, mpicom)
+!       call mpibcast(tms_orocnst, 1,                 mpir8,   0, mpicom)
+!       call mpibcast(tms_z0fac, 1,                   mpir8,   0, mpicom)
+! #endif
 
 
       
-      newg     =  gravit .ne. shr_const_g 
-      newsday  =  sday   .ne. shr_const_sday
-      newmwh2o =  mwh2o  .ne. shr_const_mwwv
-      newcpwv  =  cpwv   .ne. shr_const_cpwv
-      newmwdry =  mwdry  .ne. shr_const_mwdair
-      newrearth=  rearth .ne. shr_const_rearth
-      newtmelt =  tmelt  .ne. shr_const_tkfrz
+!       newg     =  gravit .ne. shr_const_g 
+!       newsday  =  sday   .ne. shr_const_sday
+!       newmwh2o =  mwh2o  .ne. shr_const_mwwv
+!       newcpwv  =  cpwv   .ne. shr_const_cpwv
+!       newmwdry =  mwdry  .ne. shr_const_mwdair
+!       newrearth=  rearth .ne. shr_const_rearth
+!       newtmelt =  tmelt  .ne. shr_const_tkfrz
       
       
       
-      if (newg .or. newsday .or. newmwh2o .or. newcpwv .or. newmwdry .or. newrearth .or. newtmelt) then
-         if (masterproc) then
-            write(iulog,*)'****************************************************************************'
-            write(iulog,*)'***    New Physical Constant Values set via namelist                     ***'
-            write(iulog,*)'***                                                                      ***'
-            write(iulog,*)'***    Physical Constant    Old Value                  New Value         ***'
-            if (newg)       write(iulog,*)'***       GRAVITY   ',shr_const_g,gravit,'***'
-            if (newsday)    write(iulog,*)'***       SDAY      ',shr_const_sday,sday,'***'
-            if (newmwh2o)   write(iulog,*)'***       MWH20     ',shr_const_mwwv,mwh2o,'***'
-            if (newcpwv)    write(iulog,*)'***       CPWV      ',shr_const_cpwv,cpwv,'***'
-            if (newmwdry)   write(iulog,*)'***       MWDRY     ',shr_const_mwdair,mwdry,'***'
-            if (newrearth)  write(iulog,*)'***       REARTH    ',shr_const_rearth,rearth,'***'
-            if (newtmelt)   write(iulog,*)'***       TMELT     ',shr_const_tkfrz,tmelt,'***'
-            write(iulog,*)'****************************************************************************'
-         end if
-         rga         = 1._r8/gravit 
-         ra          = 1._r8/rearth
-         omega       = 2.0_R8*pi/sday
-         cpvir       = cpwv/cpair - 1._r8
-         epsilo      = mwh2o/mwdry      
+!       if (newg .or. newsday .or. newmwh2o .or. newcpwv .or. newmwdry .or. newrearth .or. newtmelt) then
+!          if (masterproc) then
+!             write(iulog,*)'****************************************************************************'
+!             write(iulog,*)'***    New Physical Constant Values set via namelist                     ***'
+!             write(iulog,*)'***                                                                      ***'
+!             write(iulog,*)'***    Physical Constant    Old Value                  New Value         ***'
+!             if (newg)       write(iulog,*)'***       GRAVITY   ',shr_const_g,gravit,'***'
+!             if (newsday)    write(iulog,*)'***       SDAY      ',shr_const_sday,sday,'***'
+!             if (newmwh2o)   write(iulog,*)'***       MWH20     ',shr_const_mwwv,mwh2o,'***'
+!             if (newcpwv)    write(iulog,*)'***       CPWV      ',shr_const_cpwv,cpwv,'***'
+!             if (newmwdry)   write(iulog,*)'***       MWDRY     ',shr_const_mwdair,mwdry,'***'
+!             if (newrearth)  write(iulog,*)'***       REARTH    ',shr_const_rearth,rearth,'***'
+!             if (newtmelt)   write(iulog,*)'***       TMELT     ',shr_const_tkfrz,tmelt,'***'
+!             write(iulog,*)'****************************************************************************'
+!          end if
+!          rga         = 1._r8/gravit 
+!          ra          = 1._r8/rearth
+!          omega       = 2.0_R8*pi/sday
+!          cpvir       = cpwv/cpair - 1._r8
+!          epsilo      = mwh2o/mwdry      
          
-         !  rair and rh2o have to be defined before any of the variables that use them
+!          !  rair and rh2o have to be defined before any of the variables that use them
          
-         rair        = r_universal/mwdry
-         rh2o        = r_universal/mwh2o  
+!          rair        = r_universal/mwdry
+!          rh2o        = r_universal/mwh2o  
          
-         cappa       = rair/cpair       
-         rhodair     = pstd/(rair*tmelt)
-         zvir        =  (rh2o/rair)-1.0_R8
-         ez          = omega / sqrt(0.375_r8)
-         Cpd_on_Cpv  = cpair/cpwv
+!          cappa       = rair/cpair       
+!          rhodair     = pstd/(rair*tmelt)
+!          zvir        =  (rh2o/rair)-1.0_R8
+!          ez          = omega / sqrt(0.375_r8)
+!          Cpd_on_Cpv  = cpair/cpwv
          
-      else
-         ez          = omega / sqrt(0.375_r8)
-      end if
+!       else
+!          ez          = omega / sqrt(0.375_r8)
+!       end if
       
     end subroutine physconst_readnl
     
@@ -262,64 +264,66 @@ contains
     !--------------------------------------------
     ! Set constants needed for updates
     !--------------------------------------------
-    dof1 = 5._r8 
-    dof2 = 7._r8
-    kv1  = 4.03_r8
-    kv2  = 3.42_r8
-    kv3  = 3.9_r8
-    kv4  = 0.69_r8
-    kc1  = 56._r8
-    kc2  = 56._r8
-    kc3  = 75.9_r8
-    kc4  = 0.69_r8
+    print *,"[ASC debug] Y00: physconst_update called!"
+    !stop 'physconst_update'
+   !  dof1 = 5._r8 
+   !  dof2 = 7._r8
+   !  kv1  = 4.03_r8
+   !  kv2  = 3.42_r8
+   !  kv3  = 3.9_r8
+   !  kv4  = 0.69_r8
+   !  kc1  = 56._r8
+   !  kc2  = 56._r8
+   !  kc3  = 75.9_r8
+   !  kc4  = 0.69_r8
 
-     !--------------------------------------------
-     ! update cpairv, rairv, mbarv, and cappav
-     !--------------------------------------------
-     do k=1,pver
-        do i=1,ncol
-           mmro = mmr(i,k, ixo)
-           mmro2 = mmr(i,k, ixo2)
-           mmrh = mmr(i,k, ixh)
-           mmrn2 = 1._r8-mmro-mmro2-mmrh
-           mbarv(i,k,lchnk) = 1._r8/(mmro/cnst_mw_o +      &
-                                     mmro2/cnst_mw_o2 +    &
-                                     mmrn2/cnst_mw_n/2._r8 + &
-                                     mmrh/cnst_mw_h)
-           rairv(i,k,lchnk) = shr_const_rgas / mbarv(i,k,lchnk)
-           cpairv(i,k,lchnk) = 0.5_r8*shr_const_rgas*    &
-                                 (dof1*mmro/cnst_mw_o+        &
-                                  dof2*mmro2/cnst_mw_o2+     &
-                                  dof2*mmrn2/cnst_mw_n/2._r8+ &
-                                     dof1*mmrh/cnst_mw_h)
-           cappav(i,k,lchnk) = rairv(i,k,lchnk)/cpairv(i,k,lchnk)
-        enddo
-     enddo
+   !   !--------------------------------------------
+   !   ! update cpairv, rairv, mbarv, and cappav
+   !   !--------------------------------------------
+   !   do k=1,pver
+   !      do i=1,ncol
+   !         mmro = mmr(i,k, ixo)
+   !         mmro2 = mmr(i,k, ixo2)
+   !         mmrh = mmr(i,k, ixh)
+   !         mmrn2 = 1._r8-mmro-mmro2-mmrh
+   !         mbarv(i,k,lchnk) = 1._r8/(mmro/cnst_mw_o +      &
+   !                                   mmro2/cnst_mw_o2 +    &
+   !                                   mmrn2/cnst_mw_n/2._r8 + &
+   !                                   mmrh/cnst_mw_h)
+   !         rairv(i,k,lchnk) = shr_const_rgas / mbarv(i,k,lchnk)
+   !         cpairv(i,k,lchnk) = 0.5_r8*shr_const_rgas*    &
+   !                               (dof1*mmro/cnst_mw_o+        &
+   !                                dof2*mmro2/cnst_mw_o2+     &
+   !                                dof2*mmrn2/cnst_mw_n/2._r8+ &
+   !                                   dof1*mmrh/cnst_mw_h)
+   !         cappav(i,k,lchnk) = rairv(i,k,lchnk)/cpairv(i,k,lchnk)
+   !      enddo
+   !   enddo
 
-     do k=2,pver
-        do i=1,ncol
-           mmro = .5_r8*(mmr(i,k-1, ixo)+mmr(i,k,ixo))
-           mmro2 = .5_r8*(mmr(i,k-1, ixo2)+mmr(i,k,ixo2))
-           mmrn2 = 1._r8-mmro-mmro2
-           mbarvi = .5_r8*(mbarv(i,k-1,lchnk)+mbarv(i,k,lchnk))
-           tint = .5_r8*(t(i,k-1)+t(i,k))
+   !   do k=2,pver
+   !      do i=1,ncol
+   !         mmro = .5_r8*(mmr(i,k-1, ixo)+mmr(i,k,ixo))
+   !         mmro2 = .5_r8*(mmr(i,k-1, ixo2)+mmr(i,k,ixo2))
+   !         mmrn2 = 1._r8-mmro-mmro2
+   !         mbarvi = .5_r8*(mbarv(i,k-1,lchnk)+mbarv(i,k,lchnk))
+   !         tint = .5_r8*(t(i,k-1)+t(i,k))
  
-           kmvis(i,k,lchnk) = (kv1*mmro2/cnst_mw_o2+             &
-                               kv2*mmrn2/cnst_mw_n/2._r8+        &
-                               kv3*mmro/cnst_mw_o)*mbarvi*       &
-                               tint**kv4 * 1.e-7_r8
-           kmcnd(i,k,lchnk) = (kc1*mmro2/cnst_mw_o2+             &
-                               kc2*mmrn2/cnst_mw_n/2._r8+        &
-                               kc3*mmro/cnst_mw_o)*mbarvi*   &
-                               tint**kc4 * 1.e-5_r8
-        enddo
-     enddo
-     do i=1,ncol
-        kmvis(i,1,lchnk) = 1.5_r8*kmvis(i,2,lchnk)-.5_r8*kmvis(i,3,lchnk)
-        kmcnd(i,1,lchnk) = 1.5_r8*kmcnd(i,2,lchnk)-.5_r8*kmcnd(i,3,lchnk)
-        kmvis(i,pverp,lchnk) = kmvis(i,pver,lchnk)
-        kmcnd(i,pverp,lchnk) = kmcnd(i,pver,lchnk)
-     enddo
+   !         kmvis(i,k,lchnk) = (kv1*mmro2/cnst_mw_o2+             &
+   !                             kv2*mmrn2/cnst_mw_n/2._r8+        &
+   !                             kv3*mmro/cnst_mw_o)*mbarvi*       &
+   !                             tint**kv4 * 1.e-7_r8
+   !         kmcnd(i,k,lchnk) = (kc1*mmro2/cnst_mw_o2+             &
+   !                             kc2*mmrn2/cnst_mw_n/2._r8+        &
+   !                             kc3*mmro/cnst_mw_o)*mbarvi*   &
+   !                             tint**kc4 * 1.e-5_r8
+   !      enddo
+   !   enddo
+   !   do i=1,ncol
+   !      kmvis(i,1,lchnk) = 1.5_r8*kmvis(i,2,lchnk)-.5_r8*kmvis(i,3,lchnk)
+   !      kmcnd(i,1,lchnk) = 1.5_r8*kmcnd(i,2,lchnk)-.5_r8*kmcnd(i,3,lchnk)
+   !      kmvis(i,pverp,lchnk) = kmvis(i,pver,lchnk)
+   !      kmcnd(i,pverp,lchnk) = kmcnd(i,pver,lchnk)
+   !   enddo
 
    end subroutine physconst_update
 
