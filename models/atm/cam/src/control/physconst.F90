@@ -55,7 +55,7 @@ module physconst
    real(r8), public, parameter :: mwh2o2      =  34._r8
    real(r8), public, parameter :: mwdms       =  62._r8
 
-
+!asc todo: test if change these to parameter would make the application much faster ?! 
    ! modifiable physical constants for aquaplanet
 
    real(r8), public           :: gravit       = shr_const_g     ! gravitational acceleration (m/s**2)
