@@ -2091,8 +2091,8 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
    integer k                 ! Level index
    integer nn                ! Index of column loops (max=ndayc)
 
-   real(r8) taugab(pcols)        ! Layer total gas absorption optical depth
-   real(r8) tauray(pcols)        ! Layer rayleigh optical depth
+   real(r8) taugab        ! Layer total gas absorption optical depth
+   real(r8) tauray        ! Layer rayleigh optical depth
    real(r8) taucsc               ! Layer cloud scattering optical depth
    real(r8) tautot               ! Total layer optical depth
    real(r8) wtot                 ! Total layer single scatter albedo
@@ -2184,20 +2184,16 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
 
    do k=0,pver
       do i=1,ndayc
-            tauray(i) = trayoslp*(pflx(i,k+1)-pflx(i,k))
-            taugab(i) = abh2o*uh2o(i,k) + abo3*uo3(i,k) + abco2*uco2(i,k) + abo2*uo2(i,k)
-      end do
-   end do
+            tauray = trayoslp*(pflx(i,k+1)-pflx(i,k))
+            taugab = abh2o*uh2o(i,k) + abo3*uo3(i,k) + abco2*uco2(i,k) + abo2*uo2(i,k)
 
-   do k=0,pver
-      do i=1,ndayc
-            tautot = tauxcl(i,k) + tauxci(i,k) + tauray(i) + taugab(i) + aer_tau(i,k)
+            tautot = tauxcl(i,k) + tauxci(i,k) + tauray + taugab + aer_tau(i,k)
             
             tmp1   = wcl(i,k)*tauxcl(i,k)
             tmp2   = wci(i,k)*tauxci(i,k)
             
             taucsc = tmp1 + tmp2 + aer_tau_w(i,k)
-            wtau   = wray*tauray(i)
+            wtau   = wray*tauray
             wt     = wtau + taucsc
             wtot   = wt/tautot
             gtot   = (wtau*gray + gcl(i,k)*tmp1 &
@@ -2247,7 +2243,7 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
                tdifc(ns,i,k) = tdif(ns,i,k)
                explayc(ns,i,k) = explay(ns,i,k)
             else
-               tautot = tauray(i) + taugab(i) + aer_tau(i,k)
+               tautot = tauray + taugab + aer_tau(i,k)
                taucsc = aer_tau_w(i,k)
 !
 ! wtau already computed for all-sky
