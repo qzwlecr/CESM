@@ -483,8 +483,8 @@ subroutine get_hygro_rad_props(ncol, krh, wrh, mass, ext, ssa, asm, &
    ! 这里ext1 ssa1 asm1的计算可以完全给CPU，然后后面的tau 再给GPU，这样要传送的数据少一些，两边也可以overlap一点时间
 
    do iswband = 1, nswbands
-      do icol = 1, ncol
-         do ilev = 1, pver
+      do ilev = 1, pver
+         do icol = 1, ncol
             ext1 = (1 + wrh(icol,ilev)) * ext(krh(icol,ilev)+1,iswband) &
                       - wrh(icol,ilev)  * ext(krh(icol,ilev),  iswband)
             ssa1 = (1 + wrh(icol,ilev)) * ssa(krh(icol,ilev)+1,iswband) &
