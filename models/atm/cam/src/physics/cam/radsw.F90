@@ -704,7 +704,7 @@ subroutine radcswmx(lchnk   ,ncol    ,                         &
 ! 
 ! Initialize output fields:
 ! 
-   fsds(1:ncol)     = 0.0_r8
+   fsds(Nday:ncol)     = 0.0_r8 ! ASC Y00 可以减少的初始化
 
    fsnirtoa(1:ncol) = 0.0_r8
    fsnrtoac(1:ncol) = 0.0_r8
@@ -721,18 +721,19 @@ subroutine radcswmx(lchnk   ,ncol    ,                         &
    fsutoa(1:ncol)   = 0.0_r8
    fsntoac(1:ncol)  = 0.0_r8
 
-   solin(1:ncol)    = 0.0_r8
+   solin(Nday:ncol)    = 0.0_r8 ! ASC Y00 可以减少的初始化
 
    sols(1:ncol)     = 0.0_r8
    soll(1:ncol)     = 0.0_r8
    solsd(1:ncol)    = 0.0_r8
    solld(1:ncol)    = 0.0_r8
 
-   qrs (1:ncol,1:pver) = 0.0_r8
-   qrsc(1:ncol,1:pver) = 0.0_r8
-   fns(1:ncol,1:pverp) = 0.0_r8
+   qrs (Nday:ncol,1:pver) = 0.0_r8 ! ASC Y00 可以减少的初始化
+   qrsc(Nday:ncol,1:pver) = 0.0_r8 ! ASC Y00 可以减少的初始化
+   fns(Nday:ncol,1:pverp) = 0.0_r8 ! ASC Y00 可以减少的初始化
    fcns(1:ncol,1:pverp) = 0.0_r8
    if (single_column.and.scm_crm_mode) then 
+      ! single_column Default: FALSE
       fus(1:ncol,1:pverp) = 0.0_r8
       fds(1:ncol,1:pverp) = 0.0_r8
       fusc(:ncol,:pverp) = 0.0_r8
