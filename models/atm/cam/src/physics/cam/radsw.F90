@@ -704,7 +704,7 @@ subroutine radcswmx(lchnk   ,ncol    ,                         &
 ! 
 ! Initialize output fields:
 ! 
-   fsds(1:ncol)     = 0.0_r8
+   fsds(Nday:ncol)     = 0.0_r8 ! ASC Y00 可以减少的初始化
 
    fsnirtoa(1:ncol) = 0.0_r8
    fsnrtoac(1:ncol) = 0.0_r8
@@ -721,18 +721,19 @@ subroutine radcswmx(lchnk   ,ncol    ,                         &
    fsutoa(1:ncol)   = 0.0_r8
    fsntoac(1:ncol)  = 0.0_r8
 
-   solin(1:ncol)    = 0.0_r8
+   solin(Nday:ncol)    = 0.0_r8 ! ASC Y00 可以减少的初始化
 
    sols(1:ncol)     = 0.0_r8
    soll(1:ncol)     = 0.0_r8
    solsd(1:ncol)    = 0.0_r8
    solld(1:ncol)    = 0.0_r8
 
-   qrs (1:ncol,1:pver) = 0.0_r8
-   qrsc(1:ncol,1:pver) = 0.0_r8
-   fns(1:ncol,1:pverp) = 0.0_r8
+   qrs (Nday:ncol,1:pver) = 0.0_r8 ! ASC Y00 可以减少的初始化
+   qrsc(Nday:ncol,1:pver) = 0.0_r8 ! ASC Y00 可以减少的初始化
+   fns(Nday:ncol,1:pverp) = 0.0_r8 ! ASC Y00 可以减少的初始化
    fcns(1:ncol,1:pverp) = 0.0_r8
    if (single_column.and.scm_crm_mode) then 
+      ! single_column Default: FALSE
       fus(1:ncol,1:pverp) = 0.0_r8
       fds(1:ncol,1:pverp) = 0.0_r8
       fusc(:ncol,:pverp) = 0.0_r8
@@ -2091,8 +2092,8 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
    integer k                 ! Level index
    integer nn                ! Index of column loops (max=ndayc)
 
-   real(r8) taugab(pcols)        ! Layer total gas absorption optical depth
-   real(r8) tauray(pcols)        ! Layer rayleigh optical depth
+   real(r8) taugab        ! Layer total gas absorption optical depth
+   real(r8) tauray        ! Layer rayleigh optical depth
    real(r8) taucsc               ! Layer cloud scattering optical depth
    real(r8) tautot               ! Total layer optical depth
    real(r8) wtot                 ! Total layer single scatter albedo
@@ -2184,15 +2185,16 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
 
    do k=0,pver
       do i=1,ndayc
-            tauray(i) = trayoslp*(pflx(i,k+1)-pflx(i,k))
-            taugab(i) = abh2o*uh2o(i,k) + abo3*uo3(i,k) + abco2*uco2(i,k) + abo2*uo2(i,k)
-            tautot = tauxcl(i,k) + tauxci(i,k) + tauray(i) + taugab(i) + aer_tau(i,k)
+            tauray = trayoslp*(pflx(i,k+1)-pflx(i,k))
+            taugab = abh2o*uh2o(i,k) + abo3*uo3(i,k) + abco2*uco2(i,k) + abo2*uo2(i,k)
+
+            tautot = tauxcl(i,k) + tauxci(i,k) + tauray + taugab + aer_tau(i,k)
             
             tmp1   = wcl(i,k)*tauxcl(i,k)
             tmp2   = wci(i,k)*tauxci(i,k)
             
             taucsc = tmp1 + tmp2 + aer_tau_w(i,k)
-            wtau   = wray*tauray(i)
+            wtau   = wray*tauray
             wt     = wtau + taucsc
             wtot   = wt/tautot
             gtot   = (wtau*gray + gcl(i,k)*tmp1 &
@@ -2242,7 +2244,7 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
                tdifc(ns,i,k) = tdif(ns,i,k)
                explayc(ns,i,k) = explay(ns,i,k)
             else
-               tautot = tauray(i) + taugab(i) + aer_tau(i,k)
+               tautot = tauray + taugab + aer_tau(i,k)
                taucsc = aer_tau_w(i,k)
 !
 ! wtau already computed for all-sky

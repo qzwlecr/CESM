@@ -92,10 +92,8 @@
       jlast  = grid%jlastxy
 
       itot = ilast - ifirst + 1
-!     nxu = nx
-      nxu = 1
-      it = itot / nxu
-      jp = nxu * ( jlast - jfirst + 1 )
+      it = itot
+      jp = ( jlast - jfirst + 1 )
 
       !asc , init it by the intel_memset 编译器会自动优化这个的
       !Y00: this is trying to init the matrix? we use a sinlg memset to do it
@@ -104,6 +102,7 @@
             pe(i,1,j) = D0_0  !only init the (*,1,*) for all the cal will base on this one
         enddo
       enddo
+
       do j=jfirst,jlast
          do i=ifirst,ilast
            wz(i,j,km+1) = D0_0  ! only the last (*,*,km+1) for all the cal base on the last one
@@ -111,61 +110,48 @@
       enddo
 
 
-do 2000 ixj=1, jp
-
-         j  = jfirst + (ixj-1)/nxu
-         i1 = ifirst + it * mod(ixj-1, nxu)
-         i2 = i1 + it - 1
-! Top down
+   do 2000 j=jfirst, jlast
+   ! Top down
          do k=2,km+1
-            do i=i1,i2
+            do i= ifirst,ilast
                pe(i,k,j)  = pe(i,k-1,j) + delp(i,j,k-1)
             enddo
          enddo
          do k=1,km+1
-            do i=i1,i2
+            do i= ifirst,ilast
                pe(i,k,j)  = pe(i,k,j) + ptop ! 这个也丢cuda？ 就多一个参数
             enddo
          enddo
 
-2000  continue
+   2000  continue
 
-do 133 ixj=1, jp
-
-   j  = jfirst + (ixj-1)/nxu
-   i1 = ifirst + it * mod(ixj-1, nxu)
-   i2 = i1 + it - 1
+   do 133 j=jfirst, jlast
          do k=1,km+1
-            do i=i1,i2
+            do i= ifirst,ilast
                pk(i,j,k) = pe(i,k,j)**akap
             enddo
          enddo
          !call calpkcuda(pk,pe,akap,km,i1,i2,jfirst,jp,ptop)  或者整个传参？
-133  continue
+   133  continue
 
-do 146 ixj=1, jp
-   j  = jfirst + (ixj-1)/nxu
-   i1 = ifirst + it * mod(ixj-1, nxu)
-   i2 = i1 + it - 1
-
-! Bottom up
+   do 146 j=jfirst, jlast
+   ! Bottom up
          do k=1,km
-            do i=i1,i2
+            do i= ifirst,ilast
                delpp(i,j,k) = cp*pt(i,j,k)*(pk(i,j,k+1)-pk(i,j,k))
             enddo
          enddo
          do k=km,1,-1
-            do i=i1,i2
+            do i= ifirst,ilast
                wz(i,j,k) = wz(i,j,k+1)+delpp(i,j,k)
             enddo
          enddo
          do k=1,km+1
-            do i=i1,i2
+            do i= ifirst,ilast
                wz(i,j,k) = wz(i,j,k)+hs(i,j)
             enddo
          enddo
-
-146  continue
+   146  continue
 
       return
 !EOC

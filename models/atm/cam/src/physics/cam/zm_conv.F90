@@ -3600,7 +3600,10 @@ end FUNCTION entropy
      real(r8) :: pref,eref,L,e
      real(r8) :: this_lat,this_lon
      integer :: LOOPMAX,i
-      !call ientropy_cuda_(rcall,icol,lchnk,s,p,qt,T,qst,Tfg)
+     !asc cuda hack  
+      call ientropy_cuda(s,p,qt,T,qst,Tfg)
+      return
+
 LOOPMAX = 100                   !* max number of iteration loops 
 
 ! Values for entropy

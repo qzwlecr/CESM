@@ -1,13 +1,14 @@
 #!/bin/bash
-echo 'you need to download tar cam53_f19c4aqpgro_ys.tar.gz and cam.zip from sftp first'
+#echo 'you need to download tar cam53_f19c4aqpgro_ys.tar.gz and cam.zip from sftp first'
+rm -f ./*.o
 ./cuda-build.sh
 
 export INC_MPI=/usr/include/
 export LIB_MPI=/usr/lib/openmpi/
 export LDFLAGS='-L/media/rgy/win-file/document/computer/HPC/cesm/openmpi/lib -L/opt/cuda/lib64/ -lcuda -lcudart -lstdc++'
 
-echo "you need to build cprnc in tools/cprnc first"
-./build-cprnc.sh || exit 2
+#echo "you need to build cprnc in tools/cprnc first"
+#./build-cprnc.sh || exit 2
 
 ./configure -dyn fv -hgrid 1.9x2.5 -ntasks 1 -phys cam4 -ocn aquaplanet -pergro -fc gfortran
 ./build-namelist -s -case cam5.0_port -runtype startup  -csmdata ./\
@@ -44,11 +45,13 @@ ghostmodule.o glc_comp_mct.o gptl.o gptl_papi.o gravity_waves_sources.o gw_drag.
 -L/opt/cuda/lib64/ -lcuda -lcudart -lstdc++ || exit 8
 
 
-mpirun ./cam
+rm -f ./h0.nc 
+echo "run the cam"
+mpirun ./cam >cam.run.log 2>&1|| exit 4
 #pwd
 #ls ../../../../tools/cprnc
-echo "cprncdf 有bug，需要手动改"
-rm -f ./RMST_f1.9_cmp_ibm_5.0
+echo "cprncdf !"
+rm -f ./RMST_f1.9_cmp_ibm_5.0 
 ./cprncdf -X ../../../../tools/cprnc/  f19c4aqpgro_cam53_ys_intel.nc h0.nc  > RMST_f1.9_cmp_ibm_5.0
 cat ./RMST_f1.9_cmp_ibm_5.0
 #https://bb.cgd.ucar.edu/cesm-validation-port-validation-cam-cam4-physics-package
