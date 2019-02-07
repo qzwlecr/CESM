@@ -3,6 +3,10 @@ EXP1/
 *.mod
 *.nc
 # validation test for cam!
-#models/atm/cam/bld/
+models/atm/cam/bld/
 models/atm/cam/bld/mct/
 tools/cprnc/
+**/RMST_f1.9_cmp_ibm_5.0*
+**/*.diff
+models/atm/cam/bld/cam
+**/*.log
