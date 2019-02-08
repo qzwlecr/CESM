@@ -277,16 +277,25 @@ CONTAINS
         enddo
       enddo
 #else
-      if(save_flag == 0) needle(q1, 1, (im + 2) * nj);
+      if(save_flag == 0) then 
+         call needle(q1, 1, (im + 2) * nj) 
+      endif
       call fft991 (q1, q2, trigs, ifax, 1, im+2, im, nj, -1)
+      if(save_flag == 0) then 
+         call needle(q1, 1, (im + 2) * nj) 
+      endif
       do n=1,nj
          do i=5,im+2
             q1(i,n) = q1(i,n) * damp(i-2,jf(n))
          enddo
       enddo
-      if(save_flag == 0) needle(q1, 1, (im + 2) * nj);
+      if(save_flag == 0) then 
+         call needle(q1, 1, (im + 2) * nj) 
+      endif
       call fft991 (q1, q2, trigs, ifax, 1, im+2, im, nj, 1)
-      if(save_flag == 0) needle(q1, 1, (im + 2) * nj);
+      if(save_flag == 0) then 
+         call needle(q1, 1, (im + 2) * nj) 
+      endif
       save_flag = 1
 #endif
 

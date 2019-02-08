@@ -18,7 +18,7 @@ using namespace std::chrono;
 
 using real_t = cufftDoubleReal;
 using complex_t = cufftDoubleComplex;
-extern "C" void cuda_fft991_batch_host_(        //
+extern "C" void cuda_fft991_batch_host_(       //
     int* batch_size_, int* batch_distance_,    //
     double* a_,                                // inout, elements[lot][N+2]
     int* inc_,                                 // data memory addr increment of elements
@@ -45,12 +45,12 @@ extern "C" void cuda_fft991_batch_host_(        //
 }
 
 extern "C" void cuda_fft991_(    //
-    double* a_,                 // inout, elements[lot][N+2]
-    int* inc_,                  // data memory addr increment of elements
-    int* jump_,                 // data memory addr increment of vector
-    int* n_,                    // count of elements in a vector
-    int* lot_,                  // count of vectors
-    int* ISIGN_                 // -1 => time2freq, +1 => freq2time
+    double* a_,                  // inout, elements[lot][N+2]
+    int* inc_,                   // data memory addr increment of elements
+    int* jump_,                  // data memory addr increment of vector
+    int* n_,                     // count of elements in a vector
+    int* lot_,                   // count of vectors
+    int* ISIGN_                  // -1 => time2freq, +1 => freq2time
 
 ) {
     // assume
@@ -88,9 +88,9 @@ extern "C" void cuda_fft991_(    //
     }
 }
 
-extern "C" void needle_(                        //
-    int* batch_size_, int* batch_distance_,    // distance
-    double* a_                                 // inout, elements[lot][N+2]
+extern "C" void needle_(                      //
+    double* a_,                               // inout, elements[lot][N+2]
+    int* batch_size_, int* batch_distance_    // distance
 ) {
     static int counter = 0;
     printf("[needle at %p, size=%d, dist=%d]", a_, *batch_size_, *batch_distance_);

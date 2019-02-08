@@ -23,3 +23,4 @@ models/atm/cam/bld/*ing
 models/atm/cam/bld/rpointer.*
 models/atm/cam/bld/*.h
 models/atm/cam/bld/*.xml
+models/atm/cam/bld/Depends
