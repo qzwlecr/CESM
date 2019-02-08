@@ -43,9 +43,9 @@
 !
 !-----------------------------------------------------------------------
 
-   real (r8) ::       &
-      const_vvc,      &! constant value for viscosity
-      const_vdc        ! constant value for diffusivity
+   real (r8), parameter ::       &
+      const_vvc = p25 ,          &! constant value for viscosity
+      const_vdc = p25             ! constant value for diffusivity
 
 !EOC
 !***********************************************************************
@@ -83,9 +83,9 @@
 !
 !-----------------------------------------------------------------------
 
-   integer (int_kind) :: nml_error
+ !  integer (int_kind) :: nml_error
 
-   namelist /vmix_const_nml/const_vvc, const_vdc
+  ! namelist /vmix_const_nml/const_vvc, const_vdc
 
 !-----------------------------------------------------------------------
 !
@@ -93,34 +93,34 @@
 !
 !-----------------------------------------------------------------------
 
-   const_vvc = p25
-   const_vdc = p25
+   ! const_vvc = p25
+   ! const_vdc = p25
       
-   if (my_task == master_task) then
-      open (nml_in, file=nml_filename, status='old',iostat=nml_error)
-      if (nml_error /= 0) then
-         nml_error = -1
-      else
-         nml_error =  1
-      endif
-      do while (nml_error > 0)
-         read(nml_in, nml=vmix_const_nml,iostat=nml_error)
-      end do
-      if (nml_error == 0) close(nml_in)
-   endif
+   ! if (my_task == master_task) then
+   !    open (nml_in, file=nml_filename, status='old',iostat=nml_error)
+   !    if (nml_error /= 0) then
+   !       nml_error = -1
+   !    else
+   !       nml_error =  1
+   !    endif
+   !    do while (nml_error > 0)
+   !       read(nml_in, nml=vmix_const_nml,iostat=nml_error)
+   !    end do
+   !    if (nml_error == 0) close(nml_in)
+   ! endif
 
-   call broadcast_scalar(nml_error, master_task)
-   if (nml_error /= 0) then
-      call exit_POP(sigAbort,'ERROR reading vmix_const_nml')
-   endif
+   ! call broadcast_scalar(nml_error, master_task)
+   ! if (nml_error /= 0) then
+   !    call exit_POP(sigAbort,'ERROR reading vmix_const_nml')
+   ! endif
 
-   if (my_task == master_task) then
-      write(stdout,'(a17,2x,1pe12.5)') '  const_vdc     =',const_vdc
-      write(stdout,'(a17,2x,1pe12.5)') '  const_vvc     =',const_vvc
-   endif
+   ! if (my_task == master_task) then
+   !    write(stdout,'(a17,2x,1pe12.5)') '  const_vdc     =',const_vdc
+   !    write(stdout,'(a17,2x,1pe12.5)') '  const_vvc     =',const_vvc
+   ! endif
 
-   call broadcast_scalar(const_vvc, master_task)
-   call broadcast_scalar(const_vdc, master_task)
+   ! call broadcast_scalar(const_vvc, master_task)
+   ! call broadcast_scalar(const_vdc, master_task)
 
 !-----------------------------------------------------------------------
 !
