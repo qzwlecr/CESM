@@ -8,6 +8,7 @@
 #include <thrust/functional.h>
 #include <iostream>
 #include <string>
+#include <unordered_map>
 
 #include "fft99_cuda.h"
 #include <cuda.h>
@@ -57,23 +58,51 @@ extern "C" void cuda_fft991_(    //
 
 ) {
     // assume
-    thread_local cufftHandle fwd_plan, bck_plan;
-    thread_local int total_count = 0;
-    thread_local bool init_flag = false;
-    if(!init_flag) {
-        if(init_flag) {
-            cufftDestroy(fwd_plan);
-            cufftDestroy(bck_plan);
-            init_flag = false;
-        }
+    // thread_local cufftHandle fwd_plan, bck_plan;
+    // thread_local int total_count = 0;
+    // thread_local bool init_flag = false;
+    // thread_local int batch_count = 0;
+    // if(!init_flag || batch_count != *lot_) {
+    //     if(init_flag) {
+    //         cufftDestroy(fwd_plan);
+    //         cufftDestroy(bck_plan);
+    //         init_flag = false;
+    //     }
+    //     int n = *n_;
+    //     int stride = *inc_;
+    //     int real_dist = *jump_;
+    //     int complex_dist = real_dist / 2;
+    //     int ranks[] = {n};
+    //     batch_count = *lot_;
+    //     int new_count = batch_count * real_dist;
+    //     // assert(!total_count || new_count == total_count);
+    //     total_count = new_count;
+    //     printf("\n<<<<");
+    //     LOG(n);
+    //     LOG(stride);
+    //     LOG(real_dist);
+    //     LOG(batch_count);
+    //     printf("\n");
+    //     cufftPlanMany(&fwd_plan, 1, ranks, nullptr, stride, real_dist, nullptr, stride,
+    //                   complex_dist, CUFFT_D2Z, batch_count);
+    //     cufftPlanMany(&bck_plan, 1, ranks, nullptr, stride, complex_dist, nullptr, stride,
+    //                   real_dist, CUFFT_Z2D, batch_count);
+    //     init_flag = true;
+    // }
+    thread_local std::unordered_map<int, std::pair<cufftHandle, cufftHandle> > record;
+    int batch_count = *lot_;
+    assert(*jump_ == 146);
+    int total_count = 146 * batch_count;
+    if(record.count(batch_count) == 0){
+        auto& fwd_plan = record[batch_count].first;
+        auto& bck_plan = record[batch_count].second;
         int n = *n_;
         int stride = *inc_;
         int real_dist = *jump_;
         int complex_dist = real_dist / 2;
-        int batch_count = *lot_;
         int ranks[] = {n};
         int new_count = batch_count * real_dist;
-        assert(!total_count || new_count == total_count);
+        // assert(!total_count || new_count == total_count);
         total_count = new_count;
         printf("\n<<<<");
         LOG(n);
@@ -85,8 +114,10 @@ extern "C" void cuda_fft991_(    //
                       complex_dist, CUFFT_D2Z, batch_count);
         cufftPlanMany(&bck_plan, 1, ranks, nullptr, stride, complex_dist, nullptr, stride,
                       real_dist, CUFFT_Z2D, batch_count);
-        init_flag = true;
-    }
+    } 
+
+    auto& fwd_plan = record[batch_count].first;
+    auto& bck_plan = record[batch_count].second;
     if(*ISIGN_ == -1) {
         // fwd_plan
         auto status = cufftExecD2Z(fwd_plan, (real_t*)a_, (complex_t*)a_);

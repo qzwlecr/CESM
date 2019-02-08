@@ -231,7 +231,7 @@ CONTAINS
 !
 ! !LOCAL VARIABLES:
       integer i, n
-      integer, save::save_flag = 0
+      integer, save::save_flag = -10000
       real (r8) ooim
 
 !Local Auto arrays:
@@ -282,8 +282,8 @@ CONTAINS
          call needle(q1, 1, (im + 2) * nj) 
       endif
 
-      call fft991 (q1, q2, trigs, ifax, 1, im+2, im, nj, -1)
-      ! call cuda_fft991_batch_host(1, (im + 2) * nj, q1, 1, im + 2, im, nj, -1)
+    !   call fft991 (q1, q2, trigs, ifax, 1, im+2, im, nj, -1)
+      call cuda_fft991_batch_host(1, (im + 2) * nj, q1, 1, im + 2, im, nj, -1)
 
 
       if(save_flag == 0) then 
@@ -300,13 +300,13 @@ CONTAINS
          call needle(q1, 1, (im + 2) * nj) 
       endif
       
-      call fft991 (q1, q2, trigs, ifax, 1, im+2, im, nj, 1)
-      ! call cuda_fft991_batch_host(1, (im + 2) * nj, q1, 1, im + 2, im, nj, +1)
+    !   call fft991 (q1, q2, trigs, ifax, 1, im+2, im, nj, 1)
+      call cuda_fft991_batch_host(1, (im + 2) * nj, q1, 1, im + 2, im, nj, 1)
 
       if(save_flag == 0) then 
          call needle(q1, 1, (im + 2) * nj) 
       endif
-      save_flag = 1
+      save_flag = save_flag + 1
 #endif
 
       return
