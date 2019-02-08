@@ -32,7 +32,7 @@
 
 
 
-void qmmr_hPa_cpp_(double t, double p, double *es_out, double *qm){
+void inline qmmr_hPa_cpp_(double t, double p, double *es_out, double *qm){
     p=p*100;
     double tmp=(-7.90298*(tboil/t-1.0)+ \
       5.02808*log10(tboil/t)- \
