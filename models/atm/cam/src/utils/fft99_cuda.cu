@@ -25,6 +25,7 @@ extern "C" void cuda_fft991_batch_host_(       //
     double* a_,                                // inout, elements[lot][N+2]
     int* inc_,                                 // data memory addr increment of elements
     int* jump_,                                // data memory addr increment of vector
+
     int* n_,                                   // count of elements in a vector
     int* lot_,                                 // count of vectors
     int* ISIGN_                                // -1 => time2freq, +1 => freq2time
@@ -59,7 +60,7 @@ extern "C" void cuda_fft991_(    //
     thread_local cufftHandle fwd_plan, bck_plan;
     thread_local int total_count = 0;
     thread_local bool init_flag = false;
-    if(init_flag || true) {
+    if(!init_flag) {
         if(init_flag) {
             cufftDestroy(fwd_plan);
             cufftDestroy(bck_plan);
@@ -89,11 +90,11 @@ extern "C" void cuda_fft991_(    //
     if(*ISIGN_ == -1) {
         // fwd_plan
         auto status = cufftExecD2Z(fwd_plan, (real_t*)a_, (complex_t*)a_);
-        std::cout << "total_count=" << total_count << std::endl;
+        // std::cout << "total_count=" << total_count << std::endl;
         // auto fn =;
         thrust::transform(thrust::system::cuda::par, a_, a_ + total_count, a_,
                           [=] __device__(double x) { return x / 144; });
-        printf("{executed=%d}", status);
+        // printf("{executed=%d}", status);
     } else {
         cufftExecZ2D(bck_plan, (complex_t*)a_, (real_t*)a_);
     }
