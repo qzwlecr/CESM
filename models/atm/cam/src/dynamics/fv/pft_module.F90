@@ -278,6 +278,7 @@ CONTAINS
       enddo
 #else
       if(save_flag == 0) then 
+         print *, "{im+2=", im + 2, "nj=", nj, "}"
          call needle(q1, 1, (im + 2) * nj) 
       endif
       call fft991 (q1, q2, trigs, ifax, 1, im+2, im, nj, -1)

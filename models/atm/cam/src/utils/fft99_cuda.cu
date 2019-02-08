@@ -4,6 +4,8 @@
 #include <cufft.h>
 #include <stdio.h>
 #include <fstream>
+#include <thrust/transform.h>
+#include <thrust/functional.h>
 #include <iostream>
 #include <string>
 
@@ -36,7 +38,7 @@ extern "C" void cuda_fft991_batch_host_(       //
     cudaMemcpy(dev_a, a_, data_byte, cudaMemcpyHostToDevice);
     if(batch_distance == *jump_ * *lot_) {
         int fake_lot = *lot_ * batch_size;
-        cuda_fft991_(a_, inc_, jump_, n_, &fake_lot, ISIGN_);
+        cuda_fft991_(dev_a, inc_, jump_, n_, &fake_lot, ISIGN_);
     } else {
         assert(false);
     }
@@ -55,6 +57,7 @@ extern "C" void cuda_fft991_(    //
 ) {
     // assume
     thread_local cufftHandle fwd_plan, bck_plan;
+    thread_local int total_count = 0;
     thread_local bool init_flag = false;
     if(init_flag || true) {
         if(init_flag) {
@@ -68,6 +71,9 @@ extern "C" void cuda_fft991_(    //
         int complex_dist = real_dist / 2;
         int batch_count = *lot_;
         int ranks[] = {n};
+        int new_count = batch_count * real_dist;
+        assert(!total_count || new_count == total_count);
+        total_count = new_count;
         printf("\n<<<<");
         LOG(n);
         LOG(stride);
@@ -82,7 +88,12 @@ extern "C" void cuda_fft991_(    //
     }
     if(*ISIGN_ == -1) {
         // fwd_plan
-        cufftExecD2Z(fwd_plan, (real_t*)a_, (complex_t*)a_);
+        auto status = cufftExecD2Z(fwd_plan, (real_t*)a_, (complex_t*)a_);
+        std::cout << "total_count=" << total_count << std::endl;
+        // auto fn =;
+        thrust::transform(thrust::system::cuda::par, a_, a_ + total_count, a_,
+                          [=] __device__(double x) { return x / 144; });
+        printf("{executed=%d}", status);
     } else {
         cufftExecZ2D(bck_plan, (complex_t*)a_, (real_t*)a_);
     }
