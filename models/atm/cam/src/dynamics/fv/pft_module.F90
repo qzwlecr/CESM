@@ -231,6 +231,7 @@ CONTAINS
 !
 ! !LOCAL VARIABLES:
       integer i, n
+      integer, save::save_flag = 0
       real (r8) ooim
 
 !Local Auto arrays:
@@ -276,13 +277,17 @@ CONTAINS
         enddo
       enddo
 #else
+      if(save_flag == 0) needle(q1, 1, (im + 2) * nj);
       call fft991 (q1, q2, trigs, ifax, 1, im+2, im, nj, -1)
       do n=1,nj
          do i=5,im+2
             q1(i,n) = q1(i,n) * damp(i-2,jf(n))
          enddo
       enddo
+      if(save_flag == 0) needle(q1, 1, (im + 2) * nj);
       call fft991 (q1, q2, trigs, ifax, 1, im+2, im, nj, 1)
+      if(save_flag == 0) needle(q1, 1, (im + 2) * nj);
+      save_flag = 1
 #endif
 
       return

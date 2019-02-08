@@ -4,6 +4,7 @@
 #include <cufft.h>
 #include <stdio.h>
 #include <fstream>
+#include <iostream>
 #include <string>
 
 #include "fft99_cuda.h"
@@ -17,7 +18,7 @@ using namespace std::chrono;
 
 using real_t = cufftDoubleReal;
 using complex_t = cufftDoubleComplex;
-extern "C" void cuda_fft991_batch_host(        //
+extern "C" void cuda_fft991_batch_host_(        //
     int* batch_size_, int* batch_distance_,    //
     double* a_,                                // inout, elements[lot][N+2]
     int* inc_,                                 // data memory addr increment of elements
@@ -35,7 +36,7 @@ extern "C" void cuda_fft991_batch_host(        //
     cudaMemcpy(dev_a, a_, data_byte, cudaMemcpyHostToDevice);
     if(batch_distance == *jump_ * *lot_) {
         int fake_lot = *lot_ * batch_size;
-        cuda_fft991(a_, inc_, jump_, n_, &fake_lot, ISIGN_);
+        cuda_fft991_(a_, inc_, jump_, n_, &fake_lot, ISIGN_);
     } else {
         assert(false);
     }
@@ -43,7 +44,7 @@ extern "C" void cuda_fft991_batch_host(        //
     cudaFree(dev_a);
 }
 
-extern "C" void cuda_fft991(    //
+extern "C" void cuda_fft991_(    //
     double* a_,                 // inout, elements[lot][N+2]
     int* inc_,                  // data memory addr increment of elements
     int* jump_,                 // data memory addr increment of vector
@@ -59,6 +60,7 @@ extern "C" void cuda_fft991(    //
         if(init_flag) {
             cufftDestroy(fwd_plan);
             cufftDestroy(bck_plan);
+            init_flag = false;
         }
         int n = *n_;
         int stride = *inc_;
@@ -86,11 +88,12 @@ extern "C" void cuda_fft991(    //
     }
 }
 
-extern "C" void needle(                        //
+extern "C" void needle_(                        //
     int* batch_size_, int* batch_distance_,    // distance
     double* a_                                 // inout, elements[lot][N+2]
 ) {
     static int counter = 0;
+    printf("[needle at %p, size=%d, dist=%d]", a_, *batch_size_, *batch_distance_);
     ++counter;
     auto current_time = system_clock::now();
     auto path = "/home/mike/tmp/";
