@@ -129,6 +129,10 @@ contains
 !=======================================================================
 
   subroutine seq_map_init_rearrsplit( mapper, gsmap_s, ID_s, gsmap_d, ID_d, ID_join, string)
+    !-----------------------------------------------------
+    ! qzwlecr NOTE:
+    ! this function is called by ccsm_comp_mod for initializing seq mapper between mods and cpl.
+    !-----------------------------------------------------
 
     implicit none
     !-----------------------------------------------------
@@ -459,6 +463,11 @@ contains
        call shr_sys_abort(subname//' ERROR: avwtsfld present')
     endif
 
+    !-----------------------------------------------------------------------------------
+    ! qzwlecr TODO:
+    ! check which function is called.
+    !-----------------------------------------------------------------------------------
+
     if (mapper%copy_only) then
        !-------------------------------------------
        ! COPY data
@@ -497,6 +506,10 @@ contains
           if (present(fldlist)) then
              call seq_map_avNorm(mapper, av_s, av_d, rList=fldlist, norm=lnorm)
           else
+              !-----------------------------------------------------------------------------------
+              ! qzwlecr NOTE:
+              ! Actually, OCN does't call this function, because either copy or rearrange is set.
+              !-----------------------------------------------------------------------------------
              call seq_map_avNorm(mapper, av_s, av_d, norm=lnorm)
           endif
        endif
@@ -1071,6 +1084,7 @@ contains
     endif
 
     !--- create temporary avs for mapping ---
+    !--- qzwlecr TODO: Maybe this temporaray vector can be initialized only once. ---
 
     if (present(rList)) then
        call mct_aVect_init(avp_i, rList=trim( rList)//':'//ffld, lsize=lsize_i)
@@ -1085,6 +1099,7 @@ contains
     !--- copy av_i to avp_i and set ffld value to 1.0
     !--- then multiply all fields by norm_i if norm_i exists 
     !--- this will do the right thing for the norm_i normalization 
+    !--- qzwlecr TODO: This copy is not necessary to non-exist norm_i. ---
 
     call mct_aVect_copy(aVin=av_i, aVout=avp_i, VECTOR=mct_usevector)
     kf = mct_aVect_indexRA(avp_i,ffld)
@@ -1193,6 +1208,7 @@ contains
     endif
 
     !--- copy back into av_o and we are done ---
+    !--- qzwlecr TODO: check why it is necessary to copy in and copy out. ---
 
     call mct_aVect_copy(aVin=avp_o, aVout=av_o, VECTOR=mct_usevector)
 

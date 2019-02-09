@@ -2861,6 +2861,12 @@ subroutine ccsm_run()
                if (iamin_CPLOCNID(eoi)) then
                   call t_drvstartf ('driver_c2o_ocnx2ocno',barrier=mpicom_CPLOCNID(eoi))
                   call seq_map_map(mapper_Cx2o(eoi), x2oacc_ox(eoi), x2o_oo(eoi), msgtag=CPLOCNID(eoi)*100+eoi*10+2)
+                  !---------------------------------------------------------------------------------
+                  ! qzwlecr TODO:
+                  ! The seq_map_map costs most of communication time. Check if it can be optimized.
+                  ! Or work on async communication to overlap with other mod.
+                  ! Ocean is not sequencial with cpl, so async maybe feasible.
+                  !---------------------------------------------------------------------------------
                   call t_drvstopf  ('driver_c2o_ocnx2ocno')
                endif
             enddo
@@ -2879,6 +2885,7 @@ subroutine ccsm_run()
 
          !----------------------------------------------------
          ! lnd prep
+         ! Overlap is not necessary.
          !----------------------------------------------------
 
          if (iamin_CPLID) then
@@ -2952,6 +2959,7 @@ subroutine ccsm_run()
 
          !----------------------------------------------------
          ! cpl -> lnd
+         ! Overlap is not necessary.
          !----------------------------------------------------
 
          if (iamin_CPLALLLNDID) then
@@ -2991,6 +2999,8 @@ subroutine ccsm_run()
 
       !----------------------------------------------------------
       ! ICE SETUP
+      ! qzwlecr TODO:
+      ! check ICE/OCN relation
       ! Note that for atm->ice mapping below will leverage the assumption that the
       ! ice and ocn are on the same grid and that mapping of atm to ocean is 
       ! done already for use by atmocn flux and ice model prep
@@ -3071,87 +3081,8 @@ subroutine ccsm_run()
 
       !----------------------------------------------------------
       ! WAV Setup
+      ! NOTICE: non-exist in B and E1850CN, delete it.
       !----------------------------------------------------------
-
-      if (wav_present .and. wavrun_alarm) then
-
-         !----------------------------------------------------------
-         ! wav Prep
-         !----------------------------------------------------------
-
-         if (iamin_CPLID .and. wav_prognostic) then
-            if (run_barriers) then
-               call t_drvstartf ('DRIVER_WAVPREP_BARRIER')
-               call mpi_barrier(mpicom_CPLID,ierr)
-               call t_drvstopf ('DRIVER_WAVPREP_BARRIER')
-            endif
-            call t_drvstartf ('DRIVER_WAVPREP',cplrun=.true.,barrier=mpicom_CPLID)
-            if (drv_threading) call seq_comm_setnthreads(nthreads_CPLID)
-            call t_drvstartf ('driver_wavprep_atm2wav',barrier=mpicom_CPLID)
-            do eai = 1,num_inst_atm
-               call seq_map_map(mapper_Sa2w, a2x_ax(eai), a2x_wx(eai), norm=.true.)
-            enddo
-            call t_drvstopf  ('driver_wavprep_atm2wav')
-
-            call t_drvstartf ('driver_wavprep_ocn2wav',barrier=mpicom_CPLID)
-            do eoi = 1,num_inst_ocn
-               call seq_map_map(mapper_So2w, o2x_ox(eoi), o2x_wx(eoi), norm=.true.)
-            enddo
-            call t_drvstopf  ('driver_wavprep_ocn2wav')
-
-            call t_drvstartf ('driver_wavprep_ice2wav',barrier=mpicom_CPLID)
-            do eii = 1,num_inst_ice
-               call seq_map_map(mapper_Si2w, i2x_ix(eii), i2x_wx(eii), norm=.true.)
-            enddo
-            call t_drvstopf  ('driver_wavprep_ice2wav')
-
-            ! Merge wav inputs
-            ! Use fortran mod to address ensembles in merge
-            call t_drvstartf ('driver_wavprep_mrgx2w',barrier=mpicom_CPLID)
-            do ewi = 1,num_inst_wav
-               eai = mod((ewi-1),num_inst_atm) + 1
-               eoi = mod((ewi-1),num_inst_ocn) + 1
-               eii = mod((ewi-1),num_inst_ice) + 1
-               efi = mod((ewi-1),num_inst_frc) + 1
-               call mrg_x2w_run_mct( cdata_wx, a2x_wx(eai), o2x_wx(eoi), i2x_wx(eii), fractions_wx(efi), x2w_wx(ewi))
-            enddo
-            call t_drvstopf  ('driver_wavprep_mrgx2w')
-
-            if (info_debug > 1) then
-               call t_drvstartf ('driver_wavprep_diagav',barrier=mpicom_CPLID)
-               do ewi = 1,num_inst_wav
-                  call seq_diag_avect_mct(cdata_wx,x2w_wx(ewi),'send wav'//trim(wav_suffix(ewi)))
-               enddo
-               call t_drvstopf  ('driver_wavprep_diagav')
-            endif
-            if (drv_threading) call seq_comm_setnthreads(nthreads_GLOID)
-            call t_drvstopf  ('DRIVER_WAVPREP',cplrun=.true.)
-         end if
-
-         !----------------------------------------------------------
-         ! cpl -> wav
-         !----------------------------------------------------------
-
-         if (iamin_CPLALLWAVID .and. wav_prognostic) then
-            if (run_barriers) then
-               call t_drvstartf ('DRIVER_C2W_BARRIER')
-               call mpi_barrier(mpicom_CPLALLWAVID,ierr)
-               call t_drvstopf ('DRIVER_C2W_BARRIER')
-            endif
-            call t_drvstartf ('DRIVER_C2W',cplcom=.true.,barrier=mpicom_CPLALLWAVID)
-            do ewi = 1,num_inst_wav
-               if (iamin_CPLWAVID(ewi)) then
-                  call t_drvstartf ('driver_c2w_wavx2wavw',barrier=mpicom_CPLWAVID(ewi))
-                  call seq_map_map(mapper_Cx2w(ewi), x2w_wx(ewi), x2w_ww(ewi))
-                  call t_drvstopf  ('driver_c2w_wavx2wavw')
-               endif
-            enddo
-            call t_drvstartf ('driver_c2w_infoexch',barrier=mpicom_CPLALLWAVID)
-            call seq_infodata_exchange(infodata,CPLALLWAVID,'cpl2wav_run')
-            call t_drvstopf  ('driver_c2w_infoexch')
-            call t_drvstopf  ('DRIVER_C2W',cplcom=.true.)
-         endif
-      end if
 
       !----------------------------------------------------------
       ! ROF SETUP
@@ -3297,7 +3228,7 @@ subroutine ccsm_run()
       endif   ! lnd_present or sno_present and lndrun_alarm
 
       !----------------------------------------------------------
-      ! Run River Runoff model
+      ! Run River Runoff model(3s in 5day, optimise it later)
       !----------------------------------------------------------
 
       if (rof_present .and. rofrun_alarm) then
@@ -3330,117 +3261,8 @@ subroutine ccsm_run()
 
       !----------------------------------------------------------
       ! Run wave model
+      ! NOTICE: non-exist in B and E1850CN, delete it.
       !----------------------------------------------------------
-
-      if (wav_present .and. wavrun_alarm) then
-         do ewi = 1,num_inst_wav
-            if (iamin_WAVID(ewi)) then
-               if (run_barriers) then
-                  call t_drvstartf ('DRIVER_WAV_RUN_BARRIER')
-                  call mpi_barrier(mpicom_WAVID(ewi),ierr)
-                  call t_drvstopf ('DRIVER_WAV_RUN_BARRIER')
-                  time_brun = mpi_wtime()
-               endif
-               call t_drvstartf ('DRIVER_WAV_RUN',barrier=mpicom_WAVID(ewi))
-               if (drv_threading) call seq_comm_setnthreads(nthreads_WAVID)
-               if (wav_prognostic) call mct_avect_vecmult(x2w_ww(ewi),areacor_ww(ewi)%drv2mdl,seq_flds_x2w_fluxes)
-               call wav_run_mct( EClock_w, cdata_ww(ewi), x2w_ww(ewi), w2x_ww(ewi))
-               call mct_avect_vecmult(w2x_ww(ewi),areacor_ww(ewi)%mdl2drv,seq_flds_w2x_fluxes)
-               if (drv_threading) call seq_comm_setnthreads(nthreads_GLOID)
-               call t_drvstopf  ('DRIVER_WAV_RUN')
-               if (run_barriers) then
-                  time_erun = mpi_wtime()
-                  cktime = time_erun-time_brun
-                  cktime_acc(8) = cktime_acc(8) + cktime
-                  cktime_cnt(8) = cktime_cnt(8) + 1
-                  write(logunit,107) ' rstamp wav_run_time: model date = ', &
-                     ymd,tod,' avg dt = ',cktime_acc(8)/cktime_cnt(8),' dt = ',cktime
-               endif
-            endif
-         enddo
-      end if
-
-      !----------------------------------------------------------
-      ! Run Ocn Model HERE, if ocean_tight_coupling
-      !----------------------------------------------------------
-
-      if (ocean_tight_coupling) then
-      if (ocn_present .and. ocnrun_alarm) then
-         do eoi = 1,num_inst_ocn
-            if (iamin_OCNID(eoi)) then
-               if (run_barriers) then
-                  call t_drvstartf ('DRIVER_OCN_RUN_BARRIER')
-                  call mpi_barrier(mpicom_OCNID(eoi),ierr)
-                  call t_drvstopf ('DRIVER_OCN_RUN_BARRIER')
-                  time_brun = mpi_wtime()
-               endif
-               call t_drvstartf ('DRIVER_OCN_RUN',barrier=mpicom_OCNID(eoi))
-               if (drv_threading) call seq_comm_setnthreads(nthreads_OCNID)
-               if (ocn_prognostic) call mct_avect_vecmult(x2o_oo(eoi),areacor_oo(eoi)%drv2mdl,seq_flds_x2o_fluxes)
-               call ocn_run_mct( EClock_o, cdata_oo(eoi), x2o_oo(eoi), o2x_oo(eoi))
-               call mct_avect_vecmult(o2x_oo(eoi),areacor_oo(eoi)%mdl2drv,seq_flds_o2x_fluxes)
-               if (drv_threading) call seq_comm_setnthreads(nthreads_GLOID)
-               call t_drvstopf  ('DRIVER_OCN_RUN')
-               if (run_barriers) then
-                  time_erun = mpi_wtime()
-                  cktime = time_erun-time_brun
-                  cktime_acc(5) = cktime_acc(5) + cktime
-                  cktime_cnt(5) = cktime_cnt(5) + 1
-                  write(logunit,107) ' rstamp ocn_run_time: model date = ', &
-                     ymd,tod,' avg dt = ',cktime_acc(5)/cktime_cnt(5),' dt = ',cktime
-               endif
-            endif
-         enddo
-      endif
-      endif
- 
-      !----------------------------------------------------------
-      ! ocn -> cpl, tight coupling (sequential type mode)
-      !----------------------------------------------------------
-
-      if (ocean_tight_coupling) then
-      if (iamin_CPLALLOCNID) then
-      if (ocn_present .and. ocnnext_alarm) then
-         if (run_barriers) then
-            call t_drvstartf ('DRIVER_O2CT_BARRIER')
-            call mpi_barrier(mpicom_CPLALLOCNID,ierr)
-            call t_drvstopf ('DRIVER_O2CT_BARRIER')
-         endif
-         call t_drvstartf ('DRIVER_O2CT',cplcom=.true.,barrier=mpicom_CPLALLOCNID)
-         do eoi = 1,num_inst_ocn
-            if (iamin_CPLOCNID(eoi)) then
-               call t_drvstartf ('driver_o2ct_ocno2ocnx',barrier=mpicom_CPLOCNID(eoi))
-               call seq_map_map(mapper_Co2x(eoi), o2x_oo(eoi), o2x_ox(eoi), msgtag=CPLOCNID(eoi)*100+eoi*10+4)
-               call t_drvstopf  ('driver_o2ct_ocno2ocnx')
-            endif
-         enddo
-         if (iamin_CPLOCNID(ens1)) then
-            call t_drvstartf ('driver_o2ct_infoexch',barrier=mpicom_CPLOCNID(ens1))
-            call seq_infodata_exchange(infodata,CPLOCNID(ens1),'ocn2cpl_run')
-            call t_drvstopf  ('driver_o2ct_infoexch')
-         endif
-         call t_drvstopf  ('DRIVER_O2CT',cplcom=.true.)
-         if (iamin_CPLID) then
-            if (run_barriers) then
-               call t_drvstartf ('DRIVER_OCNPOSTT_BARRIER')
-               call mpi_barrier(mpicom_CPLID,ierr)
-               call t_drvstopf ('DRIVER_OCNPOSTT_BARRIER')
-            endif
-            call t_drvstartf  ('DRIVER_OCNPOSTT',cplrun=.true.,barrier=mpicom_CPLID)
-            if (drv_threading) call seq_comm_setnthreads(nthreads_CPLID)
-            if (info_debug > 1) then
-               call t_drvstartf ('driver_ocnpostt_diagav',barrier=mpicom_CPLID)
-               do eoi = 1,num_inst_ocn
-                  call seq_diag_avect_mct(cdata_ox,o2x_ox(eoi),'recv ocn'//trim(ocn_suffix(eoi)))
-               enddo
-               call t_drvstopf  ('driver_ocnpostt_diagav')
-            endif
-            if (drv_threading) call seq_comm_setnthreads(nthreads_GLOID)
-            call t_drvstopf  ('DRIVER_OCNPOSTT',cplrun=.true.)
-         endif
-      endif
-      endif
-      endif
 
       !----------------------------------------------------------
       ! OCN PREP
@@ -3611,70 +3433,8 @@ subroutine ccsm_run()
 
       !----------------------------------------------------------
       ! GLC SETUP
+      ! NOTICE: non-exist in B and E1850CN, delete it.
       !----------------------------------------------------------
-
-      if (sno_present .and. glcrun_alarm) then
-         if (iamin_CPLID .and. glc_prognostic) then
-            if (run_barriers) then
-               call t_drvstartf ('DRIVER_GLCPREP_BARRIER')
-               call mpi_barrier(mpicom_CPLID,ierr)
-               call t_drvstopf ('DRIVER_GLCPREP_BARRIER')
-            endif
-            call t_drvstartf ('DRIVER_GLCPREP',cplrun=.true.,barrier=mpicom_CPLID)
-            if (drv_threading) call seq_comm_setnthreads(nthreads_CPLID)
-
-            ! Map sno to glc
-            call t_drvstartf ('driver_glcprep_sno2glc',barrier=mpicom_CPLID)
-            do eli = 1,num_inst_lnd
-               call seq_map_map(mapper_SFs2g, s2x_sx(eli), s2x_gx(eli), norm=.true.)
-            enddo
-            call t_drvstopf  ('driver_glcprep_sno2glc')
-
-            ! Merge glc inputs
-            call t_drvstartf ('driver_glcprep_mrgx2g',barrier=mpicom_CPLID)
-            ! Use fortran mod to address ensembles in merge
-            do egi = 1,num_inst_glc
-               eli = mod((egi-1),num_inst_lnd) + 1
-               call mrg_x2g_run_mct( cdata_gx, s2x_gx(eli), x2g_gx(egi))
-            enddo
-            call t_drvstopf  ('driver_glcprep_mrgx2g')
-
-            if (info_debug > 1) then
-               call t_drvstartf ('driver_glcprep_diagav',barrier=mpicom_CPLID)
-               do egi = 1,num_inst_glc
-                  call seq_diag_avect_mct(cdata_gx,x2g_gx(egi),'send glc'//trim(glc_suffix(egi)))
-               enddo
-               call t_drvstopf  ('driver_glcprep_diagav')
-            endif
-
-            if (drv_threading) call seq_comm_setnthreads(nthreads_GLOID)
-            call t_drvstopf  ('DRIVER_GLCPREP',cplrun=.true.)
-         endif
-
-         !----------------------------------------------------
-         ! cpl -> glc
-         !----------------------------------------------------
-
-         if (iamin_CPLALLGLCID .and. glc_prognostic) then
-            if (run_barriers) then
-               call t_drvstartf ('DRIVER_C2G_BARRIER')
-               call mpi_barrier(mpicom_CPLALLGLCID,ierr)
-               call t_drvstopf ('DRIVER_C2G_BARRIER')
-            endif
-            call t_drvstartf ('DRIVER_C2G',cplcom=.true.,barrier=mpicom_CPLALLGLCID)
-            do egi = 1,num_inst_glc
-               if (iamin_CPLGLCID(egi)) then
-                  call t_drvstartf ('driver_c2g_glcx2glcg',barrier=mpicom_CPLGLCID(egi))
-                  call seq_map_map(mapper_Cx2g(egi), x2g_gx(egi), x2g_gg(egi), msgtag=CPLGLCID(egi)*100+egi*10+2)
-                  call t_drvstopf  ('driver_c2g_glcx2glcg')
-               endif
-            enddo
-            call t_drvstartf ('driver_c2g_infoexch',barrier=mpicom_CPLALLGLCID)
-            call seq_infodata_exchange(infodata,CPLALLGLCID,'cpl2glc_run')
-            call t_drvstopf  ('driver_c2g_infoexch')
-            call t_drvstopf  ('DRIVER_C2G',cplcom=.true.)
-         endif
-      endif
 
       !----------------------------------------------------------
       ! rof -> cpl
@@ -4027,10 +3787,9 @@ subroutine ccsm_run()
       endif
 
       !----------------------------------------------------------
-      ! Run Ocn Model HERE if NOT ocean_tight_coupling
+      ! Run Ocn Model HERE
       !----------------------------------------------------------
 
-      if (.not.ocean_tight_coupling) then
       if (ocn_present .and. ocnrun_alarm) then
          do eoi = 1,num_inst_ocn
             if (iamin_OCNID(eoi)) then
@@ -4058,8 +3817,7 @@ subroutine ccsm_run()
             endif
          enddo
       endif
-      endif
- 
+
       !----------------------------------------------------------
       ! RUN atm model
       !----------------------------------------------------------
@@ -4094,146 +3852,18 @@ subroutine ccsm_run()
 
       !----------------------------------------------------------
       ! Run Glc Model
+      ! NOTICE: non-exist in B and E1850CN, delete it.
       !----------------------------------------------------------
 
-      if (glc_present .and. glcrun_alarm) then
-         do egi = 1,num_inst_glc
-            if (iamin_GLCID(egi)) then
-               if (run_barriers) then
-                  call t_drvstartf ('DRIVER_GLC_RUN_BARRIER')
-                  call mpi_barrier(mpicom_GLCID(egi),ierr)
-                  call t_drvstopf ('DRIVER_GLC_RUN_BARRIER')
-                  time_brun = mpi_wtime()
-               endif
-               call t_drvstartf ('DRIVER_GLC_RUN',barrier=mpicom_GLCID(egi))
-               if (drv_threading) call seq_comm_setnthreads(nthreads_GLCID)
-               if (glc_prognostic) call mct_avect_vecmult(x2g_gg(egi),areacor_gg(egi)%drv2mdl,seq_flds_x2g_fluxes)
-               call glc_run_mct( EClock_g, cdata_gg(egi), x2g_gg(egi), g2x_gg(egi))
-               call mct_avect_vecmult(g2x_gg(egi),areacor_gg(egi)%mdl2drv,seq_flds_g2x_fluxes)
-               if (drv_threading) call seq_comm_setnthreads(nthreads_GLOID)
-               call t_drvstopf  ('DRIVER_GLC_RUN')
-               if (run_barriers) then
-                  time_erun = mpi_wtime()
-                  cktime = time_erun-time_brun
-                  cktime_acc(6) = cktime_acc(6) + cktime
-                  cktime_cnt(6) = cktime_cnt(6) + 1
-                  write(logunit,107) ' rstamp glc_run_time: model date = ', &
-                     ymd,tod,' avg dt = ',cktime_acc(6)/cktime_cnt(6),' dt = ',cktime
-               endif
-            endif
-         enddo
-      endif
- 
       !----------------------------------------------------------
       ! wav -> cpl
+      ! NOTICE: non-exist in B and E1850CN, delete it.
       !----------------------------------------------------------
-
-      if (wav_present .and. wavrun_alarm) then
-      if (iamin_CPLALLWAVID) then
-         if (run_barriers) then
-            call t_drvstartf ('DRIVER_W2C_BARRIER')
-            call mpi_barrier(mpicom_CPLALLWAVID,ierr)
-            call t_drvstopf ('DRIVER_W2C_BARRIER')
-         endif
-         call t_drvstartf ('DRIVER_W2C',cplcom=.true.,barrier=mpicom_CPLALLWAVID)
-         do ewi = 1,num_inst_wav
-            if (iamin_CPLWAVID(ewi)) then
-               call t_drvstartf ('driver_w2c_wavw2wavx',barrier=mpicom_CPLWAVID(ewi))
-               call seq_map_map(mapper_Cw2x(ewi), w2x_ww(ewi), w2x_wx(ewi))
-               call t_drvstopf  ('driver_w2c_wavw2wavx')
-            endif
-         enddo
-         if (iamin_CPLWAVID(ens1)) then
-            call t_drvstartf ('driver_w2c_infoexch',barrier=mpicom_CPLWAVID(ens1))
-            call seq_infodata_exchange(infodata,CPLWAVID(ens1),'wav2cpl_run')
-            call t_drvstopf  ('driver_w2c_infoexch')
-         endif
-         call t_drvstopf  ('DRIVER_W2C',cplcom=.true.)
-
-         if (iamin_CPLID) then
-            if (run_barriers) then
-               call t_drvstartf ('DRIVER_WAVPOST_BARRIER')
-               call mpi_barrier(mpicom_CPLID,ierr)
-               call t_drvstopf ('DRIVER_WAVPOST_BARRIER')
-            endif
-            call t_drvstartf  ('DRIVER_WAVPOST',cplrun=.true.,barrier=mpicom_CPLID)
-            if (drv_threading) call seq_comm_setnthreads(nthreads_CPLID)
-            if (info_debug > 1) then
-               call t_drvstartf ('driver_wavpost_diagav',barrier=mpicom_CPLID)
-               do ewi = 1,num_inst_wav
-                  call seq_diag_avect_mct(cdata_wx,w2x_wx(ewi),'recv wav'//trim(wav_suffix(ewi)))
-               enddo
-               call t_drvstopf  ('driver_wavpost_diagav')
-            endif
-            if (drv_threading) call seq_comm_setnthreads(nthreads_GLOID)
-            call t_drvstopf  ('DRIVER_WAVPOST',cplrun=.true.)
-         endif
-      endif   ! CPLALLWAVID
-      endif   ! run alarm, wav_present
 
       !----------------------------------------------------------
       ! glc -> cpl
+      ! NOTICE: non-exist in B and E1850CN, delete it.
       !----------------------------------------------------------
-
-      if (glc_present .and. glcrun_alarm) then
-      if (iamin_CPLALLGLCID) then
-         if (run_barriers) then
-            call t_drvstartf ('DRIVER_G2C_BARRIER')
-            call mpi_barrier(mpicom_CPLALLGLCID,ierr)
-            call t_drvstopf ('DRIVER_G2C_BARRIER')
-         endif
-         call t_drvstartf ('DRIVER_G2C',cplcom=.true.,barrier=mpicom_CPLALLGLCID)
-         do egi = 1,num_inst_glc
-            if (iamin_CPLGLCID(egi)) then
-               call t_drvstartf ('driver_g2c_glcg2glcx',barrier=mpicom_CPLGLCID(egi))
-               call seq_map_map(mapper_Cg2x(egi), g2x_gg(egi), g2x_gx(egi), msgtag=CPLGLCID(egi)*100+egi*10+4)
-               call t_drvstopf  ('driver_g2c_glcg2glcx')
-            endif
-         enddo
-         if (iamin_CPLGLCID(ens1)) then
-            call t_drvstartf ('driver_g2c_infoexch',barrier=mpicom_CPLGLCID(ens1))
-            call seq_infodata_exchange(infodata,CPLGLCID(ens1),'glc2cpl_run')
-            call t_drvstopf  ('driver_g2c_infoexch')
-         endif
-         call t_drvstopf  ('DRIVER_G2C',cplcom=.true.)
-
-         if (iamin_CPLID) then
-            if (run_barriers) then
-               call t_drvstartf ('DRIVER_GLCPOST_BARRIER')
-               call mpi_barrier(mpicom_CPLID,ierr)
-               call t_drvstopf ('DRIVER_GLCPOST_BARRIER')
-            endif
-            call t_drvstartf  ('DRIVER_GLCPOST',cplrun=.true.,barrier=mpicom_CPLID)
-            if (drv_threading) call seq_comm_setnthreads(nthreads_CPLID)
-            if (info_debug > 1) then
-               call t_drvstartf ('driver_glcpost_diagav',barrier=mpicom_CPLID)
-               do egi = 1,num_inst_glc
-                  call seq_diag_avect_mct(cdata_gx,g2x_gx(egi),'recv glc'//trim(glc_suffix(egi)))
-               enddo
-               call t_drvstopf  ('driver_glcpost_diagav')
-            endif
-            
-            if (sno_prognostic) then
-               call t_drvstartf ('driver_glcpost_glc2sno',barrier=mpicom_CPLID)
-               do egi = 1,num_inst_glc
-                  call seq_map_map(mapper_SFg2s, g2x_gx(egi), g2x_sx(egi), norm=.true.)
-               enddo
-               call t_drvstopf  ('driver_glcpost_glc2sno')
-
-               call t_drvstartf ('driver_glcpost_mrgx2s',barrier=mpicom_CPLID)
-               ! Use fortran mod to address ensembles in merge
-               do eli = 1,num_inst_lnd
-                  egi = mod((eli-1),num_inst_glc) + 1
-                  call mrg_x2s_run_mct( cdata_sx, g2x_sx(egi), x2s_sx(eli) )
-               enddo
-               call t_drvstopf  ('driver_glcpost_mrgx2s')
-            end if
-
-            if (drv_threading) call seq_comm_setnthreads(nthreads_GLOID)
-            call t_drvstopf  ('DRIVER_GLCPOST',cplrun=.true.)
-         endif
-      endif   ! CPLALLGLCID
-      endif   ! run alarm, glc_present
 
       !----------------------------------------------------------
       ! atm -> cpl
@@ -4316,7 +3946,6 @@ subroutine ccsm_run()
       ! ocn -> cpl, loose coupling (concurrent type mode)
       !----------------------------------------------------------
 
-      if (.not.ocean_tight_coupling) then
       if (iamin_CPLALLOCNID) then
       if (ocn_present .and. ocnnext_alarm) then
          if (run_barriers) then
@@ -4357,7 +3986,6 @@ subroutine ccsm_run()
             if (drv_threading) call seq_comm_setnthreads(nthreads_GLOID)
             call t_drvstopf  ('DRIVER_OCNPOST',cplrun=.true.)
          endif
-      endif
       endif
       endif
 
