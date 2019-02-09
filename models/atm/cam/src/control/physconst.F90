@@ -265,65 +265,64 @@ contains
     ! Set constants needed for updates
     !--------------------------------------------
     print *,"[ASC debug] Y00: physconst_update called!"
-    !stop 'physconst_update'
-   !  dof1 = 5._r8 
-   !  dof2 = 7._r8
-   !  kv1  = 4.03_r8
-   !  kv2  = 3.42_r8
-   !  kv3  = 3.9_r8
-   !  kv4  = 0.69_r8
-   !  kc1  = 56._r8
-   !  kc2  = 56._r8
-   !  kc3  = 75.9_r8
-   !  kc4  = 0.69_r8
+    dof1 = 5._r8 
+    dof2 = 7._r8
+    kv1  = 4.03_r8
+    kv2  = 3.42_r8
+    kv3  = 3.9_r8
+    kv4  = 0.69_r8
+    kc1  = 56._r8
+    kc2  = 56._r8
+    kc3  = 75.9_r8
+    kc4  = 0.69_r8
 
-   !   !--------------------------------------------
-   !   ! update cpairv, rairv, mbarv, and cappav
-   !   !--------------------------------------------
-   !   do k=1,pver
-   !      do i=1,ncol
-   !         mmro = mmr(i,k, ixo)
-   !         mmro2 = mmr(i,k, ixo2)
-   !         mmrh = mmr(i,k, ixh)
-   !         mmrn2 = 1._r8-mmro-mmro2-mmrh
-   !         mbarv(i,k,lchnk) = 1._r8/(mmro/cnst_mw_o +      &
-   !                                   mmro2/cnst_mw_o2 +    &
-   !                                   mmrn2/cnst_mw_n/2._r8 + &
-   !                                   mmrh/cnst_mw_h)
-   !         rairv(i,k,lchnk) = shr_const_rgas / mbarv(i,k,lchnk)
-   !         cpairv(i,k,lchnk) = 0.5_r8*shr_const_rgas*    &
-   !                               (dof1*mmro/cnst_mw_o+        &
-   !                                dof2*mmro2/cnst_mw_o2+     &
-   !                                dof2*mmrn2/cnst_mw_n/2._r8+ &
-   !                                   dof1*mmrh/cnst_mw_h)
-   !         cappav(i,k,lchnk) = rairv(i,k,lchnk)/cpairv(i,k,lchnk)
-   !      enddo
-   !   enddo
+     !--------------------------------------------
+     ! update cpairv, rairv, mbarv, and cappav
+     !--------------------------------------------
+     do k=1,pver
+        do i=1,ncol
+           mmro = mmr(i,k, ixo)
+           mmro2 = mmr(i,k, ixo2)
+           mmrh = mmr(i,k, ixh)
+           mmrn2 = 1._r8-mmro-mmro2-mmrh
+           mbarv(i,k,lchnk) = 1._r8/(mmro/cnst_mw_o +      &
+                                     mmro2/cnst_mw_o2 +    &
+                                     mmrn2/cnst_mw_n/2._r8 + &
+                                     mmrh/cnst_mw_h)
+           rairv(i,k,lchnk) = shr_const_rgas / mbarv(i,k,lchnk)
+           cpairv(i,k,lchnk) = 0.5_r8*shr_const_rgas*    &
+                                 (dof1*mmro/cnst_mw_o+        &
+                                  dof2*mmro2/cnst_mw_o2+     &
+                                  dof2*mmrn2/cnst_mw_n/2._r8+ &
+                                     dof1*mmrh/cnst_mw_h)
+           cappav(i,k,lchnk) = rairv(i,k,lchnk)/cpairv(i,k,lchnk)
+        enddo
+     enddo
 
-   !   do k=2,pver
-   !      do i=1,ncol
-   !         mmro = .5_r8*(mmr(i,k-1, ixo)+mmr(i,k,ixo))
-   !         mmro2 = .5_r8*(mmr(i,k-1, ixo2)+mmr(i,k,ixo2))
-   !         mmrn2 = 1._r8-mmro-mmro2
-   !         mbarvi = .5_r8*(mbarv(i,k-1,lchnk)+mbarv(i,k,lchnk))
-   !         tint = .5_r8*(t(i,k-1)+t(i,k))
+     do k=2,pver
+        do i=1,ncol
+           mmro = .5_r8*(mmr(i,k-1, ixo)+mmr(i,k,ixo))
+           mmro2 = .5_r8*(mmr(i,k-1, ixo2)+mmr(i,k,ixo2))
+           mmrn2 = 1._r8-mmro-mmro2
+           mbarvi = .5_r8*(mbarv(i,k-1,lchnk)+mbarv(i,k,lchnk))
+           tint = .5_r8*(t(i,k-1)+t(i,k))
  
-   !         kmvis(i,k,lchnk) = (kv1*mmro2/cnst_mw_o2+             &
-   !                             kv2*mmrn2/cnst_mw_n/2._r8+        &
-   !                             kv3*mmro/cnst_mw_o)*mbarvi*       &
-   !                             tint**kv4 * 1.e-7_r8
-   !         kmcnd(i,k,lchnk) = (kc1*mmro2/cnst_mw_o2+             &
-   !                             kc2*mmrn2/cnst_mw_n/2._r8+        &
-   !                             kc3*mmro/cnst_mw_o)*mbarvi*   &
-   !                             tint**kc4 * 1.e-5_r8
-   !      enddo
-   !   enddo
-   !   do i=1,ncol
-   !      kmvis(i,1,lchnk) = 1.5_r8*kmvis(i,2,lchnk)-.5_r8*kmvis(i,3,lchnk)
-   !      kmcnd(i,1,lchnk) = 1.5_r8*kmcnd(i,2,lchnk)-.5_r8*kmcnd(i,3,lchnk)
-   !      kmvis(i,pverp,lchnk) = kmvis(i,pver,lchnk)
-   !      kmcnd(i,pverp,lchnk) = kmcnd(i,pver,lchnk)
-   !   enddo
+           kmvis(i,k,lchnk) = (kv1*mmro2/cnst_mw_o2+             &
+                               kv2*mmrn2/cnst_mw_n/2._r8+        &
+                               kv3*mmro/cnst_mw_o)*mbarvi*       &
+                               tint**kv4 * 1.e-7_r8
+           kmcnd(i,k,lchnk) = (kc1*mmro2/cnst_mw_o2+             &
+                               kc2*mmrn2/cnst_mw_n/2._r8+        &
+                               kc3*mmro/cnst_mw_o)*mbarvi*   &
+                               tint**kc4 * 1.e-5_r8
+        enddo
+     enddo
+     do i=1,ncol
+        kmvis(i,1,lchnk) = 1.5_r8*kmvis(i,2,lchnk)-.5_r8*kmvis(i,3,lchnk)
+        kmcnd(i,1,lchnk) = 1.5_r8*kmcnd(i,2,lchnk)-.5_r8*kmcnd(i,3,lchnk)
+        kmvis(i,pverp,lchnk) = kmvis(i,pver,lchnk)
+        kmcnd(i,pverp,lchnk) = kmcnd(i,pver,lchnk)
+     enddo
 
    end subroutine physconst_update
 

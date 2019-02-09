@@ -30,7 +30,8 @@ module radae
   use abortutils,       only: endrun
   use cam_logfile,      only: iulog
   use wv_saturation,    only: qsat_water
-
+  use physconst,        only: gravit, cpair, epsilo, stebol, &
+                             pstd, mwdry, mwco2, mwo3
 
   implicit none
 
@@ -53,21 +54,21 @@ module radae
 !-----------------------------------------------------------------------------
 ! PRIVATE:: The rest of the data is private to this module.
 !-----------------------------------------------------------------------------
-  real(r8) :: p0    ! Standard pressure (dynes/cm**2)
-  real(r8) :: amd   ! Molecular weight of dry air (g/mol)
-  real(r8) :: amco2 ! Molecular weight of co2   (g/mol)
-  real(r8) :: mwo3  ! Molecular weight of O3 (g/mol)
+  real(r8), parameter   :: p0     = pstd*10.0_r8! Standard pressure (dynes/cm**2)
+  real(r8), parameter   :: amd    = mwdry ! Molecular weight of dry air (g/mol)
+  real(r8), parameter   :: amco2  = mwco2! Molecular weight of co2   (g/mol)
+  !real(r8), parameter   :: mwo3   = mwo3! Molecular weight of O3 (g/mol)
 
-  real(r8) :: gravit     ! acceleration due to gravity (m/s**2)
-  real(r8) :: gravit_cgs ! acceleration due to gravity (cm/s**2)
-  real(r8) :: rga        ! 1./gravit_cgs
-  real(r8) :: epsilo     ! Ratio of mol. wght of H2O to dry air
-  real(r8) :: omeps      ! 1._r8 - epsilo
-  real(r8) :: sslp       ! Standard sea-level pressure (dynes/cm**2)
-  real(r8) :: stebol_cgs ! Stefan-Boltzmann's constant (CGS)
-  real(r8) :: rgsslp     ! 0.5/(gravit_cgs*sslp)
-  real(r8) :: dpfo3      ! Voigt correction factor for O3
-  real(r8) :: dpfco2     ! Voigt correction factor for CO2
+  !real(r8), parameter  :: gravit  = gravx    ! acceleration due to gravity (m/s**2)
+  real(r8), parameter  :: gravit_cgs  = 100._r8*gravit  ! acceleration due to gravity (cm/s**2)
+  real(r8), parameter  :: rga         = 1._r8/gravit_cgs! 1./gravit_cgs
+  !real(r8), parameter  :: epsilo      = epsilox! Ratio of mol. wght of H2O to dry air
+  real(r8), parameter  :: omeps       = 1._r8 - epsilo! 1._r8 - epsilo
+  real(r8), parameter  :: sslp        = 1.013250e6_r8! Standard sea-level pressure (dynes/cm**2)
+  real(r8), parameter  :: stebol_cgs  = 1.e3_r8*stebol! Stefan-Boltzmann's constant (CGS)
+  real(r8), parameter  :: rgsslp      = 0.5_r8/(gravit_cgs*sslp) ! 0.5/(gravit_cgs*sslp)
+  real(r8), parameter  :: dpfo3       = 2.5e-3_r8! Voigt correction factor for O3
+  real(r8), parameter  :: dpfco2      = 5.0e-3_r8! Voigt correction factor for CO2
 
   integer, parameter :: n_u = 25   ! Number of U in abs/emis tables
   integer, parameter :: n_p = 10   ! Number of P in abs/emis tables
@@ -88,29 +89,37 @@ module radae
 !            Emissivity and Absorptivity Formulation for Water Vapor
 !            Journal of Geophysical Research, vol. 91., D8, pp 8649-8666
 !
-  real(r8):: coefh(2,4) = reshape(  &
+  real(r8), parameter:: coefh(2,4) = reshape(  &
          (/ (/5.46557e+01_r8,-7.30387e-02_r8/), &
             (/1.09311e+02_r8,-1.46077e-01_r8/), &
             (/5.11479e+01_r8,-6.82615e-02_r8/), &
             (/1.02296e+02_r8,-1.36523e-01_r8/) /), (/2,4/) )
 !
-  real(r8):: coefj(3,2) = reshape( &
+  real(r8), parameter:: coefj(3,2) = reshape( &
             (/ (/2.82096e-02_r8,2.47836e-04_r8,1.16904e-06_r8/), &
                (/9.27379e-02_r8,8.04454e-04_r8,6.88844e-06_r8/) /), (/3,2/) )
 !
-  real(r8):: coefk(3,2) = reshape( &
+  real(r8), parameter:: coefk(3,2) = reshape( &
             (/ (/2.48852e-01_r8,2.09667e-03_r8,2.60377e-06_r8/) , &
                (/1.03594e+00_r8,6.58620e-03_r8,4.04456e-06_r8/) /), (/3,2/) )
-  real(r8):: c16,c17,c26,c27,c28,c29,c30,c31
+  !real(r8):: c16,c17,c26,c27,c28,c29,c30,c31
+  real(r8), parameter:: c16  = coefj(3,1)/coefj(2,1) ,&
+  c17  = coefk(3,1)/coefk(2,1),&
+  c26  = coefj(3,2)/coefj(2,2),&
+  c27  = coefk(3,2)/coefk(2,2)
+  real(r8), parameter:: c28  = .5_r8,&
+  c29  = .002053_r8,&
+  c30  = .1_r8,&
+  c31  = 3.0e-5_r8
 !
 ! Farwing correction constants for narrow-band emissivity model,
 ! introduced to account for the deficiencies in narrow-band model
 ! used to derive the emissivity; tuned with Arkings line-by-line
 ! calculations.  Just used for water vapor overlap with trace gases.
 !
-  real(r8):: fwcoef      ! Farwing correction constant
-  real(r8):: fwc1,fwc2   ! Farwing correction constants 
-  real(r8):: fc1         ! Farwing correction constant 
+  real(r8), parameter:: fwcoef    = .1_r8   ! Farwing correction constant
+  real(r8), parameter:: fwc1= .30_r8 ,fwc2 = 4.5_r8       ! Farwing correction constants 
+  real(r8), parameter:: fc1    = 2.6_r8       ! Farwing correction constant 
 !
 ! Collins/Hackney/Edwards (C/H/E) & Collins/Lee-Taylor/Edwards (C/LT/E) 
 !       H2O parameterization
@@ -2793,33 +2802,35 @@ subroutine radae_init(gravx, epsilox, stebol, pstdx, mwdryx, mwco2x, mwo3x)
 !
 ! Constants to set
 !
-   gravit     = gravx
-   gravit_cgs = 100._r8*gravx
-   rga        = 1._r8/gravit_cgs
-   epsilo     = epsilox
-   omeps      = 1._r8 - epsilo
-   sslp       = 1.013250e6_r8
-   stebol_cgs = 1.e3_r8*stebol
-   rgsslp     = 0.5_r8/(gravit_cgs*sslp)
-   dpfo3      = 2.5e-3_r8
-   dpfco2     = 5.0e-3_r8
 
-   p0         = pstdx*10.0_r8
-   amd        = mwdryx
-   amco2      = mwco2x
-   mwo3       = mwo3x
-!
+   write(iulog,*)'[ASC debug] Y00: radae_init called!'
+   ! gravit     = gravx
+   ! gravit_cgs = 100._r8*gravx
+   ! rga        = 1._r8/gravit_cgs
+   ! epsilo     = epsilox
+   ! omeps      = 1._r8 - epsilo
+   ! sslp       = 1.013250e6_r8
+   ! stebol_cgs = 1.e3_r8*stebol
+   ! rgsslp     = 0.5_r8/(gravit_cgs*sslp)
+   ! dpfo3      = 2.5e-3_r8
+   ! dpfco2     = 5.0e-3_r8
+
+!    p0         = pstdx*10.0_r8
+!    amd        = mwdryx
+!    amco2      = mwco2x
+!    mwo3       = mwo3x
+! !
 ! Coefficients for h2o emissivity and absorptivity for overlap of H2O 
 !    and trace gases.
 !
-   c16  = coefj(3,1)/coefj(2,1)
-   c17  = coefk(3,1)/coefk(2,1)
-   c26  = coefj(3,2)/coefj(2,2)
-   c27  = coefk(3,2)/coefk(2,2)
-   c28  = .5_r8
-   c29  = .002053_r8
-   c30  = .1_r8
-   c31  = 3.0e-5_r8
+   ! c16  = coefj(3,1)/coefj(2,1)
+   ! c17  = coefk(3,1)/coefk(2,1)
+   ! c26  = coefj(3,2)/coefj(2,2)
+   ! c27  = coefk(3,2)/coefk(2,2)
+   ! c28  = .5_r8
+   ! c29  = .002053_r8
+   ! c30  = .1_r8
+   ! c31  = 3.0e-5_r8
 !
 ! Initialize further longwave constants referring to far wing
 ! correction for overlap of H2O and trace gases; R&D refers to:
@@ -2828,10 +2839,10 @@ subroutine radae_init(gravx, epsilox, stebol, pstdx, mwdryx, mwco2x, mwo3x)
 !            Emissivity and Absorptivity Formulation for Water Vapor
 !            Journal of Geophysical Research, vol. 91., D8, pp 8649-8666
 !
-   fwcoef = .1_r8           ! See eq(33) R&D
-   fwc1   = .30_r8          ! See eq(33) R&D
-   fwc2   = 4.5_r8          ! See eq(33) and eq(34) in R&D
-   fc1    = 2.6_r8          ! See eq(34) R&D
+   ! fwcoef = .1_r8           ! See eq(33) R&D
+   ! fwc1   = .30_r8          ! See eq(33) R&D
+   ! fwc2   = 4.5_r8          ! See eq(33) and eq(34) in R&D
+   ! fc1    = 2.6_r8          ! See eq(34) R&D
 
    call getfil(absems_data, locfn)
    call cam_pio_openfile(ncid_ae, locfn, PIO_NOWRITE)

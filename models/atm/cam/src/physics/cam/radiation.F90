@@ -339,7 +339,7 @@ end function radiation_nextsw_cday
     !-----------------------------------------------------------------------
 
     call radconstants_init()
-
+! todo 全部改成const
     call radsw_init(gravit)
     call radlw_init(gravit, stebol)
     call radae_init(gravit, epsilo, stebol, pstd, mwdry, mwco2, mwo3)

@@ -195,7 +195,7 @@
    ! pi  = SHR_CONST_PI
 #else
     pi  = c4*atan(c1)
-    PRINT *,  "fuck0" 
+    PRINT *,  "[ASC debug] Y00:fuck0" 
 #endif
 
 
@@ -279,12 +279,12 @@
    ! latent_heat_fusion_mks = SHR_CONST_LATICE        ! J/kg 
    ! ocn_ref_salinity       = SHR_CONST_OCN_REF_SAL   ! psu
    ! sea_ice_salinity       = SHR_CONST_ICE_REF_SAL   ! psu
-   PRINT *,  "fuck1" !只有这个被编译了 ！！
+   PRINT *,  "[ASC debug] Y00:fuck1" !只有这个被编译了 ！！
 #endif
 
 #ifdef ZERO_SEA_ICE_REF_SAL
     sea_ice_salinity       = c0
-    PRINT *,  "fuck2"
+    PRINT *,  "[ASC debug] Y00:fuck2"
 #endif
 
 
@@ -406,7 +406,7 @@
    if (rtavg == r4) then
       undefined_nf  = NF90_FILL_FLOAT
    else if (rtavg == r8) then
-      PRINT *, "fuck3" ! 为什么这个没有？？？ 难道不是double？？？ TODO-RGY ASC
+      PRINT *, "[ASC debug] Y00:fuck3" ! 为什么这个没有？？？ 难道不是double？？？ TODO-RGY ASC
       undefined_nf  = NF90_FILL_DOUBLE
    endif
 
