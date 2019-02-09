@@ -15,7 +15,7 @@ use scamMod,         only: single_column,scm_crm_mode,have_asdir, &
 use cam_logfile,     only: iulog
 use radconstants,    only: nswbands, get_sw_spectral_boundaries, &
                            idx_sw_diag, indxsl
-
+use physconst,      only: gravit=>gravx
 implicit none
 
 private
@@ -29,10 +29,12 @@ public ::&
 
 ! Private module data
 
-real(r8) :: gravit     ! Acceleration of gravity
-real(r8) :: rga        ! 1./gravit
-real(r8) :: sslp       ! Standard sea-level pressure
-
+!eal(r8) :: gravit     ! Acceleration of gravity
+real(r8), parameter :: gravit    = 100._r8*gravx
+!real(r8) :: rga        ! 1./gravit
+real(r8), parameter :: rga     =  1._r8/gravit
+!real(r8) :: sslp       ! Standard sea-level pressure
+real(r8) ,parameter ::sslp = 1.013250e6_r8
 !===============================================================================
 CONTAINS
 !===============================================================================
@@ -2316,9 +2318,9 @@ subroutine radsw_init(gravx)
 !
 ! Set general radiation consts; convert to cgs units where appropriate:
 !
-   gravit  =  100._r8*gravx
-   rga     =  1._r8/gravit
-   sslp    =  1.013250e6_r8
+   !gravit  =  100._r8*gravx
+   !rga     =  1._r8/gravit
+   !sslp    =  1.013250e6_r8
 
 end subroutine radsw_init
 
