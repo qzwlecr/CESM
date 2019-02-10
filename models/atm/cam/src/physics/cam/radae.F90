@@ -29,7 +29,7 @@ module radae
         idx_LW_1000_1200, idx_LW_0800_1000,  idx_LW_1200_2000
   use abortutils,       only: endrun
   use cam_logfile,      only: iulog
-  use wv_saturation,    only: qsat_water
+  !use wv_saturation,    only: qsat_water
   use physconst,        only: gravit, cpair, epsilo, stebol, &
                              pstd, mwdry, mwco2, mwo3
 
@@ -661,7 +661,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
       do k2=pverp,ntoplw,-1
          if (k1 == k2) cycle
          do i=1,ncol
-            !ASC-Y00 这个地方实在弄不了了
+            !ASC-Y00 这个地方实在弄不了了 TODO
             dplh2o(i) = plh2o(i,k1) - plh2o(i,k2)
             u(i)      = abs(dplh2o(i))
             sqrtu(i)  = sqrt(u(i))
@@ -3491,7 +3491,7 @@ subroutine trcab(ncol    ,                                     &
          psi1 = exp(abp(l)*tt(i) + bbp(l)*tt(i)*tt(i))
          phi1 = exp(ab(l)*tt(i) + bb(l)*tt(i)*tt(i))
          p1 = pnew(i)*(psi1/phi1)/sslp
-         w1 = dw(i)*phi1
+         w1 = dw(i)*phi1  !这个地方的指数表达式可以化简 TODO
          tw(i,l) = exp(-g1(l)*p1*(sqrt(1.0_r8 + g2(l)*(w1/p1)) - 1.0_r8) - &
                    g3(l)*ds2c(i)-g4(l)*duptyp(i))
       end do
@@ -4233,5 +4233,40 @@ end subroutine trcplk
 
 
 !====================================================================================
+
+elemental subroutine qsat_water(t, p, es, qs) ! for inline
+  !------------------------------------------------------------------!
+  ! Purpose:                                                         !
+  !   Calculate SVP over water at a given temperature, and then      !
+  !   calculate and return saturation specific humidity.             !
+  !   Optionally return various temperature derivatives or enthalpy  !
+  !   at saturation.                                                 !
+  !------------------------------------------------------------------!
+
+  real(r8), parameter :: tboil = 373.16_r8
+  ! Inputs
+  real(r8), intent(in) :: t    ! Temperature
+  real(r8), intent(in) :: p    ! Pressure
+  ! Outputs
+  real(r8), intent(out) :: es  ! Saturation vapor pressure
+  real(r8), intent(out) :: qs  ! Saturation specific humidity
+
+
+  es = 10._r8**(-7.90298_r8*(tboil/t-1._r8)+ &
+       5.02808_r8*log10(tboil/t)- &
+       1.3816e-7_r8*(10._r8**(11.344_r8*(1._r8-t/tboil))-1._r8)+ &
+       8.1328e-3_r8*(10._r8**(-3.49149_r8*(tboil/t-1._r8))-1._r8)+ &
+       log10(1013.246_r8))*100._r8
+
+   if ( (p - es) <= 0._r8 ) then
+     qs = 1.0_r8
+  else
+     qs = epsilo*es / (p - omeps*es)
+  end if
+
+  es = min(es, p)
+
+
+end subroutine qsat_water
 
 end module radae
