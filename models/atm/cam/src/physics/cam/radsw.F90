@@ -2194,6 +2194,7 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
 
    do k=0,pver
       do i=1,ndayc
+            !ASC-Y00 这个地方实在弄不了了
             tauray = trayoslp*(pflx(i,k+1)-pflx(i,k))
             taugab = abh2o*uh2o(i,k) + abo3*uo3(i,k) + abco2*uco2(i,k) + abo2*uo2(i,k)
 

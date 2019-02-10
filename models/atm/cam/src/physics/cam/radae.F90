@@ -214,7 +214,20 @@ module radae
   real(r8), parameter :: bb(6)=(/-1.3512e-4_r8,-6.8320e-5_r8,-3.2609e-5_r8,-1.0228e-5_r8,-9.5743e-5_r8,-1.0304e-4_r8/)
   real(r8), parameter :: abp(6)=(/2.9129e-2_r8,2.4101e-2_r8,1.9821e-2_r8,2.6904e-2_r8,2.9458e-2_r8,1.9892e-2_r8/)
   real(r8), parameter :: bbp(6)=(/-1.3139e-4_r8,-5.5688e-5_r8,-4.6380e-5_r8,-8.0362e-5_r8,-1.0115e-4_r8,-8.8061e-5_r8/)
+  real(r8), parameter ::  r293                = 1._r8/293._r8! 1/293
+  real(r8), parameter ::  r250                = 1._r8/250._r8! 1/250
+  real(r8), parameter ::  r3205               = 1._r8/.3205_r8! Line width factor for o3 (see R&Di)
+  real(r8), parameter ::  r300                = 1._r8/300._r8 ! 1/300
+  real(r8), parameter ::  rsslp               = 1._r8/sslp! Reciprocal of sea level pressure
+  real(r8), parameter ::  r2sslp              = 1._r8/(2._r8*sslp)! 1/2 of rsslp
 
+!
+!Constants for computing U corresponding to H2O cont. path
+!
+  real(r8), parameter ::  fdif               = 1.66_r8 ! secant(zenith angle) for diffusivity approx.
+
+  real(r8), parameter ::  sslp_mks           = sslp / 10.0_r8! Sea-level pressure in MKS units
+  real(r8), parameter ::   rmw   = amd/amco2
 
 ! Public Interfaces
 !====================================================================================
@@ -395,7 +408,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
    real(r8) oneme              ! Co2 stimulated emission term
    real(r8) alphat             ! Part of the co2 stimulated emission term
    real(r8) co2vmr(pcols)      ! CO2 column mean vmr
-   real(r8) rmw                ! ratio of molecular weights (air/co2)
+  ! real(r8) rmw                ! ratio of molecular weights (air/co2)
    real(r8) wco2               ! Constants used to define co2 pathlength
    real(r8) posqt              ! Effective pressure for co2 line width
    real(r8) u7(pcols)          ! Co2 hot band path length
@@ -432,12 +445,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
    real(r8) zinpl(pcols,4)     ! Nearest layer subdivision factor
    real(r8) pinpl(pcols,4)     ! Nearest layer subdivision factor
    real(r8) dplh2o(pcols)      ! Difference in press weighted h2o amount
-   real(r8) r293               ! 1/293
-   real(r8) r250               ! 1/250
-   real(r8) r3205              ! Line width factor for o3 (see R&Di)
-   real(r8) r300               ! 1/300
-   real(r8) rsslp              ! Reciprocal of sea level pressure
-   real(r8) r2sslp             ! 1/2 of rsslp
+
    real(r8) ds2c               ! Y in eq(7) in table A2 of R&D
    real(r8)  dplos             ! Ozone pathlength eq(A2) in R&Di
    real(r8) dplol              ! Presure weighted ozone pathlength
@@ -573,9 +581,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
    real(r8) fch2o            ! temp. factor for continuum
    real(r8) uch2o            ! U corresponding to H2O cont. path (window)
 
-   real(r8) fdif             ! secant(zenith angle) for diffusivity approx.
 
-   real(r8) sslp_mks         ! Sea-level pressure in MKS units
    real(r8) esx              ! saturation vapor pressure returned by qsat
    real(r8) qsx              ! saturation mixing ratio returned by qsat
    real(r8) pnew_mks         ! pnew in MKS units
@@ -619,23 +625,13 @@ subroutine radabs(lchnk   ,ncol    ,             &
          dbvtit(i,k) = dbvt(tint(i,k))
       end do
    end do
-   rmw = amd/amco2
+ !  rmw = amd/amco2
    do i=1,ncol
       dbvtit(i,pverp) = dbvt(tint(i,pverp))
       co2vmr(i) = co2mmr(i) * rmw
    end do
 !
-   r293    = 1._r8/293._r8
-   r250    = 1._r8/250._r8
-   r3205   = 1._r8/.3205_r8
-   r300    = 1._r8/300._r8
-   rsslp   = 1._r8/sslp
-   r2sslp  = 1._r8/(2._r8*sslp)
-!
-!Constants for computing U corresponding to H2O cont. path
-!
-   fdif       = 1.66_r8
-   sslp_mks   = sslp / 10.0_r8
+
 !
 ! Non-adjacent layer absorptivity:
 !
@@ -655,7 +651,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
    do k=ntoplw,pverp
       do i=1,ncol
          pnmsq(i,k) = pnm(i,k)**2
-         dtx(i) = tplnka(i,k) - 250._r8
+         dtx(i) = tplnka(i,k) - 250._r8 !这里是算了很多次？？
       end do
    end do
 !
@@ -665,6 +661,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
       do k2=pverp,ntoplw,-1
          if (k1 == k2) cycle
          do i=1,ncol
+            !ASC-Y00 这个地方实在弄不了了
             dplh2o(i) = plh2o(i,k1) - plh2o(i,k2)
             u(i)      = abs(dplh2o(i))
             sqrtu(i)  = sqrt(u(i))
@@ -1058,7 +1055,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
          end do
 !
 ! 500 -  800 cm-1   h2o rotation band overlap with co2
-!
+!ASC-Y00 这个地方实在弄不了了
          do i=1,ncol
             k21    = term7(i,1) + term8(i,1)/ &
                (1._r8 + (c30 + c31*(dty(i)-10._r8)*(dty(i)-10._r8))*sqrtu(i))
@@ -1793,7 +1790,7 @@ subroutine radems(lchnk   ,ncol    ,                            &
 ! Local variables for CO2:
 !
    real(r8) co2vmr(pcols)            ! CO2 column mean vmr
-   real(r8) rmw                      ! ratio of molecular weights (air/co2)
+  ! real(r8) rmw                      ! ratio of molecular weights (air/co2)
    real(r8) co2ems(pcols,pverp)      ! Co2 emissivity
    real(r8) co2plk(pcols)            ! Used to compute co2 emissivity
    real(r8) sum(pcols)               ! Used to calculate path temperature
@@ -1830,9 +1827,7 @@ subroutine radems(lchnk   ,ncol    ,                            &
    real(r8) u8                       ! Absorber amt for various co2 band systems
    real(r8) u9                       ! Absorber amt for various co2 band systems
    real(r8) u13                      ! Absorber amt for various co2 band systems
-   real(r8) r250                     ! Inverse 250K
-   real(r8) r300                     ! Inverse 300K
-   real(r8) rsslp                    ! Inverse standard sea-level pressure
+   
 !
 ! Local variables for O3:
 !
@@ -1953,9 +1948,6 @@ subroutine radems(lchnk   ,ncol    ,                            &
    real(r8) fch2o            ! temp. factor for continuum
    real(r8) uch2o            ! U corresponding to H2O cont. path (window)
 
-   real(r8) fdif             ! secant(zenith angle) for diffusivity approx.
-
-   real(r8) sslp_mks         ! Sea-level pressure in MKS units
    real(r8) esx              ! saturation vapor pressure returned by qsat
    real(r8) qsx              ! saturation mixing ratio returned by qsat
    real(r8) pnew_mks         ! pnew in MKS units
@@ -1980,18 +1972,15 @@ subroutine radems(lchnk   ,ncol    ,                            &
 !
 ! Initialize
 !
-   r250  = 1._r8/250._r8
-   r300  = 1._r8/300._r8
-   rsslp = 1._r8/sslp
-   rmw   = amd/amco2
+   ! r250  = 1._r8/250._r8
+   ! r300  = 1._r8/300._r8
+   ! rsslp = 1._r8/sslp
+
    do i=1,ncol
       co2vmr(i) = co2mmr(i) * rmw
    end do
 !
 ! Constants for computing U corresponding to H2O cont. path
-!
-   fdif       = 1.66_r8
-   sslp_mks   = sslp / 10.0_r8
 !
 ! Planck function for co2
 !
