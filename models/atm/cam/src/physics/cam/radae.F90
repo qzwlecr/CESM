@@ -679,7 +679,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
 !
             tpatha = abs(tcg(i,k1) - tcg(i,k2))/dw(i)
             t_p = min(max(tpatha, min_tp_h2o), max_tp_h2o)
-
+! todo
             call qsat_water(t_p, pnew_mks, esx, qsx)
 !
 ! Compute effective RH along path
@@ -1219,7 +1219,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
          temh2o(i,2) = tbar(i,2)
          temh2o(i,3) = tbar(i,1)
          temh2o(i,4) = tbar(i,2)
-         dpnm(i)     = pnm(i,k2+1) - pnm(i,k2)
+         dpnm(i)     = pnm(i,k2+1) - pnm(i,k2) ! 这个可以拆除来
       end do
 !
 !  Weighted Planck functions for trace gases
@@ -2062,7 +2062,7 @@ subroutine radems(lchnk   ,ncol    ,                            &
 !
          tpathe   = tcg(i,k1)/w(i,k1)
          t_p = min(max(tpathe, min_tp_h2o), max_tp_h2o)
-
+! todo
          call qsat_water(t_p, pnew_mks, esx, qsx)
 
 !

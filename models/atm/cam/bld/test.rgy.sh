@@ -14,7 +14,7 @@ export LDFLAGS='-L/media/rgy/win-file/document/computer/HPC/cesm/openmpi/lib -L/
 
 export LD_LIBRARY_PATH=/media/rgy/win-file/document/computer/HPC/cesm/netcdf-build/lib:${LD_LIBRARY_PATH}:/media/rgy/win-file/document/computer/HPC/cesm/openmpi/lib/ 
 
-./configure -dyn fv -hgrid 1.9x2.5 -ntasks 1 -phys cam4 -ocn aquaplanet -pergro -fc gfortran
+./configure -dyn fv -hgrid 1.9x2.5 -ntasks 1 -phys cam4 -ocn aquaplanet -pergro -fc gfortran  # -fopt '-Ofast' -debug
 ./build-namelist -s -case cam5.0_port -runtype startup  -csmdata ./\
  -namelist "&camexp stop_option='ndays', stop_n=2 nhtfrq=1 ndens=1 \
    mfilt=97 hfilename_spec='h%t.nc' empty_htapes=.true. \
@@ -22,7 +22,7 @@ export LD_LIBRARY_PATH=/media/rgy/win-file/document/computer/HPC/cesm/netcdf-bui
 rm -f Depends
 
 export FC=mpifort
-gmake > gmake.log 2>&1
+gmake -j 2 > gmake.log 2>&1
 
 echo "now link the cam"
 rm -f ./cam 
