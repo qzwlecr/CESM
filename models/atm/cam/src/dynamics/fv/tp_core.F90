@@ -784,7 +784,7 @@ CONTAINS
 ! !INPUT PARAMETERS:
  integer im   ! Total longitudes
  integer lmt  ! LMT = 0: full monotonicity
-              ! LMT = 1: Improved and simplified full monotonic constraint
+              ! LMT = 1: Improved and simplified full monotonic constraint  我发现这里只有1 !print *, '[ASC debug] Y00: lmppm  lmt == 3 !'
               ! LMT = 2: positive-definite constraint
               ! LMT = 3: Quasi-monotone constraint
  real(r8) p(im)
@@ -820,7 +820,19 @@ CONTAINS
 ! LMT = 2: positive-definite constraint
 ! LMT = 3: Quasi-monotone constraint
 
-  if( lmt == 0 ) then
+if( lmt == 1 ) then
+
+  ! Improved (Lin 2001?) full constraint
+        do i=1,im
+             da1 = dm(i) + dm(i)
+              dl = sign(min(abs(da1),abs(al(i)-p(i))), da1)
+              dr = sign(min(abs(da1),abs(ar(i)-p(i))), da1)
+           ar(i) = p(i) + dr
+           al(i) = p(i) - dl
+           a6(i) = D3_0*(dl-dr)
+        enddo
+    return
+  elseif( lmt == 0 ) then
 
 ! Full constraint
   do i=1,im
@@ -841,18 +853,6 @@ CONTAINS
          endif
      endif
   enddo
-
-  elseif( lmt == 1 ) then
-
-! Improved (Lin 2001?) full constraint
-      do i=1,im
-           da1 = dm(i) + dm(i)
-            dl = sign(min(abs(da1),abs(al(i)-p(i))), da1)
-            dr = sign(min(abs(da1),abs(ar(i)-p(i))), da1)
-         ar(i) = p(i) + dr
-         al(i) = p(i) - dl
-         a6(i) = D3_0*(dl-dr)
-      enddo
 
   elseif( lmt == 2 ) then
 ! Positive definite constraint
