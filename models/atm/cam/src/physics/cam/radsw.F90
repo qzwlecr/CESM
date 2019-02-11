@@ -15,7 +15,7 @@ use scamMod,         only: single_column,scm_crm_mode,have_asdir, &
 use cam_logfile,     only: iulog
 use radconstants,    only: nswbands, get_sw_spectral_boundaries, &
                            idx_sw_diag, indxsl
-
+use physconst,      only: gravx => gravit
 implicit none
 
 private
@@ -29,10 +29,12 @@ public ::&
 
 ! Private module data
 
-real(r8) :: gravit     ! Acceleration of gravity
-real(r8) :: rga        ! 1./gravit
-real(r8) :: sslp       ! Standard sea-level pressure
-
+!eal(r8) :: gravit     ! Acceleration of gravity
+real(r8), parameter :: gravit    = 100._r8*gravx
+!real(r8) :: rga        ! 1./gravit
+real(r8), parameter :: rga     =  1._r8/gravit
+!real(r8) :: sslp       ! Standard sea-level pressure
+real(r8) ,parameter ::sslp = 1.013250e6_r8
 !===============================================================================
 CONTAINS
 !===============================================================================
@@ -699,8 +701,12 @@ subroutine radcswmx(lchnk   ,ncol    ,                         &
    ! START OF CALCULATION
    !-----------------------------------------------------------------------
 
-   call phys_getopts(microp_scheme_out=microp_scheme)
-
+   ! call phys_getopts(microp_scheme_out=microp_scheme)
+   ! if  ( microp_scheme == 'MG' ) then
+   !    PRINT *,  "[ASC debug] Y00:microp_scheme is  MG wrong !" 
+   ! else
+   !    PRINT *,  "[ASC debug] Y00:microp_scheme is RK as expected!" 
+   ! endif
 ! 
 ! Initialize output fields:
 ! 
@@ -871,7 +877,9 @@ subroutine radcswmx(lchnk   ,ncol    ,                         &
       utco2(i) = 0.0_r8
       uto2(i)  = 0.0_r8
 
+   end do
 !cdir expand=pver
+   do i=1,Nday
       do k=1,pver
          uth2o(i) = uth2o(i) + uh2o(i,k)
          uto3(i)  = uto3(i)  + uo3(i,k)
@@ -941,40 +949,41 @@ subroutine radcswmx(lchnk   ,ncol    ,                         &
             ! liquid
             ! note that optical properties for liquid valid only
             ! in range of 4.2 > rel > 16 micron (Slingo 89)
-            if ( microp_scheme == 'MG' ) then
-               tmp2l = 1._r8 - cbarli - dbarli*min(max(4.2_r8,rel(i,k)),16._r8)
-               tmp3l = fbarli*min(max(4.2_r8,rel(i,k)),16._r8)
-            else
+            ! microp_scheme		= 'RK' in /CESM/EXP1/Buildconf/camconf/atm_in
+            ! if ( microp_scheme == 'MG' ) then
+            !    tmp2l = 1._r8 - cbarli - dbarli*min(max(4.2_r8,rel(i,k)),16._r8)
+            !    tmp3l = fbarli*min(max(4.2_r8,rel(i,k)),16._r8)
+            ! else
                tmp2l = 1._r8 - cbarli - dbarli*rel(i,k)
                tmp3l = fbarli*rel(i,k)
-            endif
+            !endif
 
             ! ice
             ! note that optical properties for ice valid only
             ! in range of 13 > rei > 130 micron (Ebert and Curry 92)
-            if ( microp_scheme == 'MG' ) then
-               tmp2i = 1._r8 - cbarii - dbarii*min(max(13._r8,rei(i,k)),130._r8)
-               tmp3i = fbarii*min(max(13._r8,rei(i,k)),130._r8)
-            else
+            ! if ( microp_scheme == 'MG' ) then
+            !    tmp2i = 1._r8 - cbarii - dbarii*min(max(13._r8,rei(i,k)),130._r8)
+            !    tmp3i = fbarii*min(max(13._r8,rei(i,k)),130._r8)
+            ! else
                tmp2i = 1._r8 - cbarii - dbarii*rei(i,k)
                tmp3i = fbarii*rei(i,k)
-            endif
+            !endif
 
             if (cld(i,k) >= cldmin .and. cld(i,k) >= cldeps) then
 
                ! liquid
-               if ( microp_scheme == 'MG' ) then
-                  tmp1l = abarli + bbarli/min(max(4.2_r8,rel(i,k)),16._r8)
-               else
+               ! if ( microp_scheme == 'MG' ) then
+               !    tmp1l = abarli + bbarli/min(max(4.2_r8,rel(i,k)),16._r8)
+               ! else
                   tmp1l = abarli + bbarli/rel(i,k)
-               endif
+               !endif
 
                ! ice
-               if ( microp_scheme == 'MG' ) then
-                  tmp1i = abarii + bbarii/max(13._r8,min(rei(i,k),130._r8))
-               else
+               ! if ( microp_scheme == 'MG' ) then
+               !    tmp1i = abarii + bbarii/max(13._r8,min(rei(i,k),130._r8))
+               ! else
                   tmp1i = abarii + bbarii/rei(i,k)
-               endif
+               !endif
 
                tauxcl(i,k) = cliqwp(i,k)*tmp1l
                tauxci(i,k) = cicewp(i,k)*tmp1i
@@ -2185,6 +2194,7 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
 
    do k=0,pver
       do i=1,ndayc
+            !ASC-Y00 这个地方实在弄不了了
             tauray = trayoslp*(pflx(i,k+1)-pflx(i,k))
             taugab = abh2o*uh2o(i,k) + abo3*uo3(i,k) + abco2*uco2(i,k) + abo2*uo2(i,k)
 
@@ -2316,9 +2326,9 @@ subroutine radsw_init(gravx)
 !
 ! Set general radiation consts; convert to cgs units where appropriate:
 !
-   gravit  =  100._r8*gravx
-   rga     =  1._r8/gravit
-   sslp    =  1.013250e6_r8
+   !gravit  =  100._r8*gravx
+   !rga     =  1._r8/gravit
+   !sslp    =  1.013250e6_r8
 
 end subroutine radsw_init
 

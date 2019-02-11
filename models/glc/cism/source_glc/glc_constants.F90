@@ -59,7 +59,7 @@
    ! physical constants
    !-----------------------------------------------------------------
 
-   real(r8) :: radius = SHR_CONST_REARTH  ,&! radius of earth (m)
+   real(r8), parameter  :: radius = SHR_CONST_REARTH  ,&! radius of earth (m)
                                             ! = 6.37122e6
                tkfrz  = SHR_CONST_TKFRZ     ! freezing temp of water (K)
                                             ! = 273.15

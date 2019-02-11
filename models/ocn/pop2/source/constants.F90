@@ -69,8 +69,8 @@
    integer (int_kind), parameter, public ::   &
       undefined_nf_int = NF90_FILL_INT
 
-   real (r8), public :: &
-      pi, pih, pi2            ! pi, pi/2 and 2pi
+   real (r8), parameter, public :: &
+      pi = SHR_CONST_PI , pih = p5*pi, pi2 = c2*pi            ! pi, pi/2 and 2pi
 
    !*** location of fields for staggered grids
 
@@ -116,47 +116,47 @@
    ! these constants are defined in an init routine to allow
    !  CSM shared constants to over-ride
 
-   real (r8), public ::      &
-      grav                  ,&! gravit. accel. (cm/s^2)
-      omega                 ,&! angular vel. of Earth 1/s
-      radius                ,&! radius of Earth (cm)
-      rho_air               ,&! ambient air density (kg/m^3)
-      rho_fw                ,&! density of fresh water (g/cm^3)
-      rho_sw                ,&! density of salt water (g/cm^3)
-      cp_sw                 ,&! specific heat salt water
-      cp_air                ,&! heat capacity of air (J/kg/K)
-      sound                 ,&! speed of sound (cm/s)
-      vonkar                ,&! von Karman constant
-      emissivity            ,&!
-      stefan_boltzmann      ,&! W/m^2/K^4
-      latent_heat_vapor     ,&! lat heat of vaporization (erg/g)
-      latent_heat_vapor_mks ,&! lat heat of vaporization (J/kg)
-      latent_heat_fusion    ,&! lat heat of fusion (erg/g)
-      latent_heat_fusion_mks,&! lat heat of fusion (J/kg)
-      sea_ice_salinity      ,&! salinity of sea ice formed (psu)
-      ocn_ref_salinity        ! ocean reference salinity (psu)
+   real (r8), parameter, public ::      &
+      cmperm            = 100._r8           ,&! cm per meter
+      grav                   = SHR_CONST_G*cmperm     ,&! gravit. accel. (cm/s^2)
+      omega                  = SHR_CONST_OMEGA        ,&! angular vel. of Earth 1/s
+      radius                 = SHR_CONST_REARTH*cmperm ,&! radius of Earth (cm)
+      rho_air                = SHR_CONST_RHODAIR       ,&! ambient air density (kg/m^3)
+      rho_fw                 = SHR_CONST_RHOFW*p001     ,&! density of fresh water (g/cm^3)
+      rho_sw                 = SHR_CONST_RHOSW*p001      ,&! density of salt water (g/cm^3)
+      cp_sw                  = SHR_CONST_CPSW*c10000    ,&! specific heat salt water
+      cp_air                 = SHR_CONST_CPDAIR         ,&! heat capacity of air (J/kg/K)
+      sound                  = 1.5e5_r8                ,&! speed of sound (cm/s)
+      vonkar                 = SHR_CONST_KARMAN        ,&! von Karman constant
+      emissivity             = 1.0_r8                  ,&!
+      stefan_boltzmann       = SHR_CONST_STEBOL        ,&! W/m^2/K^4
+      !latent_heat_vapor     ,&! lat heat of vaporization (erg/g)
+      latent_heat_vapor_mks  = SHR_CONST_LATVAP           ,&! lat heat of vaporization (J/kg)
+      latent_heat_fusion     = SHR_CONST_LATICE*c10000   ,&! lat heat of fusion (erg/g)
+      latent_heat_fusion_mks = SHR_CONST_LATICE  ,&! lat heat of fusion (J/kg)
+      sea_ice_salinity       = SHR_CONST_ICE_REF_SAL    ,&! salinity of sea ice formed (psu)
+      ocn_ref_salinity       = SHR_CONST_OCN_REF_SAL   ! ocean reference salinity (psu)
 
-   real (r8), public :: &
-      radian                           ! degree-radian conversion
+   real (r8), parameter, public :: &
+      radian  = 180.0_r8/pi                         ! degree-radian conversion
 
    !  conversion factors
 
-   real (r8), public :: &
-      T0_Kelvin        ,&! zero point for Celsius
-      mpercm           ,&! meters per cm
-      cmperm           ,&! cm per meter
-      salt_to_ppt      ,&! salt (g/g) to ppt
-      ppt_to_salt      ,&! salt ppt to g/g
-      mass_to_Sv       ,&! mass flux to Sverdrups
-      heat_to_PW       ,&! heat flux to Petawatts
-      salt_to_Svppt    ,&! salt flux to Sv*ppt
-      salt_to_mmday    ,&! salt to water (mm/day)
-      momentum_factor  ,&! wind stress (N/m^2) to vel flux (cm^2/s^2)
-      hflux_factor     ,&! heat flux (W/m^2) to temp flux (C*cm/s)
-      fwflux_factor    ,&! fw flux (kg/m^2/s) to salt((msu/psu)*cm/s)
-      salinity_factor  ,&! fw flux (kg/m^2/s) to salt flux (msu*cm/s)
-      sflux_factor     ,&! salt flux (kg/m^2/s) to salt flux (msu*cm/s)
-      fwmass_to_fwflux   ! fw flux (kg/m^2/s) to fw flux (cm/s)
+   real (r8), parameter, public :: &
+      T0_Kelvin         = SHR_CONST_TKFRZ   ,&! zero point for Celsius
+      mpercm            = .01_r8            ,&! meters per cm
+      salt_to_ppt       = 1000._r8          ,&! salt (g/g) to ppt
+      ppt_to_salt       = 1.e-3_r8          ,&! salt ppt to g/g
+      mass_to_Sv        = 1.0e-12_r8        ,&! mass flux to Sverdrups
+      heat_to_PW        = 4.186e-15_r8      ,&! heat flux to Petawatts
+      salt_to_Svppt     = 1.0e-9_r8         ,&! salt flux to Sv*ppt
+      salt_to_mmday     = 3.1536e+5_r8       ,&! salt to water (mm/day)
+      momentum_factor   = 10.0_r8           ,&! wind stress (N/m^2) to vel flux (cm^2/s^2)
+      hflux_factor      = 1000.0_r8/(rho_sw*cp_sw)  ,&! heat flux (W/m^2) to temp flux (C*cm/s)
+      fwflux_factor     = 1.e-4_r8           ,&! fw flux (kg/m^2/s) to salt((msu/psu)*cm/s)
+      salinity_factor   = -ocn_ref_salinity*fwflux_factor   ,&! fw flux (kg/m^2/s) to salt flux (msu*cm/s)
+      sflux_factor      = 0.1_r8             ,&! salt flux (kg/m^2/s) to salt flux (msu*cm/s)
+      fwmass_to_fwflux  = 0.1_r8 ! fw flux (kg/m^2/s) to fw flux (cm/s)
 
 !EOP
 !BOC
@@ -192,16 +192,17 @@
 
 
 #ifdef CCSMCOUPLED
-    pi  = SHR_CONST_PI
+   ! pi  = SHR_CONST_PI
 #else
     pi  = c4*atan(c1)
+    PRINT *,  "[ASC debug] Y00:fuck0" 
 #endif
 
 
-   pi2 = c2*pi
-   pih = p5*pi
+   ! pi2 = c2*pi
+   ! pih = p5*pi
 
-   radian = 180.0_r8/pi
+  ! radian = 180.0_r8/pi
 
    do n=1,char_len
      char_blank(n:n) = ' '
@@ -221,23 +222,23 @@
 !
 !-----------------------------------------------------------------------
 
-   T0_Kelvin = 273.16_r8             ! zero point for Celsius
-   grav      = 980.6_r8              ! gravit. accel. (cm/s^2)
-   omega     = 7.292123625e-5_r8     ! angular vel. of Earth 1/s
-   radius    = 6370.0e5_r8           ! radius of Earth (cm)
-   rho_air   = 1.2_r8                ! ambient air density (kg/m^3)
-   rho_sw    = 4.1_r8/3.996_r8       ! density of salt water (g/cm^3)
-   rho_fw    = 1.0_r8                ! avg. water density (g/cm^3)
-   cp_sw     = 3.996e7_r8            ! specific heat salt water
-   cp_air    = 1005.0_r8             ! heat capacity of air (J/kg/K)
-   sound     = 1.5e5_r8              ! speed of sound (cm/s)
-   vonkar    = 0.4_r8                ! von Karman constant
-   emissivity         = 1.0_r8       !
-   stefan_boltzmann   = 567.0e-10_r8 !  W/m^2/K^4
-   latent_heat_vapor_mks  = 2.5e6_r8 ! lat heat of vaporization (J/kg)
-   latent_heat_fusion = 3.34e9_r8    ! lat heat of fusion (erg/g)
-   sea_ice_salinity   =  4.0_r8      ! (psu)
-   ocn_ref_salinity   = 34.7_r8      ! (psu)
+   ! T0_Kelvin = 273.16_r8             ! zero point for Celsius
+   ! grav      = 980.6_r8              ! gravit. accel. (cm/s^2)
+   ! omega     = 7.292123625e-5_r8     ! angular vel. of Earth 1/s
+   ! radius    = 6370.0e5_r8           ! radius of Earth (cm)
+   ! rho_air   = 1.2_r8                ! ambient air density (kg/m^3)
+   ! rho_sw    = 4.1_r8/3.996_r8       ! density of salt water (g/cm^3)
+   ! rho_fw    = 1.0_r8                ! avg. water density (g/cm^3)
+   ! cp_sw     = 3.996e7_r8            ! specific heat salt water
+   ! cp_air    = 1005.0_r8             ! heat capacity of air (J/kg/K)
+   ! sound     = 1.5e5_r8              ! speed of sound (cm/s)
+   ! vonkar    = 0.4_r8                ! von Karman constant
+   ! emissivity         = 1.0_r8       !
+   ! stefan_boltzmann   = 567.0e-10_r8 !  W/m^2/K^4
+   ! latent_heat_vapor_mks  = 2.5e6_r8 ! lat heat of vaporization (J/kg)
+   ! latent_heat_fusion = 3.34e9_r8    ! lat heat of fusion (erg/g)
+   ! sea_ice_salinity   =  4.0_r8      ! (psu)
+   ! ocn_ref_salinity   = 34.7_r8      ! (psu)
 
 
 !-----------------------------------------------------------------------
@@ -246,14 +247,14 @@
 !
 !-----------------------------------------------------------------------
 
-   mpercm        = .01_r8          ! meters per cm
-   cmperm        = 100._r8         ! cm per meter
-   salt_to_ppt   = 1000._r8        ! salt (g/g) to ppt
-   ppt_to_salt   = 1.e-3_r8        ! salt ppt to g/g
-   mass_to_Sv    = 1.0e-12_r8      ! mass flux to Sverdrups
-   heat_to_PW    = 4.186e-15_r8    ! heat flux to Petawatts
-   salt_to_Svppt = 1.0e-9_r8       ! salt flux to Sv*ppt
-   salt_to_mmday = 3.1536e+5_r8    ! salt to water (mm/day)
+   ! mpercm        = .01_r8          ! meters per cm
+   ! cmperm        = 100._r8         ! cm per meter
+   ! salt_to_ppt   = 1000._r8        ! salt (g/g) to ppt
+   ! ppt_to_salt   = 1.e-3_r8        ! salt ppt to g/g
+   ! mass_to_Sv    = 1.0e-12_r8      ! mass flux to Sverdrups
+   ! heat_to_PW    = 4.186e-15_r8    ! heat flux to Petawatts
+   ! salt_to_Svppt = 1.0e-9_r8       ! salt flux to Sv*ppt
+   ! salt_to_mmday = 3.1536e+5_r8    ! salt to water (mm/day)
  
 !-----------------------------------------------------------------------
 !
@@ -262,26 +263,28 @@
 !-----------------------------------------------------------------------
 
 #ifdef CCSMCOUPLED
-   T0_Kelvin              = SHR_CONST_TKFRZ         ! zero point for Celsius
-   grav                   = SHR_CONST_G*cmperm      ! cm/s^2
-   omega                  = SHR_CONST_OMEGA         ! rad/s
-   radius                 = SHR_CONST_REARTH*cmperm ! cm
-   cp_sw                  = SHR_CONST_CPSW*c10000   ! erg/g/K
-   cp_air                 = SHR_CONST_CPDAIR        ! J/kg/K
-   rho_air                = SHR_CONST_RHODAIR       ! kg/m^3
-   rho_sw                 = SHR_CONST_RHOSW*p001    ! g/cm^3
-   rho_fw                 = SHR_CONST_RHOFW*p001    ! g/cm^3
-   vonkar                 = SHR_CONST_KARMAN
-   stefan_boltzmann       = SHR_CONST_STEBOL        ! W/m^2/K^4
-   latent_heat_vapor_mks  = SHR_CONST_LATVAP        ! J/kg
-   latent_heat_fusion     = SHR_CONST_LATICE*c10000 ! erg/g
-   latent_heat_fusion_mks = SHR_CONST_LATICE        ! J/kg 
-   ocn_ref_salinity       = SHR_CONST_OCN_REF_SAL   ! psu
-   sea_ice_salinity       = SHR_CONST_ICE_REF_SAL   ! psu
+   ! T0_Kelvin              = SHR_CONST_TKFRZ         ! zero point for Celsius
+   ! grav                   = SHR_CONST_G*cmperm      ! cm/s^2
+   ! omega                  = SHR_CONST_OMEGA         ! rad/s
+   ! radius                 = SHR_CONST_REARTH*cmperm ! cm
+   ! cp_sw                  = SHR_CONST_CPSW*c10000   ! erg/g/K
+   ! cp_air                 = SHR_CONST_CPDAIR        ! J/kg/K
+   ! rho_air                = SHR_CONST_RHODAIR       ! kg/m^3
+   ! rho_sw                 = SHR_CONST_RHOSW*p001    ! g/cm^3
+   ! rho_fw                 = SHR_CONST_RHOFW*p001    ! g/cm^3
+   ! vonkar                 = SHR_CONST_KARMAN
+   ! stefan_boltzmann       = SHR_CONST_STEBOL        ! W/m^2/K^4
+   ! latent_heat_vapor_mks  = SHR_CONST_LATVAP        ! J/kg
+   ! latent_heat_fusion     = SHR_CONST_LATICE*c10000 ! erg/g
+   ! latent_heat_fusion_mks = SHR_CONST_LATICE        ! J/kg 
+   ! ocn_ref_salinity       = SHR_CONST_OCN_REF_SAL   ! psu
+   ! sea_ice_salinity       = SHR_CONST_ICE_REF_SAL   ! psu
+   PRINT *,  "[ASC debug] Y00:fuck1" !只有这个被编译了 ！！
 #endif
 
 #ifdef ZERO_SEA_ICE_REF_SAL
     sea_ice_salinity       = c0
+    PRINT *,  "[ASC debug] Y00:fuck2"
 #endif
 
 
@@ -301,7 +304,7 @@
 !
 !-----------------------------------------------------------------------
 
-   momentum_factor = 10.0_r8
+  ! momentum_factor = 10.0_r8
 
 !-----------------------------------------------------------------------
 !
@@ -323,7 +326,7 @@
 !
 !-----------------------------------------------------------------------
 
-   hflux_factor = 1000.0_r8/(rho_sw*cp_sw)
+ !  hflux_factor = 1000.0_r8/(rho_sw*cp_sw)
 
 !-----------------------------------------------------------------------
 !
@@ -351,8 +354,8 @@
 !
 !-----------------------------------------------------------------------
 
-   fwflux_factor   = 1.e-4_r8
-   salinity_factor = -ocn_ref_salinity*fwflux_factor
+  ! fwflux_factor   = 1.e-4_r8
+   !salinity_factor = -ocn_ref_salinity*fwflux_factor
 
 !-----------------------------------------------------------------------
 !
@@ -372,7 +375,7 @@
 !
 !-----------------------------------------------------------------------
 
-   sflux_factor = 0.1_r8
+ !  sflux_factor = 0.1_r8
 
 !-----------------------------------------------------------------------
 !
@@ -392,7 +395,7 @@
 !
 !-----------------------------------------------------------------------
 
-   fwmass_to_fwflux = 0.1_r8
+   !fwmass_to_fwflux = 0.1_r8
 
 !-----------------------------------------------------------------------
 !
@@ -403,6 +406,7 @@
    if (rtavg == r4) then
       undefined_nf  = NF90_FILL_FLOAT
    else if (rtavg == r8) then
+      PRINT *, "[ASC debug] Y00:fuck3" ! 为什么这个没有？？？ 难道不是double？？？ TODO-RGY ASC
       undefined_nf  = NF90_FILL_DOUBLE
    endif
 
