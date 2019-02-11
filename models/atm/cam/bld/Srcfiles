@@ -463,6 +463,6 @@ wv_saturation.F90
 xpavg_mod.F90
 zenith.F90
 zm_conv.F90
-zm_conv_cuda.cu
+zm_conv_cuda.cpp
 zm_conv_intr.F90
 zonal_mean.F90
