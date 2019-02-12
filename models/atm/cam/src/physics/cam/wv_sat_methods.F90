@@ -298,24 +298,24 @@ elemental function wv_sat_svp_water(t, idx) result(es)
   integer,  intent(in), optional :: idx
   real(r8) :: es
 
-  integer :: use_idx
+  !integer :: use_idx
 
-  if (present(idx)) then
-     use_idx = idx
-  else
-     use_idx = default_idx
-  end if
+!   if (present(idx)) then
+!      use_idx = idx
+!   else
+!      use_idx = default_idx
+!   end if
 
-  select case (use_idx)
-  case(GoffGratch_idx)
+!   select case (use_idx)
+!   case(GoffGratch_idx)
      es = GoffGratch_svp_water(t)
-  case(MurphyKoop_idx)
-     es = MurphyKoop_svp_water(t)
-  case(OldGoffGratch_idx)
-     es = OldGoffGratch_svp_water(t)
-  case(Bolton_idx)
-     es = Bolton_svp_water(t)
-  end select
+!   case(MurphyKoop_idx)
+!       es = 0
+!   case(OldGoffGratch_idx)
+!      es = 0
+!   case(Bolton_idx)
+!      es = 0
+!   end select
 
 end function wv_sat_svp_water
 
@@ -324,24 +324,24 @@ elemental function wv_sat_svp_ice(t, idx) result(es)
   integer,  intent(in), optional :: idx
   real(r8) :: es
 
-  integer :: use_idx
+!   integer :: use_idx
 
-  if (present(idx)) then
-     use_idx = idx
-  else
-     use_idx = default_idx
-  end if
+!   if (present(idx)) then
+!      use_idx = idx
+!   else
+!      use_idx = default_idx
+!   end if
 
-  select case (use_idx)
-  case(GoffGratch_idx)
+!   select case (use_idx)
+!   case(GoffGratch_idx)
      es = GoffGratch_svp_ice(t)
-  case(MurphyKoop_idx)
-     es = MurphyKoop_svp_ice(t)
-  case(OldGoffGratch_idx)
-     es = OldGoffGratch_svp_ice(t)
-  case(Bolton_idx)
-     es = Bolton_svp_water(t)
-  end select
+!   case(MurphyKoop_idx)
+!    es = 0
+!   case(OldGoffGratch_idx)
+!    es = 0
+!   case(Bolton_idx)
+!    es = 0
+!   end select
 
 end function wv_sat_svp_ice
 
