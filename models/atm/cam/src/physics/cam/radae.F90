@@ -651,7 +651,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
    do k=ntoplw,pverp
       do i=1,ncol
          pnmsq(i,k) = pnm(i,k)**2
-         dtx(i) = tplnka(i,k) - 250._r8 !这里是算了很多次？？
+        ! dtx(i) = tplnka(i,k) - 250._r8 !这里是算了很多次？？
       end do
    end do
 !
