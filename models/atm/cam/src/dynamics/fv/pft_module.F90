@@ -149,49 +149,39 @@ CONTAINS
       nj = 0
 
       do 200 j=1,jp
+         if(s(j) > D1_01 ) then
+            if(fft_flt .eq. 0 .and. s(j) <= D4_0) then
+               rsc = D1_0/s(j)
+               bt  = D0_5*(s(j)-D1_0)
+               do i=1,im
+                  ptmp(i) = p(i,j)
+               enddo
+               ptmp(   0) = p(im,j)
+               ptmp(im+1) = p(1 ,j)
 
-      if(s(j) > D1_01 ) then
-       if(fft_flt .eq. 0 .and. s(j) <= D4_0) then
-
-         rsc = D1_0/s(j)
-         bt  = D0_5*(s(j)-D1_0)
-
-         do i=1,im
-            ptmp(i) = p(i,j)
-         enddo
-           ptmp(   0) = p(im,j)
-           ptmp(im+1) = p(1 ,j)
-
-         do i=1,im
-            p(i,j) = rsc * ( ptmp(i) + bt*(ptmp(i-1)+ptmp(i+1)) )
-         enddo
-
-       else
-
-! Packing for FFT 
-         nj  = nj + 1
-         jf(nj) = j
-
-         do i=1,im
-            q1(i,nj) = p(i,j)
-         enddo
-            q1(im+1,nj) = D0_0
-            q1(im+2,nj) = D0_0
-
-       endif
-      endif
+               do i=1,im
+                  p(i,j) = rsc * ( ptmp(i) + bt*(ptmp(i-1)+ptmp(i+1)) )
+               enddo
+            else
+       ! Packing for FFT 
+               nj = nj + 1
+               jf(nj) = j
+               do i=1,im
+                  q1(i,nj) = p(i,j)
+               enddo
+                  q1(im+1,nj) = D0_0
+                  q1(im+2,nj) = D0_0
+            endif
+         endif
 200   continue
 
       if( nj == 0) return
-
       call fftrans(damp, im, jp, nj, jf, q1, q2)
-
       do n=1,nj
          do i=1,im
             p(i,jf(n)) = q1(i,n)
          enddo
       enddo
-
       return
 !EOC
  end subroutine pft2d
@@ -237,45 +227,45 @@ CONTAINS
 !Local Auto arrays:
 
 #if defined( LIBSCI_FFT )
-      real (r8) qwk(2*im+4, jp)
-      complex(r8) cqf(im/2+1, jp)
-      integer imo2p
+    !   real (r8) qwk(2*im+4, jp)
+    !   complex(r8) cqf(im/2+1, jp)
+    !   integer imo2p
 #elif defined( SGI_FFT )
-      integer*4 im_4, nj_4, imp2_4
+    !   integer*4 im_4, nj_4, imp2_4
 #endif
 
 #if defined( LIBSCI_FFT )
-      imo2p = im/2 + 1
-      ooim = D1_0/real(im,r8)
+    !   imo2p = im/2 + 1
+    !   ooim = D1_0/real(im,r8)
 
-      call dzfftm(-1, im, nj, D1_0, q1, im+2, cqf, imo2p,      &
-                  trigs, qwk, 0)
+    !   call dzfftm(-1, im, nj, D1_0, q1, im+2, cqf, imo2p,      &
+    !               trigs, qwk, 0)
 
-      do n=1,nj
-         do i=3,imo2p
-            cqf(i,n) = cqf(i,n) * damp(2*i-2,jf(n))
-         enddo
-      enddo
+    !   do n=1,nj
+    !      do i=3,imo2p
+    !         cqf(i,n) = cqf(i,n) * damp(2*i-2,jf(n))
+    !      enddo
+    !   enddo
 
-      call zdfftm( 1, im, nj, ooim, cqf, imo2p, q1, im+2,    &
-                  trigs, qwk, 0)
+    !   call zdfftm( 1, im, nj, ooim, cqf, imo2p, q1, im+2,    &
+    !               trigs, qwk, 0)
 #elif defined( SGI_FFT )
-      im_4 = im
-      nj_4 = nj
-      imp2_4 = im+2
-      call dzfftm1du (-1, im_4, nj_4, q1, 1, imp2_4, trigs)
-      do n=1,nj
-         do i=5,im+2
-            q1(i,n) = q1(i,n) * damp(i-2,jf(n))
-         enddo
-      enddo
-      call dzfftm1du (1, im_4, nj_4, q1, 1, imp2_4, trigs)
-      ooim = D1_0/real(im,r8)
-      do n=1,nj
-        do i=1,im+2
-          q1(i,n) = ooim*q1(i,n)
-        enddo
-      enddo
+    !   im_4 = im
+    !   nj_4 = nj
+    !   imp2_4 = im+2
+    !   call dzfftm1du (-1, im_4, nj_4, q1, 1, imp2_4, trigs)
+    !   do n=1,nj
+    !      do i=5,im+2
+    !         q1(i,n) = q1(i,n) * damp(i-2,jf(n))
+    !      enddo
+    !   enddo
+    !   call dzfftm1du (1, im_4, nj_4, q1, 1, imp2_4, trigs)
+    !   ooim = D1_0/real(im,r8)
+    !   do n=1,nj
+    !     do i=1,im+2
+    !       q1(i,n) = ooim*q1(i,n)
+    !     enddo
+    !   enddo
 #else
       if(save_flag == 0) then 
          print *, "{im+2=", im + 2, "nj=", nj, "}"
