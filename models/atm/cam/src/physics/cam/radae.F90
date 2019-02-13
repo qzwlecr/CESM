@@ -395,12 +395,16 @@ subroutine radabs(lchnk   ,ncol    ,             &
    real(r8) to3h2o(pcols)      ! H2o trnsmsn for overlap with o3
    real(r8) pi                 ! For co2 absorptivity computation
    real(r8) sqti(pcols)        ! Used to store sqrt of mean temperature
+   real(r8) sqti_tmp        ! Used to store sqrt of mean temperature
+
    real(r8) et                 ! Co2 hot band factor
    real(r8) et2                ! Co2 hot band factor squared
    real(r8) et4                ! Co2 hot band factor to fourth power
    real(r8) omet               ! Co2 stimulated emission term
    real(r8) f1co2              ! Co2 central band factor
    real(r8) f2co2(pcols)       ! Co2 weak band factor
+   real(r8) f2co2_tmp       ! Co2 weak band factor
+
    real(r8) f3co2(pcols)       ! Co2 weak band factor
    real(r8) t1co2(pcols)       ! Overlap factr weak bands on strong band
    real(r8) sqwp               ! Sqrt of co2 pathlength
@@ -412,10 +416,14 @@ subroutine radabs(lchnk   ,ncol    ,             &
    real(r8) wco2               ! Constants used to define co2 pathlength
    real(r8) posqt              ! Effective pressure for co2 line width
    real(r8) u7(pcols)          ! Co2 hot band path length
+   real(r8) u7_tmp          ! Co2 hot band path length
+
    real(r8) u8                 ! Co2 hot band path length
    real(r8) u9                 ! Co2 hot band path length
    real(r8) u13                ! Co2 hot band path length
    real(r8) rbeta7(pcols)      ! Inverse of co2 hot band line width par
+   real(r8) rbeta7_tmp      ! Inverse of co2 hot band line width par
+
    real(r8) rbeta8             ! Inverse of co2 hot band line width par
    real(r8) rbeta9             ! Inverse of co2 hot band line width par
    real(r8) rbeta13            ! Inverse of co2 hot band line width par
@@ -634,22 +642,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
    end do
 !
 
-!
-! Non-adjacent layer absorptivity:
-!
-! abso(i,1)     0 -  800 cm-1   h2o rotation band
-! abso(i,1)  1200 - 2200 cm-1   h2o vibration-rotation band
-! abso(i,2)   800 - 1200 cm-1   h2o window
-!
-! Separation between rotation and vibration-rotation dropped, so
-!                only 2 slots needed for H2O absorptivity
-!
-! 500-800 cm^-1 H2o continuum/line overlap already included
-!                in abso(i,1).  This used to be in abso(i,4)
-!
-! abso(i,3)   o3  9.6 micrometer band (nu3 and nu1 bands)
-! abso(i,4)   co2 15  micrometer band system
-!
+
    do k=ntoplw,pverp
       do i=1,ncol
          pnmsq(i,k) = pnm(i,k)**2
@@ -676,7 +669,6 @@ subroutine radabs(lchnk   ,ncol    ,             &
 
             tpatha = abs(tcg(i,k1) - tcg(i,k2))/dw(i)
             t_p = min(max(tpatha, min_tp_h2o), max_tp_h2o)
-! todo
             call qsat_water(t_p, pnew_mks, esx, qsx)
 
             q_path = dw(i) / abs(pnm(i,k1) - pnm(i,k2)) / rga
@@ -1051,7 +1043,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
                sqti(i) = sqrt(tlayr(i,k2))
             end do
          end if
-!考虑把这两个循环合并，然后删掉 f2co2 f3co2 rbeta7
+!考虑把这两个循环合并，然后删掉 f2co2 f3co2 rbeta7 f1sqwp
          do i=1,ncol
             tmp1      = log(1._r8 + f1sqwp(i))
             tmp2      = log(1._r8 + f2co2(i))
@@ -1165,40 +1157,12 @@ subroutine radabs(lchnk   ,ncol    ,             &
             aer_trn_ngh(i, 1:nlwbands)= &
               exp(-fdif * uinpl(i,kn) * odap_aer(i, k2, 1:nlwbands ) )
 
-!
-! Define variables for C/H/E (now C/LT/E) fit
-!
-! abso(i,1)     0 -  800 cm-1   h2o rotation band
-! abso(i,1)  1200 - 2200 cm-1   h2o vibration-rotation band
-! abso(i,2)   800 - 1200 cm-1   h2o window
-!
-! Separation between rotation and vibration-rotation dropped, so
-!                only 2 slots needed for H2O absorptivity
-!
-! Notation:
-! U   = integral (P/P_0 dW)  
-! P   = atmospheric pressure
-! P_0 = reference atmospheric pressure
-! W   = precipitable water path
-! T_e = emission temperature
-! T_p = path temperature
-! RH  = path relative humidity
-!
-!
-! Terms for asymptotic value of emissivity
-!
             te1  = temh2o(i,kn)
             te2  = te1 * te1
             te3  = te2 * te1
             te4  = te3 * te1
             te5  = te4 * te1
 
-!
-! Indices for lines and continuum tables 
-! Note: because we are dealing with the nearest layer,
-!       the Hulst-Curtis-Godson corrections
-!       for inhomogeneous paths are not applied.
-!
             uvar = u(i)*fdif
             log_u  = min(log10(max(uvar, min_u_h2o)), max_lu_h2o)
             dvar = (log_u - min_lu_h2o) / dlu_h2o
@@ -1434,19 +1398,17 @@ subroutine radabs(lchnk   ,ncol    ,             &
             dplco2   = plco2(i,k2+1) - plco2(i,k2)
             sqwp     = sqrt(uinpl(i,kn)*dplco2)
             et       = exp(-480._r8/tbar(i,kn))
-            sqti(i)  = sqrt(tbar(i,kn))
-            rsqti    = 1._r8/sqti(i)
+            sqti_tmp  = sqrt(tbar(i,kn))
+            rsqti    = 1._r8/sqti_tmp
             et2      = et*et
             et4      = et2*et2
             omet     = (1._r8 - 1.5_r8*et2)
             f1co2    = 899.70_r8*omet*(1._r8 + 1.94774_r8*et + 4.73486_r8*et2)*rsqti
-            f1sqwp(i)= f1co2*sqwp
-            t1co2(i) = 1._r8/(1._r8 + (245.18_r8*omet*sqwp*rsqti))
             oneme    = 1._r8 - et2
             alphat   = oneme**3*rsqti
             pi       = abs(dpnm(i))*winpl(i,kn)
             wco2     = 2.5221_r8*co2vmr(i)*pi*rga
-            u7(i)    = 4.9411e4_r8*alphat*et2*wco2
+            u7_tmp    = 4.9411e4_r8*alphat*et2*wco2
             u8       = 3.9744e4_r8*alphat*et4*wco2
             u9       = 1.0447e5_r8*alphat*et4*et2*wco2
             u13      = 2.8388e3_r8*alphat*et4*wco2
@@ -1454,20 +1416,20 @@ subroutine radabs(lchnk   ,ncol    ,             &
             tlocal   = tbar(i,kn)
             tcrfac   = sqrt((tlocal*r250)*(tpath*r300))
             posqt    = (pinpl(i,kn)*rsslp + dpfco2*tcrfac)*rsqti
-            rbeta7(i)= 1._r8/(5.3228_r8*posqt)
+            rbeta7_tmp= 1._r8/(5.3228_r8*posqt)
             rbeta8   = 1._r8/(10.6576_r8*posqt)
-            rbeta9   = rbeta7(i)
+            rbeta9   = rbeta7_tmp
             rbeta13  = rbeta9
-            f2co2(i) = u7(i)/sqrt(4._r8 + u7(i)*(1._r8 + rbeta7(i))) + &
+            f2co2_tmp = u7_tmp/sqrt(4._r8 + u7_tmp*(1._r8 + rbeta7_tmp)) + &
                  u8   /sqrt(4._r8 + u8*(1._r8 + rbeta8)) + &
                  u9   /sqrt(4._r8 + u9*(1._r8 + rbeta9))
-            f3co2(i) = u13/sqrt(4._r8 + u13*(1._r8 + rbeta13))
-            tmp1     = log(1._r8 + f1sqwp(i))
-            tmp2     = log(1._r8 + f2co2(i))
-            tmp3     = log(1._r8 + f3co2(i))
-            absbnd   = (tmp1 + 2._r8*t1co2(i)*tmp2 + 2._r8*tmp3)*sqti(i)
+            !f3co2(i) = u13/sqrt(4._r8 + u13*(1._r8 + rbeta13))
+            tmp1     = log(1._r8 + f1co2*sqwp)
+            tmp2     = log(1._r8 + f2co2_tmp)
+            tmp3     = log(1._r8 + u13/sqrt(4._r8 + u13*(1._r8 + rbeta13)))
+            absbnd   = (tmp1 + 2._r8*(1._r8/(1._r8 + (245.18_r8*omet*sqwp*rsqti)))*tmp2 + 2._r8*tmp3)*sqti_tmp
             abso(i,4)= trab2(i)*emm(i,kn)*absbnd
-            tco2(i)  = 1.0_r8/(1.0_r8+ 10.0_r8*u7(i)/sqrt(4._r8 + u7(i)*(1._r8 + rbeta7(i))))
+            tco2(i)  = 1.0_r8/(1.0_r8+ 10.0_r8*u7_tmp/sqrt(4._r8 + u7_tmp*(1._r8 + rbeta7_tmp)))
          end do ! do i =
 !
 ! Calculate trace gas absorptivity for nearest layer, abstrc

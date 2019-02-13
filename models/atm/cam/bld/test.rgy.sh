@@ -25,10 +25,10 @@ gmake -j 2 > gmake.log 2>&1
 echo "now link the cam"
 rm -f ./cam 
 mpifort -o /media/rgy/win-file/document/computer/HPC/cesm/CESM/models/atm/cam/bld/cam \
-./*.o -L $INTEL/mkl/lib/intel64/ -lmkl_rt -lstdc++ \
+./*.o  -lstdc++ \
 -L/media/rgy/win-file/document/computer/HPC/cesm/netcdf-build/lib -lnetcdff -L/media/rgy/win-file/document/computer/HPC/cesm/netcdf-build/lib -lnetcdf -lnetcdf -Wl,-rpath=/media/rgy/win-file/document/computer/HPC/cesm/netcdf-build/lib  -L/media/rgy/win-file/document/computer/HPC/cesm/CESM/models/atm/cam/bld/mct/mct -lmct -L/media/rgy/win-file/document/computer/HPC/cesm/CESM/models/atm/cam/bld/mct/mpeu -lmpeu  -L/media/rgy/win-file/document/computer/HPC/cesm/openmpi/lib -lmpi \
 || exit 3
-
+#-L $INTEL/mkl/lib/intel64/ -lmkl_rt
 rm -f ./h0.nc 
 echo "run the cam"
 mpirun ./cam >cam.run.log 2>&1|| exit 4

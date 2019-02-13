@@ -5,5 +5,5 @@ cd /media/rgy/win-file/document/computer/HPC/cesm/CESM/models/atm/cam/bld/
 gcc  -c ../src/physics/cam/zm_conv_cuda.cpp -o zm_conv_cuda.o -O3  -Ofast || exit 2 
 echo "change this to icc for better opt"
 #echo $INTEL
-icc -g -c  ../src/utils/fft_mkl.c  -o fft_mkl.o -fPIC -I $INTEL/mkl/include/|| exit 2 
+#icc -g -c  ../src/utils/fft_mkl.c  -o fft_mkl.o -fPIC -I $INTEL/mkl/include/|| exit 2 
 #echo "fft_mkl done ! "
