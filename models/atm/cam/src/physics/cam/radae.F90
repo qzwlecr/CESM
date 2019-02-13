@@ -1637,8 +1637,10 @@ subroutine radems(lchnk   ,ncol    ,                            &
 !
 !
 !
-   real(r8) term7(pcols,2)          ! Kl_inf(i) in eq(r8) of table A3a of R&D
-   real(r8) term8(pcols,2)          ! Delta kl_inf(i) in eq(r8)
+   real(r8) term7_2     ! Kl_inf(i) in eq(r8) of table A3a of R&D
+   real(r8) term8_2     ! Delta kl_inf(i) in eq(r8)
+   real(r8) term7_1     ! Kl_inf(i) in eq(r8) of table A3a of R&D
+   real(r8) term8_1     ! Delta kl_inf(i) in eq(r8)
    real(r8) tr1(pcols)              ! Equation(6) in table A2 for 650-800
    real(r8) tr2(pcols)              ! Equation(6) in table A2 for 500-650
    real(r8) tr3(pcols)              ! Equation(4) in table A2 for 650-800

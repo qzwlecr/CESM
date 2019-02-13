@@ -1,6 +1,6 @@
 #!/bin/bash
 #echo 'you need to download tar cam53_f19c4aqpgro_ys.tar.gz and cam.zip from sftp first'
-#rm -f ./*.o
+rm -f ./*.o
 ./cuda-build.sh || exit 1
 
 export INC_MPI=/media/rgy/win-file/document/computer/HPC/cesm/openmpi/include
