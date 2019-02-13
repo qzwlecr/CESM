@@ -671,27 +671,14 @@ subroutine radabs(lchnk   ,ncol    ,             &
             pch2o     = ds2c
             pnew(i)   = u(i)/dw(i)
             pnew_mks  = pnew(i) * sslp_mks
-!
-! Changed effective path temperature to std. Curtis-Godson form
-!
+
             tpatha = abs(tcg(i,k1) - tcg(i,k2))/dw(i)
             t_p = min(max(tpatha, min_tp_h2o), max_tp_h2o)
 ! todo
             call qsat_water(t_p, pnew_mks, esx, qsx)
-!
-! Compute effective RH along path
-!
+
             q_path = dw(i) / abs(pnm(i,k1) - pnm(i,k2)) / rga
-!
-! Calculate effective u, pnew for each band using
-!        Hulst-Curtis-Godson approximation:
-! Formulae: Goody and Yung, Atmospheric Radiation: Theoretical Basis, 
-!           2nd edition, Oxford University Press, 1989.
-! Effective H2O path (w)
-!      eq. 6.24, p. 228
-! Effective H2O path pressure (pnew = u/w):
-!      eq. 6.29, p. 228
-!
+
             ub(1) = abs(plh2ob(1,i,k1) - plh2ob(1,i,k2)) / psi(t_p,1)
             ub(2) = abs(plh2ob(2,i,k1) - plh2ob(2,i,k2)) / psi(t_p,2)
             
@@ -704,36 +691,12 @@ subroutine radabs(lchnk   ,ncol    ,             &
             fwk(i)  = fwcoef + fwc1/(1._r8 + fwc2*u(i))
             fwku(i) = fwk(i)*u(i)
 !
-! Define variables for C/H/E (now C/LT/E) fit
-!
-! abso(i,1)     0 -  800 cm-1   h2o rotation band
-! abso(i,1)  1200 - 2200 cm-1   h2o vibration-rotation band
-! abso(i,2)   800 - 1200 cm-1   h2o window
-!
-! Separation between rotation and vibration-rotation dropped, so
-!                only 2 slots needed for H2O absorptivity
-!
-! Notation:
-! U   = integral (P/P_0 dW)  
-! P   = atmospheric pressure
-! P_0 = reference atmospheric pressure
-! W   = precipitable water path
-! T_e = emission temperature
-! T_p = path temperature
-! RH  = path relative humidity
-!
-!
-! Terms for asymptotic value of emissivity
-!
             te1  = tplnka(i,k2)
             te2  = te1 * te1
             te3  = te2 * te1
             te4  = te3 * te1
             te5  = te4 * te1
 
-!
-!  Band-independent indices for lines and continuum tables
-!
             dvar = (t_p - min_tp_h2o) / dtp_h2o
             itp = min(max(int(aint(dvar,r8)) + 1, 1), n_tp - 1)
             itp1 = itp + 1
@@ -768,63 +731,10 @@ subroutine radabs(lchnk   ,ncol    ,             &
             w_1_10 = w_1_1_ * wrh
             w_1_11 = w_1_1_ * wrh1
 
-!
-! H2O Continuum path for 0-800 and 1200-2200 cm^-1
-!
-!    Assume foreign continuum dominates total H2O continuum in these bands
-!    per Clough et al, JGR, v. 97, no. D14 (Oct 20, 1992), p. 15776
-!    Then the effective H2O path is just 
-!         U_c = integral[ f(P) dW ]
-!    where 
-!           W = water-vapor mass and 
-!        f(P) = dependence of foreign continuum on pressure 
-!             = P / sslp
-!    Then 
-!         U_c = U (the same effective H2O path as for lines)
-!
-!
-! Continuum terms for 800-1200 cm^-1
-!
-!    Assume self continuum dominates total H2O continuum for this band
-!    per Clough et al, JGR, v. 97, no. D14 (Oct 20, 1992), p. 15776
-!    Then the effective H2O self-continuum path is 
-!         U_c = integral[ h(e,T) dW ]                        (*eq. 1*)
-!    where 
-!           W = water-vapor mass and 
-!           e = partial pressure of H2O along path
-!           T = temperature along path
-!      h(e,T) = dependence of foreign continuum on e,T
-!             = e / sslp * f(T)
-!
-!    Replacing
-!           e =~ q * P / epsilo
-!           q = mixing ratio of H2O
-!     epsilo = 0.622
-!
-!    and using the definition
-!           U = integral [ (P / sslp) dW ]
-!             = (P / sslp) W                                 (homogeneous path)
-!
-!    the effective path length for the self continuum is
-!         U_c = (q / epsilo) f(T) U                         (*eq. 2*)
-!
-!    Once values of T, U, and q have been calculated for the inhomogeneous
-!        path, this sets U_c for the corresponding
-!        homogeneous atmosphere.  However, this need not equal the
-!        value of U_c' defined by eq. 1 for the actual inhomogeneous atmosphere
-!        under consideration.
-!
-!    Solution: hold T and q constant, solve for U' that gives U_c' by
-!        inverting eq. (2):
-!
-!        U' = (U_c * epsilo) / (q * f(T))
-!
             fch2o = fh2oself(t_p) 
             uch2o = (pch2o * epsilo) / (q_path * fch2o)
 
-!
-! Band-dependent indices for non-window
-!
+
             ib = 1
 
             uvar = ub(ib) * fdif
@@ -858,9 +768,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
             w11_01 = wp1 * w_1_01 
             w11_10 = wp1 * w_1_10 
             w11_11 = wp1 * w_1_11 
-!
-! Asymptotic value of absorptivity as U->infinity
-!
+
             fa = fat(1,ib) + &
                  fat(2,ib) * te1 + &
                  fat(3,ib) * te2 + &
@@ -904,9 +812,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
             abso(i,ib) = min(max(fa * (1.0_r8 - (1.0_r8 - a_star) * &
                                  aer_trn_ttl(i,k1,k2,ib)), &
                              0.0_r8), 1.0_r8)
-!
-! Invoke linear limit for scaling wrt u below min_u_h2o
-!
+
             if (uvar < min_u_h2o) then
                uscl = uvar / min_u_h2o
                abso(i,ib) = abso(i,ib) * uscl
@@ -1053,8 +959,8 @@ subroutine radabs(lchnk   ,ncol    ,             &
             term7(i,2) = coefj(1,2) + coefj(2,2)*dty(i)*(1._r8 + c26*dty(i))
             term8(i,2) = coefk(1,2) + coefk(2,2)*dty(i)*(1._r8 + c27*dty(i))
          end do
-!
-! 500 -  800 cm-1   h2o rotation band overlap with co2
+
+         
 !ASC-Y00 这个地方实在弄不了了
          do i=1,ncol
             k21    = term7(i,1) + term8(i,1)/ &
@@ -1064,9 +970,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
             tr1    = exp(-(k21*(sqrtu(i) + fc1*fwku(i))))
             tr2    = exp(-(k22*(sqrtu(i) + fc1*fwku(i))))
             tr1=tr1*aer_trn_ttl(i,k1,k2,idx_LW_0650_0800) 
-!                                          ! H2O line+STRAER trn 650--800 cm-1
             tr2=tr2*aer_trn_ttl(i,k1,k2,idx_LW_0500_0650)
-!                                          ! H2O line+STRAER trn 500--650 cm-1
             tr5    = exp(-((coefh(1,3) + coefh(2,3)*dtx(i))*uc1(i)))
             tr6    = exp(-((coefh(1,4) + coefh(2,4)*dtx(i))*uc1(i)))
             tr9(i)   = tr1*tr5
@@ -1083,9 +987,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
                to3h2o(i) = h2otr(i,k2)/h2otr(i,k1)
             end do
          end if
-!
-! abso(i,3)   o3  9.6 micrometer band (nu3 and nu1 bands)
-!
+         
          do i=1,ncol
             dpnm(i)  = pnm(i,k1) - pnm(i,k2)
             to3co2(i) = (pnm(i,k1)*co2t(i,k1) - pnm(i,k2)*co2t(i,k2))/dpnm(i)
@@ -1180,24 +1082,8 @@ subroutine radabs(lchnk   ,ncol    ,             &
          end do
       end do ! do k2 = 
    end do ! do k1 = 
-!
-! Adjacent layer absorptivity:
-!
-! abso(i,1)     0 -  800 cm-1   h2o rotation band
-! abso(i,1)  1200 - 2200 cm-1   h2o vibration-rotation band
-! abso(i,2)   800 - 1200 cm-1   h2o window
-!
-! Separation between rotation and vibration-rotation dropped, so
-!                only 2 slots needed for H2O absorptivity
-!
-! 500-800 cm^-1 H2o continuum/line overlap already included
-!                in abso(i,1).  This used to be in abso(i,4)
-!
-! abso(i,3)   o3  9.6 micrometer band (nu3 and nu1 bands)
-! abso(i,4)   co2 15  micrometer band system
-!
-! Nearest layer level loop
-!
+
+   
    do k2=pver,ntoplw,-1
       do i=1,ncol
          tbar(i,1)   = 0.5_r8*(tint(i,k2+1) + tlayr(i,k2+1))
