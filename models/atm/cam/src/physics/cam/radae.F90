@@ -423,15 +423,17 @@ subroutine radabs(lchnk   ,ncol    ,             &
    real(r8) abso(pcols,4)      ! Absorptivity for various gases/bands
    real(r8) dtx(pcols)         ! Planck temperature minus 250 K
    real(r8) dty(pcols)         ! Path temperature minus 250 K
-   real(r8) term7(pcols,2)     ! Kl_inf(i) in eq(r8) of table A3a of R&D
-   real(r8) term8(pcols,2)     ! Delta kl_inf(i) in eq(r8)
+   real(r8) term7_2     ! Kl_inf(i) in eq(r8) of table A3a of R&D
+   real(r8) term8_2     ! Delta kl_inf(i) in eq(r8)
+   real(r8) term7_1     ! Kl_inf(i) in eq(r8) of table A3a of R&D
+   real(r8) term8_1     ! Delta kl_inf(i) in eq(r8)
    real(r8) tr1                ! Eqn(6) in table A2 of R&D for 650-800
-   real(r8) tr10(pcols)        ! Eqn (6) times eq(4) in table A2
+   real(r8) tr10        ! Eqn (6) times eq(4) in table A2
 !                              !  of R&D for 500-650 cm-1 region
    real(r8) tr2                ! Eqn(6) in table A2 of R&D for 500-650
    real(r8) tr5                ! Eqn(4) in table A2 of R&D for 650-800
    real(r8) tr6                ! Eqn(4) in table A2 of R&D for 500-650
-   real(r8) tr9(pcols)         ! Equation (6) times eq(4) in table A2
+   real(r8) tr9         ! Equation (6) times eq(4) in table A2
 !                              !  of R&D for 650-800 cm-1 region
    real(r8) sqrtu(pcols)       ! Sqrt of pressure weighted h20 pathlength
    real(r8) fwk(pcols)         ! Equation(33) in R&D far wing correction
@@ -954,18 +956,14 @@ subroutine radabs(lchnk   ,ncol    ,             &
 ! Line transmission in 800-1000 and 1000-1200 cm-1 intervals
 !
          do i=1,ncol
-            term7(i,1) = coefj(1,1) + coefj(2,1)*dty(i)*(1._r8 + c16*dty(i))
-            term8(i,1) = coefk(1,1) + coefk(2,1)*dty(i)*(1._r8 + c17*dty(i))
-            term7(i,2) = coefj(1,2) + coefj(2,2)*dty(i)*(1._r8 + c26*dty(i))
-            term8(i,2) = coefk(1,2) + coefk(2,2)*dty(i)*(1._r8 + c27*dty(i))
-         end do
+            term7_1 = coefj(1,1) + coefj(2,1)*dty(i)*(1._r8 + c16*dty(i))
+            term8_1 = coefk(1,1) + coefk(2,1)*dty(i)*(1._r8 + c17*dty(i))
+            term7_2 = coefj(1,2) + coefj(2,2)*dty(i)*(1._r8 + c26*dty(i))
+            term8_2 = coefk(1,2) + coefk(2,2)*dty(i)*(1._r8 + c27*dty(i))
 
-         
-!ASC-Y00 这个地方实在弄不了了
-         do i=1,ncol
-            k21    = term7(i,1) + term8(i,1)/ &
+            k21    = term7_1 + term8_1/ &
                (1._r8 + (c30 + c31*(dty(i)-10._r8)*(dty(i)-10._r8))*sqrtu(i))
-            k22    = term7(i,2) + term8(i,2)/ &
+            k22    = term7_2 + term8_2/ &
                (1._r8 + (c28 + c29*(dty(i)-10._r8))*sqrtu(i))
             tr1    = exp(-(k21*(sqrtu(i) + fc1*fwku(i))))
             tr2    = exp(-(k22*(sqrtu(i) + fc1*fwku(i))))
@@ -973,10 +971,10 @@ subroutine radabs(lchnk   ,ncol    ,             &
             tr2=tr2*aer_trn_ttl(i,k1,k2,idx_LW_0500_0650)
             tr5    = exp(-((coefh(1,3) + coefh(2,3)*dtx(i))*uc1(i)))
             tr6    = exp(-((coefh(1,4) + coefh(2,4)*dtx(i))*uc1(i)))
-            tr9(i)   = tr1*tr5
-            tr10(i)  = tr2*tr6
-            th2o(i) = tr10(i)
-            trab2(i) = 0.65_r8*tr9(i) + 0.35_r8*tr10(i)
+            tr9   = tr1*tr5
+            tr10  = tr2*tr6
+            th2o(i) = tr10
+            trab2(i) = 0.65_r8*tr9 + 0.35_r8*tr10
          end do
          if (k2 < k1) then
             do i=1,ncol
@@ -1053,14 +1051,14 @@ subroutine radabs(lchnk   ,ncol    ,             &
                sqti(i) = sqrt(tlayr(i,k2))
             end do
          end if
-!
+!考虑把这两个循环合并，然后删掉 f2co2 f3co2 rbeta7
          do i=1,ncol
             tmp1      = log(1._r8 + f1sqwp(i))
             tmp2      = log(1._r8 + f2co2(i))
             tmp3      = log(1._r8 + f3co2(i))
             absbnd    = (tmp1 + 2._r8*t1co2(i)*tmp2 + 2._r8*tmp3)*sqti(i)
             abso(i,4) = trab2(i)*co2em(i,k2)*absbnd
-            tco2(i)   = 1._r8/(1.0_r8+10.0_r8*(u7(i)/sqrt(4._r8 + u7(i)*(1._r8 + rbeta7(i)))))
+            tco2(i)   = 1._r8/(1.0_r8+10.0_r8*(u7(i)/sqrt(4._r8 + u7(i)*(1._r8 + rbeta7(i))))) !这个部分和L1044的重复了
          end do
 !
 ! Calculate absorptivity due to trace gases, abstrc
@@ -1388,20 +1386,16 @@ subroutine radabs(lchnk   ,ncol    ,             &
 ! Line transmission in 800-1000 and 1000-1200 cm-1 intervals
 !
          do i=1,ncol
-            term7(i,1) = coefj(1,1) + coefj(2,1)*dty(i)*(1._r8 + c16*dty(i))
-            term8(i,1) = coefk(1,1) + coefk(2,1)*dty(i)*(1._r8 + c17*dty(i))
-            term7(i,2) = coefj(1,2) + coefj(2,2)*dty(i)*(1._r8 + c26*dty(i))
-            term8(i,2) = coefk(1,2) + coefk(2,2)*dty(i)*(1._r8 + c27*dty(i))
-         end do
-!
-! 500 -  800 cm-1   h2o rotation band overlap with co2
-!
-         do i=1,ncol
+            term7_1 = coefj(1,1) + coefj(2,1)*dty(i)*(1._r8 + c16*dty(i))
+            term8_1 = coefk(1,1) + coefk(2,1)*dty(i)*(1._r8 + c17*dty(i))
+            term7_2 = coefj(1,2) + coefj(2,2)*dty(i)*(1._r8 + c26*dty(i))
+            term8_2 = coefk(1,2) + coefk(2,2)*dty(i)*(1._r8 + c27*dty(i))
+
             dtym10     = dty(i) - 10._r8
             denom      = 1._r8 + (c30 + c31*dtym10*dtym10)*sqrtu(i)
-            k21        = term7(i,1) + term8(i,1)/denom
+            k21        = term7_1 + term8_1/denom
             denom      = 1._r8 + (c28 + c29*dtym10       )*sqrtu(i)
-            k22        = term7(i,2) + term8(i,2)/denom
+            k22        = term7_2 + term8_2/denom
             tr1     = exp(-(k21*(sqrtu(i) + fc1*fwku(i))))
             tr2     = exp(-(k22*(sqrtu(i) + fc1*fwku(i))))
             tr1=tr1*aer_trn_ngh(i,idx_LW_0650_0800) 
@@ -1410,10 +1404,10 @@ subroutine radabs(lchnk   ,ncol    ,             &
 !                                         ! H2O line+STRAER trn 500--650 cm-1
             tr5     = exp(-((coefh(1,3) + coefh(2,3)*dtx(i))*uc1(i)))
             tr6     = exp(-((coefh(1,4) + coefh(2,4)*dtx(i))*uc1(i)))
-            tr9(i)  = tr1*tr5
-            tr10(i) = tr2*tr6
-            trab2(i)= 0.65_r8*tr9(i) + 0.35_r8*tr10(i)
-            th2o(i) = tr10(i)
+            tr9  = tr1*tr5
+            tr10 = tr2*tr6
+            trab2(i)= 0.65_r8*tr9 + 0.35_r8*tr10
+            th2o(i) = tr10
          end do
 !
 ! abso(i,3)  o3  9.6 micrometer (nu3 and nu1 bands)
@@ -2318,18 +2312,14 @@ subroutine radems(lchnk   ,ncol    ,                            &
 !
 
       do i=1,ncol
-         term7(i,1) = coefj(1,1) + coefj(2,1)*dty(i)*(1._r8+c16*dty(i))
-         term8(i,1) = coefk(1,1) + coefk(2,1)*dty(i)*(1._r8+c17*dty(i))
-         term7(i,2) = coefj(1,2) + coefj(2,2)*dty(i)*(1._r8+c26*dty(i))
-         term8(i,2) = coefk(1,2) + coefk(2,2)*dty(i)*(1._r8+c27*dty(i))
-      end do
-      do i=1,ncol
-!
-! 500 -  800 cm-1   rotation band overlap with co2
-!
-         k21(i) = term7(i,1) + term8(i,1)/ &
+         term7_1 = coefj(1,1) + coefj(2,1)*dty(i)*(1._r8+c16*dty(i))
+         term8_1 = coefk(1,1) + coefk(2,1)*dty(i)*(1._r8+c17*dty(i))
+         term7_2 = coefj(1,2) + coefj(2,2)*dty(i)*(1._r8+c26*dty(i))
+         term8_2 = coefk(1,2) + coefk(2,2)*dty(i)*(1._r8+c27*dty(i))
+
+         k21(i) = term7_1 + term8_1/ &
                  (1._r8 + (c30 + c31*(dty(i)-10._r8)*(dty(i)-10._r8))*sqrt(u(i)))
-         k22(i) = term7(i,2) + term8(i,2)/ &
+         k22(i) = term7_2 + term8_2/ &
                  (1._r8 + (c28 + c29*(dty(i)-10._r8))*sqrt(u(i)))
          fwk    = fwcoef + fwc1/(1._r8+fwc2*u(i))
          tr1(i) = exp(-(k21(i)*(sqrt(u(i)) + fc1*fwk*u(i))))
@@ -2999,14 +2989,14 @@ subroutine trcpth(ncol                                        , &
    integer   i               ! Longitude index
    integer   k               ! Level index
 !
-   real(r8) co2fac(pcols,1)      ! co2 factor
-   real(r8) alpha1(pcols)        ! stimulated emission term
-   real(r8) alpha2(pcols)        ! stimulated emission term
-   real(r8) rt(pcols)            ! reciprocal of local temperature
-   real(r8) rsqrt(pcols)         ! reciprocal of sqrt of temp
+   real(r8) co2fac      ! co2 factor
+   real(r8) alpha1        ! stimulated emission term
+   real(r8) alpha2        ! stimulated emission term
+   real(r8) rt            ! reciprocal of local temperature
+   real(r8) rsqrt         ! reciprocal of sqrt of temp
 !
-   real(r8) pbar(pcols)          ! mean pressure
-   real(r8) dpnm(pcols)          ! difference in pressure
+   real(r8) pbar          ! mean pressure
+   real(r8) dpnm          ! difference in pressure
    real(r8) diff                 ! diffusivity factor
 !
 !--------------------------Data Statements------------------------------
@@ -3024,15 +3014,15 @@ subroutine trcpth(ncol                                        , &
       un2o0(i,ntoplw) = diff * 1.02346e5_r8 * n2o(i,ntoplw) * pnm(i,ntoplw) * rga / sqrt(tnm(i,ntoplw))
       un2o1(i,ntoplw) = diff * 2.01909_r8 * un2o0(i,ntoplw) * exp(-847.36_r8/tnm(i,ntoplw))
       uch4(i,ntoplw)  = diff * 8.60957e4_r8 * ch4(i,ntoplw) * pnm(i,ntoplw) * rga / sqrt(tnm(i,ntoplw))
-      co2fac(i,1)     = diff * co2mmr(i) * pnm(i,ntoplw) * rga
-      alpha1(i) = (1.0_r8 - exp(-1540.0_r8/tnm(i,ntoplw)))**3.0_r8/sqrt(tnm(i,ntoplw))
-      alpha2(i) = (1.0_r8 - exp(-1360.0_r8/tnm(i,ntoplw)))**3.0_r8/sqrt(tnm(i,ntoplw))
-      uco211(i,ntoplw) = 3.42217e3_r8 * co2fac(i,1) * alpha1(i) * exp(-1849.7_r8/tnm(i,ntoplw))
-      uco212(i,ntoplw) = 6.02454e3_r8 * co2fac(i,1) * alpha1(i) * exp(-2782.1_r8/tnm(i,ntoplw))
-      uco213(i,ntoplw) = 5.53143e3_r8 * co2fac(i,1) * alpha1(i) * exp(-3723.2_r8/tnm(i,ntoplw))
-      uco221(i,ntoplw) = 3.88984e3_r8 * co2fac(i,1) * alpha2(i) * exp(-1997.6_r8/tnm(i,ntoplw))
-      uco222(i,ntoplw) = 3.67108e3_r8 * co2fac(i,1) * alpha2(i) * exp(-3843.8_r8/tnm(i,ntoplw))
-      uco223(i,ntoplw) = 6.50642e3_r8 * co2fac(i,1) * alpha2(i) * exp(-2989.7_r8/tnm(i,ntoplw))
+      co2fac     = diff * co2mmr(i) * pnm(i,ntoplw) * rga
+      alpha1 = (1.0_r8 - exp(-1540.0_r8/tnm(i,ntoplw)))**3.0_r8/sqrt(tnm(i,ntoplw))
+      alpha2 = (1.0_r8 - exp(-1360.0_r8/tnm(i,ntoplw)))**3.0_r8/sqrt(tnm(i,ntoplw))
+      uco211(i,ntoplw) = 3.42217e3_r8 * co2fac * alpha1 * exp(-1849.7_r8/tnm(i,ntoplw))
+      uco212(i,ntoplw) = 6.02454e3_r8 * co2fac * alpha1 * exp(-2782.1_r8/tnm(i,ntoplw))
+      uco213(i,ntoplw) = 5.53143e3_r8 * co2fac * alpha1 * exp(-3723.2_r8/tnm(i,ntoplw))
+      uco221(i,ntoplw) = 3.88984e3_r8 * co2fac * alpha2 * exp(-1997.6_r8/tnm(i,ntoplw))
+      uco222(i,ntoplw) = 3.67108e3_r8 * co2fac * alpha2 * exp(-3843.8_r8/tnm(i,ntoplw))
+      uco223(i,ntoplw) = 6.50642e3_r8 * co2fac * alpha2 * exp(-2989.7_r8/tnm(i,ntoplw))
       bn2o0(i,ntoplw) = diff * 19.399_r8 * pnm(i,ntoplw)**2.0_r8 * n2o(i,ntoplw) * &
                    1.02346e5_r8 * rga / (sslp*tnm(i,ntoplw))
       bn2o1(i,ntoplw) = bn2o0(i,ntoplw) * exp(-847.36_r8/tnm(i,ntoplw)) * 2.06646e5_r8
@@ -3046,38 +3036,38 @@ subroutine trcpth(ncol                                        , &
 !
    do k = ntoplw,pver
       do i = 1,ncol
-         rt(i) = 1._r8/tnm(i,k)
-         rsqrt(i) = sqrt(rt(i))
-         pbar(i) = 0.5_r8 * (pnm(i,k+1) + pnm(i,k)) / sslp
-         dpnm(i) = (pnm(i,k+1) - pnm(i,k)) * rga
-         alpha1(i) = diff * rsqrt(i) * (1.0_r8 - exp(-1540.0_r8/tnm(i,k)))**3.0_r8
-         alpha2(i) = diff * rsqrt(i) * (1.0_r8 - exp(-1360.0_r8/tnm(i,k)))**3.0_r8
-         ucfc11(i,k+1) = ucfc11(i,k) +  1.8_r8 * cfc11(i,k) * dpnm(i)
-         ucfc12(i,k+1) = ucfc12(i,k) +  1.8_r8 * cfc12(i,k) * dpnm(i)
-         un2o0(i,k+1) = un2o0(i,k) + diff * 1.02346e5_r8 * n2o(i,k) * rsqrt(i) * dpnm(i)
+         rt = 1._r8/tnm(i,k)
+         rsqrt = sqrt(rt)
+         pbar = 0.5_r8 * (pnm(i,k+1) + pnm(i,k)) / sslp
+         dpnm = (pnm(i,k+1) - pnm(i,k)) * rga
+         alpha1 = diff * rsqrt * (1.0_r8 - exp(-1540.0_r8/tnm(i,k)))**3.0_r8
+         alpha2 = diff * rsqrt * (1.0_r8 - exp(-1360.0_r8/tnm(i,k)))**3.0_r8
+         ucfc11(i,k+1) = ucfc11(i,k) +  1.8_r8 * cfc11(i,k) * dpnm
+         ucfc12(i,k+1) = ucfc12(i,k) +  1.8_r8 * cfc12(i,k) * dpnm
+         un2o0(i,k+1) = un2o0(i,k) + diff * 1.02346e5_r8 * n2o(i,k) * rsqrt * dpnm
          un2o1(i,k+1) = un2o1(i,k) + diff * 2.06646e5_r8 * n2o(i,k) * &
-                        rsqrt(i) * exp(-847.36_r8/tnm(i,k)) * dpnm(i)
-         uch4(i,k+1) = uch4(i,k) + diff * 8.60957e4_r8 * ch4(i,k) * rsqrt(i) * dpnm(i)
-         uco211(i,k+1) = uco211(i,k) + 1.15_r8*3.42217e3_r8 * alpha1(i) * &
-                         co2mmr(i) * exp(-1849.7_r8/tnm(i,k)) * dpnm(i)
-         uco212(i,k+1) = uco212(i,k) + 1.15_r8*6.02454e3_r8 * alpha1(i) * &
-                         co2mmr(i) * exp(-2782.1_r8/tnm(i,k)) * dpnm(i)
-         uco213(i,k+1) = uco213(i,k) + 1.15_r8*5.53143e3_r8 * alpha1(i) * &
-                         co2mmr(i) * exp(-3723.2_r8/tnm(i,k)) * dpnm(i)
-         uco221(i,k+1) = uco221(i,k) + 1.15_r8*3.88984e3_r8 * alpha2(i) * &
-                         co2mmr(i) * exp(-1997.6_r8/tnm(i,k)) * dpnm(i)
-         uco222(i,k+1) = uco222(i,k) + 1.15_r8*3.67108e3_r8 * alpha2(i) * &
-                         co2mmr(i) * exp(-3843.8_r8/tnm(i,k)) * dpnm(i)
-         uco223(i,k+1) = uco223(i,k) + 1.15_r8*6.50642e3_r8 * alpha2(i) * &
-                         co2mmr(i) * exp(-2989.7_r8/tnm(i,k)) * dpnm(i)
-         bn2o0(i,k+1) = bn2o0(i,k) + diff * 19.399_r8 * pbar(i) * rt(i) &
-                        * 1.02346e5_r8 * n2o(i,k) * dpnm(i)
-         bn2o1(i,k+1) = bn2o1(i,k) + diff * 19.399_r8 * pbar(i) * rt(i) &
-                        * 2.06646e5_r8 * exp(-847.36_r8/tnm(i,k)) * n2o(i,k)*dpnm(i)
-         bch4(i,k+1) = bch4(i,k) + diff * 2.94449_r8 * rt(i) * pbar(i) &
-                       * 8.60957e4_r8 * ch4(i,k) * dpnm(i)
+                        rsqrt * exp(-847.36_r8/tnm(i,k)) * dpnm
+         uch4(i,k+1) = uch4(i,k) + diff * 8.60957e4_r8 * ch4(i,k) * rsqrt * dpnm
+         uco211(i,k+1) = uco211(i,k) + 1.15_r8*3.42217e3_r8 * alpha1 * &
+                         co2mmr(i) * exp(-1849.7_r8/tnm(i,k)) * dpnm
+         uco212(i,k+1) = uco212(i,k) + 1.15_r8*6.02454e3_r8 * alpha1 * &
+                         co2mmr(i) * exp(-2782.1_r8/tnm(i,k)) * dpnm
+         uco213(i,k+1) = uco213(i,k) + 1.15_r8*5.53143e3_r8 * alpha1 * &
+                         co2mmr(i) * exp(-3723.2_r8/tnm(i,k)) * dpnm
+         uco221(i,k+1) = uco221(i,k) + 1.15_r8*3.88984e3_r8 * alpha2 * &
+                         co2mmr(i) * exp(-1997.6_r8/tnm(i,k)) * dpnm
+         uco222(i,k+1) = uco222(i,k) + 1.15_r8*3.67108e3_r8 * alpha2 * &
+                         co2mmr(i) * exp(-3843.8_r8/tnm(i,k)) * dpnm
+         uco223(i,k+1) = uco223(i,k) + 1.15_r8*6.50642e3_r8 * alpha2 * &
+                         co2mmr(i) * exp(-2989.7_r8/tnm(i,k)) * dpnm
+         bn2o0(i,k+1) = bn2o0(i,k) + diff * 19.399_r8 * pbar * rt &
+                        * 1.02346e5_r8 * n2o(i,k) * dpnm
+         bn2o1(i,k+1) = bn2o1(i,k) + diff * 19.399_r8 * pbar * rt &
+                        * 2.06646e5_r8 * exp(-847.36_r8/tnm(i,k)) * n2o(i,k)*dpnm
+         bch4(i,k+1) = bch4(i,k) + diff * 2.94449_r8 * rt * pbar &
+                       * 8.60957e4_r8 * ch4(i,k) * dpnm
          uptype(i,k+1) = uptype(i,k) + diff *qnm(i,k) * &
-                         exp(1800.0_r8*(1.0_r8/tnm(i,k) - 1.0_r8/296.0_r8)) * pbar(i) * dpnm(i)
+                         exp(1800.0_r8*(1.0_r8/tnm(i,k) - 1.0_r8/296.0_r8)) * pbar * dpnm
       end do
    end do
 !
@@ -3383,7 +3373,7 @@ subroutine trcab(ncol    ,                                     &
       end do
    end do
 !
-   do i=1,ncol
+   do i=1,ncol  !这个和上面的合并？
       tw(i,1)=tw(i,1)*(0.7_r8*aer_trn_ttl(i,k1,k2,idx_LW_0650_0800)+&! l=1: 0750--0820 cm-1
                        0.3_r8*aer_trn_ttl(i,k1,k2,idx_LW_0800_1000)) 
       tw(i,2)=tw(i,2)*aer_trn_ttl(i,k1,k2,idx_LW_0800_1000) ! l=2: 0820--0880 cm-1
