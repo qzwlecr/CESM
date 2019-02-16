@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 #short-term archive script - move model output out of run directory
 #to free disc space for next invocation of model run
