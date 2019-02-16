@@ -230,7 +230,7 @@ elemental subroutine wv_sat_qsat_water(t, p, es, qs, idx)
 
   integer,  intent(in), optional :: idx ! Scheme index
 
-  es = wv_sat_svp_water(t, idx)
+  es = wv_sat_svp_water(t)
 
   qs = wv_sat_svp_to_qsat(es, p)
 
@@ -255,7 +255,7 @@ elemental subroutine wv_sat_qsat_ice(t, p, es, qs, idx)
 
   integer,  intent(in), optional :: idx ! Scheme index
 
-  es = wv_sat_svp_ice(t, idx)
+  es = wv_sat_svp_ice(t)
 
   qs = wv_sat_svp_to_qsat(es, p)
 
@@ -280,7 +280,7 @@ elemental subroutine wv_sat_qsat_trans(t, p, es, qs, idx)
 
   integer,  intent(in), optional :: idx ! Scheme index
 
-  es = wv_sat_svp_trans(t, idx)
+  es = wv_sat_svp_trans(t)
 
   qs = wv_sat_svp_to_qsat(es, p)
 
