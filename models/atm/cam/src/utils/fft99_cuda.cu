@@ -183,9 +183,8 @@ __global__ void pft_finish(double* __restrict__ p_inout, int plan_id) {
     }
 }
 
-extern "C" void cuda_pft2d_(int* plan_id_,
-                            double* p_inout_    // array filtered [y_dim][x_dim]
-) {
+extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim]
+                            int* plan_id_) {
     int plan_id = *plan_id_;
     auto& record = pft_records[plan_id];
     int s_size = record.s_size;
