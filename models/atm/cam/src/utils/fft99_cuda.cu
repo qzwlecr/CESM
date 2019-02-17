@@ -16,7 +16,7 @@
 #include <cuda_runtime_api.h>
 #include <chrono>
 using namespace std::chrono;
-#define DOG_BUGGY 1
+#define DOG_BUGGY 0
 
 class ErrorDetect {
   public:
@@ -186,7 +186,7 @@ __global__ void pft_prepare(double* __restrict__ p_inout, PftRecord record) {
     double* raw_p = p_inout + s_index * x_dim;
     if(id == -2 || x_id >= x_dim) {
         // do nothing
-    } else if(-1) {
+    } else if(id == -1) {
         // inplace filter
         double s_rev = record.s_rev[s_index];
         double mid = raw_p[x_id];
@@ -217,25 +217,47 @@ __global__ void pft_finish(double* __restrict__ p_inout, PftRecord record) {
         dest[x_id] = src[x_id];
     }
 }
-void log_freq(PftRecord& record, double* arr) {
+
+#include <vector>
+using std::vector;
+void log_freq(PftRecord& record, double* arr_) {
     int stride = record.x_dim + 2;
     for(int i = 0; i < 1; ++i) {
+        vector<double> arr(stride);
+        cudaMemcpy(arr.data(), arr_ + i * stride, sizeof(double)*stride, cudaMemcpyDeviceToHost);
         for(int j = 0; j < stride; ++j) {
-            printf("%.6lf\t", arr[i * stride + j]);
+            printf("%.6lf\t", arr[j]);
         }
-        printf("\n");
+        printf("freq\n");
     }
+    fflush(stdout);
 }
 
-void log_origin(PftRecord& record, double* arr) {
+void log_origin(PftRecord& record, double* arr_) {
+    int stride = record.x_dim;
+    for(int i = 0; i < 1; ++i) {
+        vector<double> arr(stride);
+        cudaMemcpy(arr.data(), arr_ + i * stride, sizeof(double)*stride, cudaMemcpyDeviceToHost);
+        for(int j = 0; j < stride; ++j) {
+            printf("%.6lf\t", arr[j]);
+        }
+        printf("origin\n");
+    }
+    fflush(stdout);
+}
+
+void log_raw(PftRecord& record, double* arr_) {
     int stride = record.x_dim;
     for(int i = 0; i < 1; ++i) {
         int id = record.encode_ids[i];
+        vector<double> arr(stride);
+        cudaMemcpy(arr.data(), arr_ + id * stride, sizeof(double)*stride, cudaMemcpyDeviceToHost);
         for(int j = 0; j < stride; ++j) {
-            printf("%.6lf\t", arr[id * stride + j]);
+            printf("%.6lf\t", arr[j]);
         }
-        printf("\n");
+        printf("raw[%d]\n", id);
     }
+    fflush(stdout);
 }
 
 extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim]
@@ -282,7 +304,12 @@ extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
     ED << cudaMemcpy(dev_inout, p_inout_, sizeof(double) * s_size * x_dim,
                      cudaMemcpyHostToDevice);
     // may change to benifit the hardware
+    // log_raw(record, dev_inout);
+    // assert(false);
     pft_prepare<<<s_size, x_dim>>>(dev_inout, record);
+    // log_origin(record, dev_origin); 
+    // assert(false);
+
     ED << cufftExecD2Z(record.fwd_plan, dev_origin, dev_freq);
 
     thrust::transform(thrust::system::cuda::par,
@@ -295,7 +322,7 @@ extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
     pft_finish<<<s_size, x_dim>>>(dev_inout, record);
     ED << cudaMemcpy(p_inout_, dev_inout, sizeof(double) * s_size * x_dim,
                      cudaMemcpyDeviceToHost);
-    if(DOG_BUGGY || true) {
+    if(DOG_BUGGY) {
         printf("\n{{final_data\n");
 
         printf("}}\n");
