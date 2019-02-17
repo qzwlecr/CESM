@@ -9,6 +9,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include <cuda.h>
 #include <assert.h>
@@ -89,13 +90,13 @@ extern "C"    //
     for(int i = 0; i < s_size; ++i) {
         auto coef = s_[i];
         printf("<%ld>", coef);
+        record.s_rev[i] = 1.0 / coef;
         if(coef <= 1.01) {
             // skip
             encode_ids[i] = -2;
         } else if(!force_fft && coef <= 4.0) {
             // shortcut
             encode_ids[i] = -1;
-            record.s_rev[i] = 1.0 / coef;
         } else {
             // real fft
             int id = fft_count;
@@ -186,7 +187,11 @@ __global__ void pft_finish(double* __restrict__ p_inout, int plan_id) {
 }
 
 extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim]
-                            int* plan_id_) {
+                            int* plan_id_, //
+                            // raw datas
+                            double* xxx_s, double* xxx_d, //
+                            int* xxx_im, int* xxx_jp//
+                            ) {
     int plan_id = *plan_id_;
     auto& record = pft_records[plan_id];
     int s_size = record.s_size;
@@ -196,6 +201,11 @@ extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
     auto* dev_origin = record.dev_origin;
     auto* dev_freq = record.dev_freq;
     auto* dev_inout = record.dev_inout;
+    assert(*xxx_im == x_dim);
+    assert(*xxx_jp == s_size);
+    double wtf = xxx_s[14] - 1.0 / record.s_rev[14];
+    assert((float)(wtf) == (float)0.0);
+    // what about d?  
     cudaMemcpy(dev_inout, p_inout_, sizeof(double) * s_size * x_dim,
                cudaMemcpyHostToDevice);
     // may change to benifit the hardware
@@ -206,7 +216,7 @@ extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
                       (double*)dev_freq + fft_count * (x_dim + 2),    //
                       dev_damp,                                       //
                       (double*)dev_freq,                              //
-                      [] __device__(double a, double b) { return a * b; });
+                      [] __device__(double a, double b) { return a * b / 144.0; });
     cufftExecZ2D(record.bck_plan, dev_freq, dev_origin);
     pft_finish<<<s_size, x_dim>>>(dev_inout, plan_id);
     cudaMemcpy(p_inout_, dev_inout, sizeof(double) * s_size * x_dim,
