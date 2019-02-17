@@ -196,18 +196,32 @@ extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
     auto& record = pft_records[plan_id];
     int s_size = record.s_size;
     int x_dim = record.x_dim;
+    assert(x_dim == 144);
     int fft_count = record.fft_count;
     auto* dev_damp = record.dev_damp;
     auto* dev_origin = record.dev_origin;
     auto* dev_freq = record.dev_freq;
     auto* dev_inout = record.dev_inout;
-    if(true){ // tester
+    if(true) {    // tester
         assert(*xxx_im == x_dim);
         assert(*xxx_jp == s_size);
         double wtf = xxx_s[14] - 1.0 / record.s_rev[14];
         assert((float)(wtf) == (float)0.0);
-        // double the_fuck[146];
-        
+        double the_fuck[146];
+        int id = 14;
+        int index = record.decode_ids[id];
+        // TODO
+        printf("{index=%d}", index);
+        cudaMemcpy(the_fuck, dev_damp + id * (x_dim + 2), sizeof(double) * (x_dim + 2),
+                   cudaMemcpyDeviceToHost);
+        double* ref = xxx_d + index * x_dim;
+        for(int i = 4; i < 146; ++i) {
+            assert(ref[i - 2] == the_fuck[i]);
+        }
+        assert(the_fuck[0] == 1.0);
+        assert(the_fuck[1] == 1.0);
+        assert(the_fuck[2] == 1.0);
+        assert(the_fuck[3] == 1.0);
     }
     // what about d?
     cudaMemcpy(dev_inout, p_inout_, sizeof(double) * s_size * x_dim,
