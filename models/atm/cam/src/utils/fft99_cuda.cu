@@ -85,9 +85,10 @@ extern "C"    //
     int fft_count = 0;
 
     bool force_fft = (bool)*fft_flt_;
-    printf("------------");
+    printf("{plan_id=%d}", plan_id);
     for(int i = 0; i < s_size; ++i) {
         auto coef = s_[i];
+        printf("<%ld>", coef);
         if(coef <= 1.01) {
             // skip
             encode_ids[i] = -2;
@@ -98,7 +99,6 @@ extern "C"    //
         } else {
             // real fft
             int id = fft_count;
-            printf("<%d>", id);
             ++fft_count;
             encode_ids[i] = id;
             decode_ids[id] = i;
