@@ -85,6 +85,7 @@ extern "C"    //
     int fft_count = 0;
 
     bool force_fft = (bool)*fft_flt_;
+    printf("------------");
     for(int i = 0; i < s_size; ++i) {
         auto coef = s_[i];
         if(coef <= 1.01) {
@@ -97,12 +98,13 @@ extern "C"    //
         } else {
             // real fft
             int id = fft_count;
+            printf("<%d>", id);
             ++fft_count;
             encode_ids[i] = id;
             decode_ids[id] = i;
         }
     }
-
+    printf("\n");
     record.s_size = s_size;
     if(record.x_dim == x_dim && record.fft_count == fft_count) {
         // well done
