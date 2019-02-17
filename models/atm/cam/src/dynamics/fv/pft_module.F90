@@ -4,6 +4,7 @@ module pft_module
 ! !MODULE: pft_module --- polar filters
 !
 ! !USES:
+
  use shr_kind_mod,   only: r8 => shr_kind_r8
  use fv_control_mod, only: fft_flt
 #include "pft2d_header.h"
@@ -309,7 +310,7 @@ CONTAINS
 ! !IROUTINE: pft_cf --- Calculate algebraic and FFT polar filters
 !
 ! !INTERFACE: 
- subroutine pft_cf(im, jm, js2g0, jn2g0, jn1g1, sc, se, dc, de, plan_idc, plan_ide    &
+ subroutine pft_cf(im, jm, js2g0, jn2g0, jn1g1, sc, se, dc, de, plan_idc, plan_ide,    &
                    cosp, cose, ycrit)
 
 ! !USES:
