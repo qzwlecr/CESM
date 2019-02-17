@@ -307,18 +307,19 @@ extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
     // log_raw(record, dev_inout);
     // assert(false);
     pft_prepare<<<s_size, x_dim>>>(dev_inout, record);
-    // log_origin(record, dev_origin); 
-    // assert(false);
 
-    ED << cufftExecD2Z(record.fwd_plan, dev_origin, dev_freq);
+    // ED << cufftExecD2Z(record.fwd_plan, dev_origin, dev_freq);
 
-    thrust::transform(thrust::system::cuda::par,
-                      (double*)dev_freq,                              //
-                      (double*)dev_freq + fft_count * (x_dim + 2),    //
-                      dev_damp,                                       //
-                      (double*)dev_freq,                              //
-                      [] __device__(double a, double b) { return a * b / 144.0; });
-    ED << cufftExecZ2D(record.bck_plan, dev_freq, dev_origin);
+
+    // thrust::transform(thrust::system::cuda::par,
+    //                   (double*)dev_freq,                              //
+    //                   (double*)dev_freq + fft_count * (x_dim + 2),    //
+    //                   dev_damp,                                       //
+    //                   (double*)dev_freq,                              //
+    //                   [] __device__(double a, double b) { return a / 144.0; });
+    // // log_freq(record, (double*)dev_freq); 
+    // // assert(false);
+    // ED << cufftExecZ2D(record.bck_plan, dev_freq, dev_origin);
     pft_finish<<<s_size, x_dim>>>(dev_inout, record);
     ED << cudaMemcpy(p_inout_, dev_inout, sizeof(double) * s_size * x_dim,
                      cudaMemcpyDeviceToHost);
