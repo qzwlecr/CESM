@@ -6,7 +6,7 @@ module sw_core
 ! !USES:
   use dynamics_vars, only: T_FVDYCORE_GRID
   use shr_kind_mod, only : r8 => shr_kind_r8
-  #include "pft_plan.h"
+  include "pft_plan.h"
 
 #ifdef NO_R16
    integer,parameter :: r16= selected_real_kind(12) ! 8 byte real
@@ -905,11 +905,11 @@ contains
 #if defined(FILTER_MASS_FLUXES)
 !    call pft2d( xfx(1,js2g0), sc, dc, im, jn2g0-js2g0+1, &
                     ! v2, u2 )
-   call pft2d(xfx(1,js2g0), plan_c)
+   call cuda_pft2d(xfx(1,js2g0), plan_c)
 
 !    call pft2d(yfx(1,js2g0), se, de, im, jn1g1-js2g0+1, &
 !                     v2, u2 )
-   call pft2d(yfx(1,js2g0), plan_e)
+   call cuda_pft2d(yfx(1,js2g0), plan_e)
 #if defined(INNER_OMP)
 !$omp parallel do default(shared) private(j,i)
 #endif
@@ -1118,11 +1118,13 @@ contains
      !
      ! filter velocity components for stability
      !
-     call pft2d(u(1,js2gd), grid%sediv4, grid%dediv4, im, jn1gs-js2gd+1, &
-          wkdiv4, wk2div4 )
+    !  call pft2d(u(1,js2gd), grid%sediv4, grid%dediv4, im, jn1gs-js2gd+1, &
+    !       wkdiv4, wk2div4 )
+     call cuda_pft2d(u(1,js2gd), plan_e_div4)
     
-     call pft2d(v(1,js2gs), grid%scdiv4, grid%dcdiv4, im, jn2gd-js2gs+1, &
-          wkdiv4, wk2div4 )
+    !  call pft2d(v(1,js2gs), grid%scdiv4, grid%dcdiv4, im, jn2gd-js2gs+1, &
+    !       wkdiv4, wk2div4 )
+     call cuda_pft2d(v(1,js2gs), plan_c_div4)
 
 
     !**************************************************************************

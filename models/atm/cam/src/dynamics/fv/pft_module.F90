@@ -7,7 +7,6 @@ module pft_module
 
  use shr_kind_mod,   only: r8 => shr_kind_r8
  use fv_control_mod, only: fft_flt
-#include "pft2d_header.h"
 
 #ifdef NO_R16
    integer,parameter :: r16= selected_real_kind(12) ! 8 byte real
