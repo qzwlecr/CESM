@@ -127,8 +127,8 @@ extern "C"    //
         record.dev_freq = cuda_alloc<cufftDoubleComplex>(fft_count * (x_dim + 2) / 2);
         record.dev_inout = cuda_alloc<double>(s_size * x_dim);
 
-        cufftPlan1d(&record.fwd_plan, x_dim, CUFFT_R2C, fft_count);
-        cufftPlan1d(&record.bck_plan, x_dim, CUFFT_C2R, fft_count);
+        cufftPlan1d(&record.fwd_plan, x_dim, CUFFT_D2Z, fft_count);
+        cufftPlan1d(&record.bck_plan, x_dim, CUFFT_Z2D, fft_count);
     }
     double placeholder[4] = {1.0, 1.0, 1.0, 1.0};
     for(int id = 0; id < fft_count; id++) {
@@ -141,7 +141,7 @@ extern "C"    //
         cudaMemcpy(dev_damp_ptr + 4, host_damp_ptr + 2, sizeof(double) * (x_dim - 2),
                    cudaMemcpyHostToDevice);
     }
-    cudaMemcpyToSymbol(dev_pft_records, pft_records + plan_id, sizeof(PftRecord),
+    cudaMemcpyToSymbol(dev_pft_records, &record, sizeof(PftRecord),
                        sizeof(PftRecord) * plan_id);
 }
 
@@ -187,11 +187,11 @@ __global__ void pft_finish(double* __restrict__ p_inout, int plan_id) {
 }
 
 extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim]
-                            int* plan_id_, //
+                            int* plan_id_,       //
                             // raw datas
-                            double* xxx_s, double* xxx_d, //
-                            int* xxx_im, int* xxx_jp//
-                            ) {
+                            double* xxx_s, double* xxx_d,    //
+                            int* xxx_im, int* xxx_jp         //
+) {
     int plan_id = *plan_id_;
     auto& record = pft_records[plan_id];
     int s_size = record.s_size;
@@ -201,11 +201,15 @@ extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
     auto* dev_origin = record.dev_origin;
     auto* dev_freq = record.dev_freq;
     auto* dev_inout = record.dev_inout;
-    assert(*xxx_im == x_dim);
-    assert(*xxx_jp == s_size);
-    double wtf = xxx_s[14] - 1.0 / record.s_rev[14];
-    assert((float)(wtf) == (float)0.0);
-    // what about d?  
+    if(true){ // tester
+        assert(*xxx_im == x_dim);
+        assert(*xxx_jp == s_size);
+        double wtf = xxx_s[14] - 1.0 / record.s_rev[14];
+        assert((float)(wtf) == (float)0.0);
+        // double the_fuck[146];
+        
+    }
+    // what about d?
     cudaMemcpy(dev_inout, p_inout_, sizeof(double) * s_size * x_dim,
                cudaMemcpyHostToDevice);
     // may change to benifit the hardware
