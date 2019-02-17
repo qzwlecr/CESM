@@ -903,10 +903,13 @@ contains
                 cosp, 0, jfirst, jlast)
 
 #if defined(FILTER_MASS_FLUXES)
-   call pft2d( xfx(1,js2g0), sc, dc, im, jn2g0-js2g0+1, &
-                    v2, u2 )
-   call pft2d( yfx(1,js2g0), se, de, im, jn1g1-js2g0+1, &
-                    v2, u2 )
+!    call pft2d( xfx(1,js2g0), sc, dc, im, jn2g0-js2g0+1, &
+                    ! v2, u2 )
+   call pft2d(xfx(1,js2g0), plan_c)
+
+!    call pft2d(yfx(1,js2g0), se, de, im, jn1g1-js2g0+1, &
+!                     v2, u2 )
+   call pft2d(yfx(1,js2g0), plan_e)
 #if defined(INNER_OMP)
 !$omp parallel do default(shared) private(j,i)
 #endif
