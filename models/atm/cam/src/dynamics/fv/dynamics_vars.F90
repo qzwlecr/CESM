@@ -684,12 +684,14 @@ subroutine dynpkg_init( pi, ae, om, dt, im, jm, jord, grid )
 
       call pft_cf(im, jm, js2g0, jn2g0, jn1g1, &
                   grid%sc, grid%se, grid%dc, grid%de,  &
+                  grid%plan_dsc, grid%plan_dse, &
                   grid%cosp, grid%cose, ycrit)
 
       !for filtering of u and v in div4 damping 
       !(needs larger halo than cam3.5 code)
       call pft_cf(im, jm, js2gs, jn2gd, jn1gs,                             & 
                   grid%scdiv4, grid%sediv4, grid%dcdiv4, grid%dediv4,      & 
+                  grid%plan_dscdiv4,  grid%plan_desdiv4,  
                   grid%cosp, grid%cose, ycrit)                               
 
 

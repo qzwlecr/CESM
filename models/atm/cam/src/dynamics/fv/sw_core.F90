@@ -335,6 +335,7 @@ contains
               xfx, yfx, cosp, 1, jfirst, jlast)
 
 ! use wk4, crx as work arrays
+! dog todo
      call pft2d(ptk(1,js2g0), sc,   &
                 dc, im, jn2g0-js2g0+1,  &
                 wk4, crx )

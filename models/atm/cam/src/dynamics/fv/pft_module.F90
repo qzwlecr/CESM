@@ -4,9 +4,9 @@ module pft_module
 ! !MODULE: pft_module --- polar filters
 !
 ! !USES:
-
  use shr_kind_mod,   only: r8 => shr_kind_r8
  use fv_control_mod, only: fft_flt
+#include "pft2d_header.h"
 
 #ifdef NO_R16
    integer,parameter :: r16= selected_real_kind(12) ! 8 byte real
@@ -309,7 +309,7 @@ CONTAINS
 ! !IROUTINE: pft_cf --- Calculate algebraic and FFT polar filters
 !
 ! !INTERFACE: 
- subroutine pft_cf(im, jm, js2g0, jn2g0, jn1g1, sc, se, dc, de,          &
+ subroutine pft_cf(im, jm, js2g0, jn2g0, jn1g1, sc, se, dc, de, plan_idc, plan_ide    &
                    cosp, cose, ycrit)
 
 ! !USES:
@@ -324,6 +324,8 @@ CONTAINS
       real (r8)   cosp(jm)            ! cosine array
       real (r8)   cose(jm)            ! cosine array
       real (r8)   ycrit               ! critical value
+      integer plan_idc                ! out: plan_id at cuda
+      integer plan_ide                ! out: plan_id at cuda 
 
 ! !OUTPUT PARAMETERS:
       real (r8)   sc(js2g0:jn2g0)     ! Algebric filter at center
@@ -397,6 +399,7 @@ CONTAINS
           endif
          endif
       enddo
+      call cuda_pft_cf_record(plan_idc, sc, js2g0, jn2g0, dc, im, fft_flt)
 
 !************
 ! Cell edges
@@ -421,6 +424,7 @@ CONTAINS
           endif
          endif
       enddo
+      call cuda_pft_cf_record(plan_ide, se, js2g0, jn1g1, de, im, fft_flt)
       return
 !EOC
  end subroutine pft_cf

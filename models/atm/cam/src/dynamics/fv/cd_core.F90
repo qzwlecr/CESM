@@ -1160,7 +1160,7 @@
          call geopk_d(grid, pe, delp, pkcc, wzc, hs, pt, &
                       ng_d, cp, akap)
       endif
-
+      jlast
 !
 ! Geopk does not need j ghost zones of pkc and wz
 !
@@ -1552,6 +1552,7 @@
          call pft2d( wk3(1,js2g0), grid%se,        &
                      grid%de, im, jlast-js2g0+1,       &
                      wk, wk2 )
+        
          call pft2d( wk1(1,js2g0), grid%sc,        &
                      grid%dc, im, jn2g0-js2g0+1,       &
                      wk, wk2 )
