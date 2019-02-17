@@ -38,9 +38,10 @@ void inline qmmr_hPa_cpp_(double t, double p, double *es_out, double *qm){
     double tmp=(-7.90298*(tboil/t-1.0)+ \
       5.02808*log10(tboil/t)- \
       0.00000013816*(exp10(11.344*(1.0-t/tboil))-1.0)+\
-      0.0081328*(exp10(-3.49149*(tboil/t-1.0))-1.0));
-
-    double es=exp10(tmp)*101324.6;;//exp10(tmp)*100.0;
+      0.0081328*(exp10(-3.49149*(tboil/t-1.0))-1.0)+\
+      log10(1013.246));
+  // printf("the tmp ios %f",tmp);
+    double es=exp10(tmp)*100.0;;//exp10(tmp)*100.0;
 
   if ( (p - es) < DBL_MIN )
      *qm = DBL_MAX;
