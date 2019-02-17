@@ -18,7 +18,6 @@
 using namespace std::chrono;
 #define DOG_BUGGY 1
 
-
 class ErrorDetect {
   public:
     ErrorDetect(int line) : line(line) {}
@@ -128,13 +127,13 @@ extern "C"    //
             decode_ids[id] = i;
         }
     }
-    if(DOG_BUGGY){
+    if(DOG_BUGGY) {
         printf("\nplan<%d>\n", plan_id);
-        for(int i = 0; i < fft_count; ++i){
+        for(int i = 0; i < fft_count; ++i) {
             printf("$%d ", decode_ids[i]);
         }
         printf("\n");
-        for(int i = 0; i < s_size; ++i){
+        for(int i = 0; i < s_size; ++i) {
             printf("#%d ", encode_ids[i]);
         }
         printf("\n");
@@ -218,6 +217,26 @@ __global__ void pft_finish(double* __restrict__ p_inout, PftRecord record) {
         dest[x_id] = src[x_id];
     }
 }
+void log_freq(PftRecord& record, double* arr) {
+    int stride = record.x_dim + 2;
+    for(int i = 0; i < 1; ++i) {
+        for(int j = 0; j < stride; ++j) {
+            printf("%.6lf\t", arr[i * stride + j]);
+        }
+        printf("\n");
+    }
+}
+
+void log_origin(PftRecord& record, double* arr) {
+    int stride = record.x_dim;
+    for(int i = 0; i < 1; ++i) {
+        int id = record.encode_ids[i];
+        for(int j = 0; j < stride; ++j) {
+            printf("%.6lf\t", arr[id * stride + j]);
+        }
+        printf("\n");
+    }
+}
 
 extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim]
                             int* plan_id_,       //
@@ -265,6 +284,7 @@ extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
     // may change to benifit the hardware
     pft_prepare<<<s_size, x_dim>>>(dev_inout, record);
     ED << cufftExecD2Z(record.fwd_plan, dev_origin, dev_freq);
+
     thrust::transform(thrust::system::cuda::par,
                       (double*)dev_freq,                              //
                       (double*)dev_freq + fft_count * (x_dim + 2),    //
@@ -275,14 +295,9 @@ extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
     pft_finish<<<s_size, x_dim>>>(dev_inout, record);
     ED << cudaMemcpy(p_inout_, dev_inout, sizeof(double) * s_size * x_dim,
                      cudaMemcpyDeviceToHost);
-    if(DOG_BUGGY && false) {
+    if(DOG_BUGGY || true) {
         printf("\n{{final_data\n");
-        for(int i = 0; i < 3; ++i) {
-            for(int j = 0; j < x_dim; ++j) {
-                printf("%.6lf\t", p_inout_[i * x_dim + j]);
-            }
-            printf("\n");
-        }
+
         printf("}}\n");
         fflush(stdout);
         assert(false);
