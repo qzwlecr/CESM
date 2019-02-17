@@ -90,10 +90,8 @@ struct PftRecord {
 thread_local PftRecord pft_records[4] = {};
 // static __constant__ PftRecord dev_pft_records[4];
 
-extern "C"    //
-    void
-    cuda_pft_cf_record_(int* plan_id_, double* s_, int* s_beg_, int* s_end_,
-                        double* damp_, int* im_, int* fft_flt_) {
+extern "C" void cuda_pft_cf_record_(int* plan_id_, double* s_, int* s_beg_, int* s_end_,
+                                    double* damp_, int* im_, int* fft_flt_) {
     // initalize this region for further call
     int plan_id = *plan_id_;
     assert(plan_id >= 0 && plan_id < 4);
@@ -105,7 +103,6 @@ extern "C"    //
     auto* decode_ids = record.decode_ids;
 
     int fft_count = 0;
-
     bool force_fft = (bool)*fft_flt_;
     for(int i = 0; i < s_size; ++i) {
         auto coef = s_[i];
@@ -124,18 +121,6 @@ extern "C"    //
             encode_ids[i] = id;
             decode_ids[id] = i;
         }
-    }
-    if(DOG_BUGGY) {
-        printf("\nplan<%d>\n", plan_id);
-        for(int i = 0; i < fft_count; ++i) {
-            printf("$%d ", decode_ids[i]);
-        }
-        printf("\n");
-        for(int i = 0; i < s_size; ++i) {
-            printf("#%d ", encode_ids[i]);
-        }
-        printf("\n");
-        fflush(stdout);
     }
     record.s_size = s_size;
     if(record.x_dim == x_dim && record.fft_count == fft_count) {
@@ -219,48 +204,46 @@ __global__ void pft_finish(double* __restrict__ p_inout, PftRecord record) {
     }
 }
 
-void log_freq(PftRecord& record, double* arr_) {
-    int stride = record.x_dim + 2;
-    for(int i = 0; i < 1; ++i) {
-        std::vector<double> arr(stride);
-        cudaMemcpy(arr.data(), arr_ + i * stride, sizeof(double) * stride,
-                   cudaMemcpyDeviceToHost);
-        for(int j = 0; j < stride; ++j) {
-            printf("%.6lf\t", arr[j]);
-        }
-        printf("freq\n");
-    }
-    fflush(stdout);
-}
-
-void log_origin(PftRecord& record, double* arr_) {
-    int stride = record.x_dim;
-    for(int i = 0; i < 1; ++i) {
-        std::vector<double> arr(stride);
-        cudaMemcpy(arr.data(), arr_ + i * stride, sizeof(double) * stride,
-                   cudaMemcpyDeviceToHost);
-        for(int j = 0; j < stride; ++j) {
-            printf("%.6lf\t", arr[j]);
-        }
-        printf("origin\n");
-    }
-    fflush(stdout);
-}
-
-void log_raw(PftRecord& record, double* arr_) {
-    int stride = record.x_dim;
-    for(int i = 0; i < 1; ++i) {
-        int id = record.encode_ids[i];
-        std::vector<double> arr(stride);
-        cudaMemcpy(arr.data(), arr_ + id * stride, sizeof(double) * stride,
-                   cudaMemcpyDeviceToHost);
-        for(int j = 0; j < stride; ++j) {
-            printf("%.6lf\t", arr[j]);
-        }
-        printf("raw[%d]\n", id);
-    }
-    fflush(stdout);
-}
+// void log_freq(PftRecord& record, double* arr_) {
+//     int stride = record.x_dim + 2;
+//     for(int i = 0; i < 1; ++i) {
+//         std::vector<double> arr(stride);
+//         cudaMemcpy(arr.data(), arr_ + i * stride, sizeof(double) * stride,
+//                    cudaMemcpyDeviceToHost);
+//         for(int j = 0; j < stride; ++j) {
+//             printf("%.6lf\t", arr[j]);
+//         }
+//         printf("freq\n");
+//     }
+//     fflush(stdout);
+// }
+// void log_origin(PftRecord& record, double* arr_) {
+//     int stride = record.x_dim;
+//     for(int i = 0; i < 1; ++i) {
+//         std::vector<double> arr(stride);
+//         cudaMemcpy(arr.data(), arr_ + i * stride, sizeof(double) * stride,
+//                    cudaMemcpyDeviceToHost);
+//         for(int j = 0; j < stride; ++j) {
+//             printf("%.6lf\t", arr[j]);
+//         }
+//         printf("origin\n");
+//     }
+//     fflush(stdout);
+// }
+// void log_raw(PftRecord& record, double* arr_) {
+//     int stride = record.x_dim;
+//     for(int i = 0; i < 1; ++i) {
+//         int id = record.encode_ids[i];
+//         std::vector<double> arr(stride);
+//         cudaMemcpy(arr.data(), arr_ + id * stride, sizeof(double) * stride,
+//                    cudaMemcpyDeviceToHost);
+//         for(int j = 0; j < stride; ++j) {
+//             printf("%.6lf\t", arr[j]);
+//         }
+//         printf("raw[%d]\n", id);
+//     }
+//     fflush(stdout);
+// }
 
 extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim]
                             int* plan_id_,       //
