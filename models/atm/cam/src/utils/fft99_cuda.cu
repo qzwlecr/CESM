@@ -3,13 +3,13 @@
 //https://github.com/qzwlecr/CESM/issues/12
 #include <cufft.h>
 #include <stdio.h>
+#include <vector>
 #include <fstream>
 #include <thrust/transform.h>
 #include <thrust/functional.h>
 #include <iostream>
 #include <string>
 #include <unordered_map>
-#include <vector>
 
 #include <cuda.h>
 #include <assert.h>
@@ -164,16 +164,23 @@ extern "C"    //
         ED << cufftPlan1d(&record.fwd_plan, x_dim, CUFFT_D2Z, fft_count);
         ED << cufftPlan1d(&record.bck_plan, x_dim, CUFFT_Z2D, fft_count);
     }
-    double placeholder[4] = {1.0, 1.0, 1.0, 1.0};
+    // double placeholder[4] = {1.0, 1.0, 1.0, 1.0};
     for(int id = 0; id < fft_count; id++) {
+        std::vector<double> buffer(x_dim + 2);
         int i = decode_ids[id];
-        double* dev_damp_ptr = record.dev_damp + id * (x_dim + 2);
+        buffer[0] = buffer[1] = buffer[2] = buffer[3] = 1.0 / x_dim;
         double* host_damp_ptr = damp_ + i * x_dim;
+        for(int i = 4; i < x_dim + 2; ++i) {
+            buffer[i] = host_damp_ptr[i - 2] / x_dim;
+        }
+        double* dev_damp_ptr = record.dev_damp + id * (x_dim + 2);
         // set damp
-        ED << cudaMemcpy(dev_damp_ptr, placeholder, sizeof(placeholder),
+        // ED << cudaMemcpy(dev_damp_ptr, placeholder, sizeof(placeholder),
+        //                  cudaMemcpyHostToDevice);
+        // ED << cudaMemcpy(dev_damp_ptr + 4, host_damp_ptr + 2,
+        //                  sizeof(double) * (x_dim - 2), cudaMemcpyHostToDevice);
+        ED << cudaMemcpy(dev_damp_ptr, buffer.data(), sizeof(double) * (x_dim + 2),
                          cudaMemcpyHostToDevice);
-        ED << cudaMemcpy(dev_damp_ptr + 4, host_damp_ptr + 2,
-                         sizeof(double) * (x_dim - 2), cudaMemcpyHostToDevice);
     }
     // ED << cudaMemcpyToSymbol(dev_pft_records, pft_records, 4 * sizeof(PftRecord));
 }
@@ -189,7 +196,6 @@ __global__ void pft_prepare(double* __restrict__ p_inout, PftRecord record) {
         // do nothing
     } else if(id == -1) {
         // inplace filter
-        if(1) {
         double s_rev = record.s_rev[s_index];
         double mid = raw_p[x_id];
         double left = x_id - 1 >= 0 ? raw_p[x_id - 1] : raw_p[x_dim];
@@ -197,7 +203,6 @@ __global__ void pft_prepare(double* __restrict__ p_inout, PftRecord record) {
         double result = mid * s_rev + (1 - s_rev) * 0.5 * (left + right);
         __syncthreads();
         raw_p[x_id] = result;
-        }
     } else {
         // fft
         int fft_id = id;
@@ -221,13 +226,12 @@ __global__ void pft_finish(double* __restrict__ p_inout, PftRecord record) {
     }
 }
 
-#include <vector>
-using std::vector;
 void log_freq(PftRecord& record, double* arr_) {
     int stride = record.x_dim + 2;
     for(int i = 0; i < 1; ++i) {
-        vector<double> arr(stride);
-        cudaMemcpy(arr.data(), arr_ + i * stride, sizeof(double)*stride, cudaMemcpyDeviceToHost);
+        std::vector<double> arr(stride);
+        cudaMemcpy(arr.data(), arr_ + i * stride, sizeof(double) * stride,
+                   cudaMemcpyDeviceToHost);
         for(int j = 0; j < stride; ++j) {
             printf("%.6lf\t", arr[j]);
         }
@@ -239,8 +243,9 @@ void log_freq(PftRecord& record, double* arr_) {
 void log_origin(PftRecord& record, double* arr_) {
     int stride = record.x_dim;
     for(int i = 0; i < 1; ++i) {
-        vector<double> arr(stride);
-        cudaMemcpy(arr.data(), arr_ + i * stride, sizeof(double)*stride, cudaMemcpyDeviceToHost);
+        std::vector<double> arr(stride);
+        cudaMemcpy(arr.data(), arr_ + i * stride, sizeof(double) * stride,
+                   cudaMemcpyDeviceToHost);
         for(int j = 0; j < stride; ++j) {
             printf("%.6lf\t", arr[j]);
         }
@@ -253,8 +258,9 @@ void log_raw(PftRecord& record, double* arr_) {
     int stride = record.x_dim;
     for(int i = 0; i < 1; ++i) {
         int id = record.encode_ids[i];
-        vector<double> arr(stride);
-        cudaMemcpy(arr.data(), arr_ + id * stride, sizeof(double)*stride, cudaMemcpyDeviceToHost);
+        std::vector<double> arr(stride);
+        cudaMemcpy(arr.data(), arr_ + id * stride, sizeof(double) * stride,
+                   cudaMemcpyDeviceToHost);
         for(int j = 0; j < stride; ++j) {
             printf("%.6lf\t", arr[j]);
         }
@@ -312,13 +318,12 @@ extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
 
     ED << cufftExecD2Z(record.fwd_plan, dev_origin, dev_freq);
 
-
     thrust::transform(thrust::system::cuda::par,
                       (double*)dev_freq,                              //
                       (double*)dev_freq + fft_count * (x_dim + 2),    //
                       dev_damp,                                       //
                       (double*)dev_freq,                              //
-                      [] __device__(double a, double b) { return a * b / 144.0; });
+                      [] __device__(double a, double b) { return a * b; });
 
     ED << cufftExecZ2D(record.bck_plan, dev_freq, dev_origin);
     pft_finish<<<fft_count, x_dim>>>(dev_inout, record);
