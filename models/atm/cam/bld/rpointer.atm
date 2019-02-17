@@ -1,8 +1,9 @@
-cam5.0_port.cam.r.0000-01-03-00000.nc
+cam5.0_port.cam.r.0000-01-02-00000.nc
 
 
 # The following lists the other files needed for restarts (cam only reads the first line of this file).
-# The files below refer to the files needed for the master restart file:cam5.0_port.cam.r.0000-01-03-00000.nc
+# The files below refer to the files needed for the master restart file:cam5.0_port.cam.r.0000-01-02-00000.nc
+# h0.nc
 # 
 # 
 # 
