@@ -118,6 +118,7 @@ extern "C"    //
             encode_ids[i] = -2;
         } else if(!force_fft && coef <= 4.0) {
             // shortcut
+            assert(false);
             encode_ids[i] = -1;
         } else {
             // real fft
@@ -188,6 +189,7 @@ __global__ void pft_prepare(double* __restrict__ p_inout, PftRecord record) {
         // do nothing
     } else if(id == -1) {
         // inplace filter
+        if(1) {
         double s_rev = record.s_rev[s_index];
         double mid = raw_p[x_id];
         double left = x_id - 1 >= 0 ? raw_p[x_id - 1] : raw_p[x_dim];
@@ -195,6 +197,7 @@ __global__ void pft_prepare(double* __restrict__ p_inout, PftRecord record) {
         double result = mid * s_rev + (1 - s_rev) * 0.5 * (left + right);
         __syncthreads();
         raw_p[x_id] = result;
+        }
     } else {
         // fft
         int fft_id = id;
@@ -305,21 +308,20 @@ extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
                      cudaMemcpyHostToDevice);
     // may change to benifit the hardware
     /// the bug??
-    // pft_prepare<<<s_size, x_dim>>>(dev_inout, record);
+    pft_prepare<<<s_size, x_dim>>>(dev_inout, record);
 
-    // // ED << cufftExecD2Z(record.fwd_plan, dev_origin, dev_freq);
+    ED << cufftExecD2Z(record.fwd_plan, dev_origin, dev_freq);
 
 
-    // // thrust::transform(thrust::system::cuda::par,
-    // //                   (double*)dev_freq,                              //
-    // //                   (double*)dev_freq + fft_count * (x_dim + 2),    //
-    // //                   dev_damp,                                       //
-    // //                   (double*)dev_freq,                              //
-    // //                   [] __device__(double a, double b) { return a / 144.0; });
-    // // // log_freq(record, (double*)dev_freq); 
-    // // // assert(false);
-    // // ED << cufftExecZ2D(record.bck_plan, dev_freq, dev_origin);
-    // pft_finish<<<s_size, x_dim>>>(dev_inout, record);
+    thrust::transform(thrust::system::cuda::par,
+                      (double*)dev_freq,                              //
+                      (double*)dev_freq + fft_count * (x_dim + 2),    //
+                      dev_damp,                                       //
+                      (double*)dev_freq,                              //
+                      [] __device__(double a, double b) { return a * b / 144.0; });
+
+    ED << cufftExecZ2D(record.bck_plan, dev_freq, dev_origin);
+    pft_finish<<<fft_count, x_dim>>>(dev_inout, record);
     ED << cudaMemcpy(p_inout_, dev_inout, sizeof(double) * s_size * x_dim,
                      cudaMemcpyDeviceToHost);
     if(DOG_BUGGY) {

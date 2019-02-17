@@ -341,9 +341,9 @@ contains
                  wk4, crx )
 
 
-     call pft2d(ptk(1,js2g0), sc,   &
-                dc, im, jn2g0-js2g0+1,  &
-                wk4, crx )
+    !  call pft2d(ptk(1,js2g0), sc,   &
+    !             dc, im, jn2g0-js2g0+1,  &
+    !             wk4, crx )
 
 
      call pft2d(tm2(1,js2g0), sc,   &
