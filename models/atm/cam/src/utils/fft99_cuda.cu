@@ -16,7 +16,6 @@
 #include <chrono>
 using namespace std::chrono;
 
-
 extern "C" void needle_(                      //
     double* a_,                               // inout, elements[lot][N+2]
     int* batch_size_, int* batch_distance_    // distance
@@ -35,7 +34,8 @@ extern "C" void needle_(                      //
 
 template <typename T, bool is_managed = false>
 T* cuda_alloc(int size) {
-    int bytes = sizeof(T) * size : T * tmp;
+    int bytes = sizeof(T) * size;
+    T* tmp;
     if(is_managed) {
         cudaMallocManaged(&tmp, bytes);
     } else {
@@ -78,7 +78,6 @@ extern "C"    //
     int s_size = *s_end_ - *s_beg_ + 1;
     assert(s_size < MAX_S_SIZE);
     int x_dim = *im_;
-    auto dev_record_ptr = &dev_pft_records[plan_id];
     auto& record = pft_records[plan_id];
     auto* encode_ids = record.encode_ids;
     auto* decode_ids = record.decode_ids;
@@ -131,10 +130,12 @@ extern "C"    //
     double placeholder[4] = {1.0, 1.0, 1.0, 1.0};
     for(int id = 0; id < fft_count; id++) {
         int i = decode_ids[id];
-        double* ptr = record.dev_damp + id * (x_dim + 2);
+        double* dev_damp_ptr = record.dev_damp + id * (x_dim + 2);
+        double* host_damp_ptr = damp_ + i * x_dim;
         // set damp
-        cudaMemcpy(ptr, placeholder, sizeof(placeholder), cudaMemcpyHostToDevice);
-        cudaMemcpy(ptr + 4, damp_ + 2, sizeof(double) * (x_dim - 2),
+        cudaMemcpy(dev_damp_ptr, placeholder, sizeof(placeholder),
+                   cudaMemcpyHostToDevice);
+        cudaMemcpy(dev_damp_ptr + 4, host_damp_ptr + 2, sizeof(double) * (x_dim - 2),
                    cudaMemcpyHostToDevice);
     }
     cudaMemcpyToSymbol(dev_pft_records, pft_records + plan_id, sizeof(PftRecord),
@@ -170,13 +171,15 @@ __global__ void pft_prepare(double* __restrict__ p_inout, int plan_id) {
 
 __global__ void pft_finish(double* __restrict__ p_inout, int plan_id) {
     int fft_id = blockIdx.x;
-    int x_id = threadIdx.x;
     auto& record = dev_pft_records[plan_id];
     int x_dim = record.x_dim;
     int s_index = record.decode_ids[fft_id];
     double* src = record.dev_origin + fft_id * x_dim;
+    double* dest = p_inout + s_index * x_dim;
+
+    int x_id = threadIdx.x;
     if(x_id < x_dim) {
-        p_inout[x_id] = src[x_id];
+        dest[x_id] = src[x_id];
     }
 }
 
@@ -204,7 +207,7 @@ extern "C" void cuda_pft2d_(int* plan_id_,
                       (double*)dev_freq,                              //
                       [] __device__(double a, double b) { return a * b; });
     cufftExecZ2D(record.bck_plan, dev_freq, dev_origin);
-    pft_finish < <<s_size, x_dim>>(dev_inout, plan_id);
+    pft_finish<<<s_size, x_dim>>>(dev_inout, plan_id);
     cudaMemcpy(p_inout_, dev_inout, sizeof(double) * s_size * x_dim,
                cudaMemcpyDeviceToHost);
 }
