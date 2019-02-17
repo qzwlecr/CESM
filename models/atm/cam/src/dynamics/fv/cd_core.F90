@@ -28,6 +28,7 @@
    use fv_control_mod, only: div24del2flag, del2coef
    use spmd_utils,     only: masterproc
    use abortutils,     only: endrun
+   #include "pft_plan.h"
 
 #if defined( SPMD )
    use mod_comm,      only : mp_send4d_ns, mp_recv4d_ns,     &
@@ -616,9 +617,10 @@
                   delpf(i,j,k) = delp(i,j,k)
                enddo
             enddo
-            call pft2d( delpf(1,js2g0,k), grid%sc, &
-                        grid%dc, im, jn2g0-js2g0+1,    &
-                        wk, wk2 )
+            ! call pft2d( delpf(1,js2g0,k), grid%sc, &
+            !             grid%dc, im, jn2g0-js2g0+1,    &
+            !             wk, wk2 )
+            call cuda_pft2d( elpf(1,js2g0,k), plan_c)
          enddo
 #if (!defined USE_OMP) 
 !CSD$ END PARALLEL DO
@@ -680,7 +682,8 @@
 
 ! Optionally filter advecting C-grid winds
          if (filtcw .gt. 0) then
-            call pft2d(uc(1,js2g0,k), grid%sc, grid%dc, im, jn2g0-js2g0+1, wk, wk2 )
+            ! call pft2d(uc(1,js2g0,k), grid%sc, grid%dc, im, jn2g0-js2g0+1, wk, wk2 )
+            call cuda_pft2d(uc(1,js2g0,k), plan_c)
             call pft2d(vc(1,js2g0,k), grid%se, grid%de, im, jlast-js2g0+1, wk, wk2 )
          endif
 
@@ -978,9 +981,10 @@
                cx_om(i,j,k) = grid%dtdx(j)*uc(i,j,k)
             enddo
          enddo
-         call pft2d(uc(1,js2g0,k), grid%sc,       &
-                    grid%dc, im, jn2g0-js2g0+1,       &
-                    wk, wk2 )
+        !  call pft2d(uc(1,js2g0,k), grid%sc,       &
+        !             grid%dc, im, jn2g0-js2g0+1,       &
+        !             wk, wk2 )
+         call cuda_pft2d(uc(1,js2g0,k), plan_c)
          if ( jfirst == 1 ) then   ! Clean up
             do i=1,im
                uc(i,1,k) = D0_0
@@ -1359,9 +1363,11 @@
                   delpf(i,j,k) = delp(i,j,k)
                enddo
             enddo
-            call pft2d( delpf(1,js2g0,k), grid%sc, &
-                        grid%dc, im, jn2g0-js2g0+1,    &
-                        wk, wk2 )
+            ! call pft2d( delpf(1,js2g0,k), grid%sc, &
+            !             grid%dc, im, jn2g0-js2g0+1,    &
+            !             wk, wk2 )
+            call cuda_pft2d( delpf(1,js2g0,k), plan_c)
+
          enddo
 #if (!defined USE_OMP) 
 !CSD$ END PARALLEL DO
@@ -1552,10 +1558,11 @@
          call pft2d( wk3(1,js2g0), grid%se,        &
                      grid%de, im, jlast-js2g0+1,       &
                      wk, wk2 )
-         call pft2d( wk1(1,js2g0), grid%sc,        &
-                     grid%dc, im, jn2g0-js2g0+1,       &
-                     wk, wk2 )
-
+        !  call pft2d( wk1(1,js2g0), grid%sc,        &
+        !              grid%dc, im, jn2g0-js2g0+1,       &
+        !              wk, wk2 )
+         
+         call cuda_pft2d(wk1(1,js2g0), plan_c)
          do j=js2g0,jn2g0
             do i=1,im
                v(i,j,k) = v(i,j,k) + wk1(i,j)
