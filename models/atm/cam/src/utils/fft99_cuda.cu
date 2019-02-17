@@ -17,6 +17,29 @@
 #include <chrono>
 using namespace std::chrono;
 
+class ErrorDetect {
+  public:
+    ErrorDetect(int line) : line(line) {}
+    int line;
+};
+
+#define ED ErrorDetect(__LINE__)
+
+static void operator<<(const ErrorDetect& detect, cudaError_t error) {
+    if(error) {
+        fprintf(stderr, "{{{error %d at line %d}}}", (int)error, detect.line);
+        assert(false);
+    }
+    return;
+}
+static void operator<<(const ErrorDetect& detect, cufftResult_t error) {
+    if(error) {
+        fprintf(stderr, "{{{error %d at line %d}}}", (int)error, detect.line);
+        assert(false);
+    }
+    return;
+}
+
 extern "C" void needle_(                      //
     double* a_,                               // inout, elements[lot][N+2]
     int* batch_size_, int* batch_distance_    // distance
@@ -86,10 +109,8 @@ extern "C"    //
     int fft_count = 0;
 
     bool force_fft = (bool)*fft_flt_;
-    printf("{plan_id=%d}", plan_id);
     for(int i = 0; i < s_size; ++i) {
         auto coef = s_[i];
-        printf("<%ld>", coef);
         record.s_rev[i] = 1.0 / coef;
         if(coef <= 1.01) {
             // skip
@@ -105,7 +126,6 @@ extern "C"    //
             decode_ids[id] = i;
         }
     }
-    printf("\n");
     record.s_size = s_size;
     if(record.x_dim == x_dim && record.fft_count == fft_count) {
         // well done
@@ -127,8 +147,8 @@ extern "C"    //
         record.dev_freq = cuda_alloc<cufftDoubleComplex>(fft_count * (x_dim + 2) / 2);
         record.dev_inout = cuda_alloc<double>(s_size * x_dim);
 
-        cufftPlan1d(&record.fwd_plan, x_dim, CUFFT_D2Z, fft_count);
-        cufftPlan1d(&record.bck_plan, x_dim, CUFFT_Z2D, fft_count);
+        ED << cufftPlan1d(&record.fwd_plan, x_dim, CUFFT_D2Z, fft_count);
+        ED << cufftPlan1d(&record.bck_plan, x_dim, CUFFT_Z2D, fft_count);
     }
     double placeholder[4] = {1.0, 1.0, 1.0, 1.0};
     for(int id = 0; id < fft_count; id++) {
@@ -136,13 +156,12 @@ extern "C"    //
         double* dev_damp_ptr = record.dev_damp + id * (x_dim + 2);
         double* host_damp_ptr = damp_ + i * x_dim;
         // set damp
-        cudaMemcpy(dev_damp_ptr, placeholder, sizeof(placeholder),
-                   cudaMemcpyHostToDevice);
-        cudaMemcpy(dev_damp_ptr + 4, host_damp_ptr + 2, sizeof(double) * (x_dim - 2),
-                   cudaMemcpyHostToDevice);
+        ED << cudaMemcpy(dev_damp_ptr, placeholder, sizeof(placeholder),
+                         cudaMemcpyHostToDevice);
+        ED << cudaMemcpy(dev_damp_ptr + 4, host_damp_ptr + 2,
+                         sizeof(double) * (x_dim - 2), cudaMemcpyHostToDevice);
     }
-    cudaMemcpyToSymbol(dev_pft_records, &record, sizeof(PftRecord),
-                       sizeof(PftRecord) * plan_id);
+    ED << cudaMemcpyToSymbol(dev_pft_records, pft_records, 4 * sizeof(PftRecord));
 }
 
 __global__ void pft_prepare(double* __restrict__ p_inout, int plan_id) {
@@ -194,6 +213,11 @@ extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
 ) {
     int plan_id = *plan_id_;
     auto& record = pft_records[plan_id];
+    if(false) {
+        PftRecord mirror;
+        cudaMemcpyFromSymbol(&mirror, dev_pft_records, sizeof(PftRecord));
+        record = mirror;
+    }
     int s_size = record.s_size;
     int x_dim = record.x_dim;
     assert(x_dim == 144);
@@ -202,7 +226,7 @@ extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
     auto* dev_origin = record.dev_origin;
     auto* dev_freq = record.dev_freq;
     auto* dev_inout = record.dev_inout;
-    if(true) {    // tester
+    if(false) {    // tester
         assert(*xxx_im == x_dim);
         assert(*xxx_jp == s_size);
         double wtf = xxx_s[14] - 1.0 / record.s_rev[14];
@@ -210,10 +234,8 @@ extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
         double the_fuck[146];
         int id = 14;
         int index = record.decode_ids[id];
-        // TODO
-        printf("{index=%d}", index);
-        cudaMemcpy(the_fuck, dev_damp + id * (x_dim + 2), sizeof(double) * (x_dim + 2),
-                   cudaMemcpyDeviceToHost);
+        ED << cudaMemcpy(the_fuck, dev_damp + id * (x_dim + 2),
+                         sizeof(double) * (x_dim + 2), cudaMemcpyDeviceToHost);
         double* ref = xxx_d + index * x_dim;
         for(int i = 4; i < 146; ++i) {
             assert(ref[i - 2] == the_fuck[i]);
@@ -224,19 +246,31 @@ extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
         assert(the_fuck[3] == 1.0);
     }
     // what about d?
-    cudaMemcpy(dev_inout, p_inout_, sizeof(double) * s_size * x_dim,
-               cudaMemcpyHostToDevice);
+    ED << cudaMemcpy(dev_inout, p_inout_, sizeof(double) * s_size * x_dim,
+                     cudaMemcpyHostToDevice);
     // may change to benifit the hardware
     pft_prepare<<<s_size, x_dim>>>(dev_inout, plan_id);
-    cufftExecD2Z(record.fwd_plan, dev_origin, dev_freq);
+    ED << cufftExecD2Z(record.fwd_plan, dev_origin, dev_freq);
     thrust::transform(thrust::system::cuda::par,
                       (double*)dev_freq,                              //
                       (double*)dev_freq + fft_count * (x_dim + 2),    //
                       dev_damp,                                       //
                       (double*)dev_freq,                              //
                       [] __device__(double a, double b) { return a * b / 144.0; });
-    cufftExecZ2D(record.bck_plan, dev_freq, dev_origin);
+    ED << cufftExecZ2D(record.bck_plan, dev_freq, dev_origin);
     pft_finish<<<s_size, x_dim>>>(dev_inout, plan_id);
-    cudaMemcpy(p_inout_, dev_inout, sizeof(double) * s_size * x_dim,
-               cudaMemcpyDeviceToHost);
+    ED << cudaMemcpy(p_inout_, dev_inout, sizeof(double) * s_size * x_dim,
+                     cudaMemcpyDeviceToHost);
+    if(false) {
+        printf("\n{{final_data\n");
+        for(int i = 0; i < 3; ++i) {
+            for(int j = 0; j < x_dim; ++j) {
+                printf("%.6lf\t", p_inout_[i * x_dim + j]);
+            }
+            printf("\n");
+        }
+        printf("}}\n");
+        fflush(stdout);
+        assert(false);
+    }
 }
