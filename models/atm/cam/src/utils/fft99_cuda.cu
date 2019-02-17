@@ -75,6 +75,7 @@ constexpr int MAX_S_SIZE = 128 + 16;
 struct PftRecord {
     // here is the wtf
     int s_size;
+    int s_offset;
     int x_dim;
     double s_rev[MAX_S_SIZE];
     int fft_count;
@@ -88,7 +89,7 @@ struct PftRecord {
 };
 
 thread_local PftRecord pft_records[4] = {};
-// static __constant__ PftRecord dev_pft_records[4];
+static __constant__ PftRecord dev_pft_records[4];
 
 extern "C" void cuda_pft_cf_record_(int* plan_id_, double* s_, int* s_beg_, int* s_end_,
                                     double* damp_, int* im_, int* fft_flt_) {
@@ -104,25 +105,42 @@ extern "C" void cuda_pft_cf_record_(int* plan_id_, double* s_, int* s_beg_, int*
 
     int fft_count = 0;
     bool force_fft = (bool)*fft_flt_;
+    int s_beg = 0;
+    int s_end = 0;
     for(int i = 0; i < s_size; ++i) {
         auto coef = s_[i];
         record.s_rev[i] = 1.0 / coef;
         if(coef <= 1.01) {
             // skip
-            encode_ids[i] = -2;
+            if(s_beg == i) {
+                assert(s_beg == s_end);
+                s_beg += 1;
+                s_end += 1;
+            } else {
+                encode_ids[i - s_beg] = -2;
+            }
         } else if(!force_fft && coef <= 4.0) {
             // shortcut
             assert(false);
-            encode_ids[i] = -1;
+            encode_ids[i - s_beg] = -1;
+            s_end = i + 1;
         } else {
             // real fft
             int id = fft_count;
             ++fft_count;
-            encode_ids[i] = id;
-            decode_ids[id] = i;
+            encode_ids[i - s_beg] = id;
+            decode_ids[id] = i - s_beg;
+            s_end = i + 1;
         }
     }
+
+    s_size = s_end - s_beg;
     record.s_size = s_size;
+    int s_offset = s_beg * x_dim;
+    record.s_offset = s_offset;
+    s_ += s_offset;
+    damp_ += s_offset; 
+
     if(record.x_dim == x_dim && record.fft_count == fft_count) {
         // well done
         // do nothing
@@ -160,13 +178,14 @@ extern "C" void cuda_pft_cf_record_(int* plan_id_, double* s_, int* s_beg_, int*
         ED << cudaMemcpy(dev_damp_ptr, buffer.data(), sizeof(double) * (x_dim + 2),
                          cudaMemcpyHostToDevice);
     }
-    // ED << cudaMemcpyToSymbol(dev_pft_records, pft_records, 4 * sizeof(PftRecord));
+    // todo: opt it
+    ED << cudaMemcpyToSymbol(dev_pft_records, pft_records, 4 * sizeof(PftRecord));
 }
 
-__global__ void pft_prepare(double* __restrict__ p_inout, PftRecord record) {
+__global__ void pft_prepare(double* __restrict__ p_inout, int plan_id) {
     int s_index = blockIdx.x;
     int x_id = threadIdx.x;
-    // auto& record = dev_pft_records[plan_id];
+    auto& record = dev_pft_records[plan_id];
     int x_dim = record.x_dim;
     int id = record.encode_ids[s_index];
     double* raw_p = p_inout + s_index * x_dim;
@@ -190,9 +209,9 @@ __global__ void pft_prepare(double* __restrict__ p_inout, PftRecord record) {
     }
 }
 
-__global__ void pft_finish(double* __restrict__ p_inout, PftRecord record) {
+__global__ void pft_finish(double* __restrict__ p_inout, int plan_id) {
     int fft_id = blockIdx.x;
-    // auto& record = dev_pft_records[plan_id];
+    auto& record = dev_pft_records[plan_id];
     int x_dim = record.x_dim;
     int s_index = record.decode_ids[fft_id];
     double* src = record.dev_origin + fft_id * x_dim;
@@ -258,9 +277,11 @@ extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
     auto* dev_origin = record.dev_origin;
     auto* dev_freq = record.dev_freq;
     auto* dev_inout = record.dev_inout;
+    auto s_offset = record.s_offset;
+    p_inout_ += s_offset;
     ED << cudaMemcpy(dev_inout, p_inout_, sizeof(double) * s_size * x_dim,
                      cudaMemcpyHostToDevice);
-    pft_prepare<<<s_size, x_dim>>>(dev_inout, record);
+    pft_prepare<<<s_size, x_dim>>>(dev_inout, plan_id);
 
     ED << cufftExecD2Z(record.fwd_plan, dev_origin, dev_freq);
 
@@ -272,7 +293,7 @@ extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
                       [] __device__(double a, double b) { return a * b; });
 
     ED << cufftExecZ2D(record.bck_plan, dev_freq, dev_origin);
-    pft_finish<<<fft_count, x_dim>>>(dev_inout, record);
+    pft_finish<<<fft_count, x_dim>>>(dev_inout, plan_id);
     ED << cudaMemcpy(p_inout_, dev_inout, sizeof(double) * s_size * x_dim,
                      cudaMemcpyDeviceToHost);
 }
