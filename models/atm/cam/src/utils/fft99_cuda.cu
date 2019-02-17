@@ -16,6 +16,8 @@
 #include <cuda_runtime_api.h>
 #include <chrono>
 using namespace std::chrono;
+#define DOG_BUGGY 1
+
 
 class ErrorDetect {
   public:
@@ -89,8 +91,8 @@ struct PftRecord {
     double* dev_inout;               // of s_size * x_dim
 };
 
-static PftRecord pft_records[4] = {};
-static __constant__ PftRecord dev_pft_records[4];
+thread_local PftRecord pft_records[4] = {};
+// static __constant__ PftRecord dev_pft_records[4];
 
 extern "C"    //
     void
@@ -125,6 +127,18 @@ extern "C"    //
             encode_ids[i] = id;
             decode_ids[id] = i;
         }
+    }
+    if(DOG_BUGGY){
+        printf("\nplan<%d>\n", plan_id);
+        for(int i = 0; i < fft_count; ++i){
+            printf("$%d ", decode_ids[i]);
+        }
+        printf("\n");
+        for(int i = 0; i < s_size; ++i){
+            printf("#%d ", encode_ids[i]);
+        }
+        printf("\n");
+        fflush(stdout);
     }
     record.s_size = s_size;
     if(record.x_dim == x_dim && record.fft_count == fft_count) {
@@ -161,13 +175,13 @@ extern "C"    //
         ED << cudaMemcpy(dev_damp_ptr + 4, host_damp_ptr + 2,
                          sizeof(double) * (x_dim - 2), cudaMemcpyHostToDevice);
     }
-    ED << cudaMemcpyToSymbol(dev_pft_records, pft_records, 4 * sizeof(PftRecord));
+    // ED << cudaMemcpyToSymbol(dev_pft_records, pft_records, 4 * sizeof(PftRecord));
 }
 
-__global__ void pft_prepare(double* __restrict__ p_inout, int plan_id) {
+__global__ void pft_prepare(double* __restrict__ p_inout, PftRecord record) {
     int s_index = blockIdx.x;
     int x_id = threadIdx.x;
-    auto& record = dev_pft_records[plan_id];
+    // auto& record = dev_pft_records[plan_id];
     int x_dim = record.x_dim;
     int id = record.encode_ids[s_index];
     double* raw_p = p_inout + s_index * x_dim;
@@ -191,9 +205,9 @@ __global__ void pft_prepare(double* __restrict__ p_inout, int plan_id) {
     }
 }
 
-__global__ void pft_finish(double* __restrict__ p_inout, int plan_id) {
+__global__ void pft_finish(double* __restrict__ p_inout, PftRecord record) {
     int fft_id = blockIdx.x;
-    auto& record = dev_pft_records[plan_id];
+    // auto& record = dev_pft_records[plan_id];
     int x_dim = record.x_dim;
     int s_index = record.decode_ids[fft_id];
     double* src = record.dev_origin + fft_id * x_dim;
@@ -213,10 +227,10 @@ extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
 ) {
     int plan_id = *plan_id_;
     auto& record = pft_records[plan_id];
-    if(false) {
-        PftRecord mirror;
-        cudaMemcpyFromSymbol(&mirror, dev_pft_records, sizeof(PftRecord));
-        record = mirror;
+    if(DOG_BUGGY) {
+        // PftRecord mirror;
+        // cudaMemcpyFromSymbol(&mirror, dev_pft_records, sizeof(PftRecord));
+        // record = mirror;
     }
     int s_size = record.s_size;
     int x_dim = record.x_dim;
@@ -226,7 +240,7 @@ extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
     auto* dev_origin = record.dev_origin;
     auto* dev_freq = record.dev_freq;
     auto* dev_inout = record.dev_inout;
-    if(false) {    // tester
+    if(DOG_BUGGY) {    // tester
         assert(*xxx_im == x_dim);
         assert(*xxx_jp == s_size);
         double wtf = xxx_s[14] - 1.0 / record.s_rev[14];
@@ -249,7 +263,7 @@ extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
     ED << cudaMemcpy(dev_inout, p_inout_, sizeof(double) * s_size * x_dim,
                      cudaMemcpyHostToDevice);
     // may change to benifit the hardware
-    pft_prepare<<<s_size, x_dim>>>(dev_inout, plan_id);
+    pft_prepare<<<s_size, x_dim>>>(dev_inout, record);
     ED << cufftExecD2Z(record.fwd_plan, dev_origin, dev_freq);
     thrust::transform(thrust::system::cuda::par,
                       (double*)dev_freq,                              //
@@ -258,10 +272,10 @@ extern "C" void cuda_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
                       (double*)dev_freq,                              //
                       [] __device__(double a, double b) { return a * b / 144.0; });
     ED << cufftExecZ2D(record.bck_plan, dev_freq, dev_origin);
-    pft_finish<<<s_size, x_dim>>>(dev_inout, plan_id);
+    pft_finish<<<s_size, x_dim>>>(dev_inout, record);
     ED << cudaMemcpy(p_inout_, dev_inout, sizeof(double) * s_size * x_dim,
                      cudaMemcpyDeviceToHost);
-    if(false) {
+    if(DOG_BUGGY && false) {
         printf("\n{{final_data\n");
         for(int i = 0; i < 3; ++i) {
             for(int j = 0; j < x_dim; ++j) {
