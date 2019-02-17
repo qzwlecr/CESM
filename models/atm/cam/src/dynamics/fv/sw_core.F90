@@ -5,8 +5,8 @@ module sw_core
 !
 ! !USES:
   use dynamics_vars, only: T_FVDYCORE_GRID
-    
   use shr_kind_mod, only : r8 => shr_kind_r8
+  #include "pft_plan.h"
 
 #ifdef NO_R16
    integer,parameter :: r16= selected_real_kind(12) ! 8 byte real
@@ -337,12 +337,10 @@ contains
 
 ! use wk4, crx as work arrays
 ! dog todo
-     call cuda_pft2d(ptk(1, js2g0), 0)
-
-
-    !  call pft2d(ptk(1,js2g0), sc,   &
-    !             dc, im, jn2g0-js2g0+1,  &
-    !             wk4, crx )
+     call pft2d(ptk(1,js2g0), sc,   &
+                dc, im, jn2g0-js2g0+1,  &
+                wk4, crx )
+    !  call cuda_pft2d(ptk(1, js2g0), plan_c)
 
 
      call pft2d(tm2(1,js2g0), sc,   &
