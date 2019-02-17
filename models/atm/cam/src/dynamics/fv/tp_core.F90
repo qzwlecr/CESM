@@ -1,6 +1,6 @@
-!#if defined( UNICOSMP ) || defined ( NEC_SX )
+#if defined( UNICOSMP ) || defined ( NEC_SX )
 #define VECTORIZE
-!#endif
+#endif
 module tp_core
 !BOP
 !
@@ -784,7 +784,7 @@ CONTAINS
 ! !INPUT PARAMETERS:
  integer im   ! Total longitudes
  integer lmt  ! LMT = 0: full monotonicity
-              ! LMT = 1: Improved and simplified full monotonic constraint  我发现这里只有1 !print *, '[ASC debug] Y00: lmppm  lmt == 3 !'
+              ! LMT = 1: Improved and simplified full monotonic constraint
               ! LMT = 2: positive-definite constraint
               ! LMT = 3: Quasi-monotone constraint
  real(r8) p(im)
@@ -820,19 +820,7 @@ CONTAINS
 ! LMT = 2: positive-definite constraint
 ! LMT = 3: Quasi-monotone constraint
 
-if( lmt == 1 ) then
-
-  ! Improved (Lin 2001?) full constraint
-        do i=1,im
-             da1 = dm(i) + dm(i)
-              dl = sign(min(abs(da1),abs(al(i)-p(i))), da1)
-              dr = sign(min(abs(da1),abs(ar(i)-p(i))), da1)
-           ar(i) = p(i) + dr
-           al(i) = p(i) - dl
-           a6(i) = D3_0*(dl-dr)
-        enddo
-    return
-  elseif( lmt == 0 ) then
+  if( lmt == 0 ) then
 
 ! Full constraint
   do i=1,im
@@ -853,6 +841,18 @@ if( lmt == 1 ) then
          endif
      endif
   enddo
+
+  elseif( lmt == 1 ) then
+
+! Improved (Lin 2001?) full constraint
+      do i=1,im
+           da1 = dm(i) + dm(i)
+            dl = sign(min(abs(da1),abs(al(i)-p(i))), da1)
+            dr = sign(min(abs(da1),abs(ar(i)-p(i))), da1)
+         ar(i) = p(i) + dr
+         al(i) = p(i) - dl
+         a6(i) = D3_0*(dl-dr)
+      enddo
 
   elseif( lmt == 2 ) then
 ! Positive definite constraint
@@ -1244,7 +1244,6 @@ if( lmt == 1 ) then
 !-----------------------------------------------------------------------
 !BOP
 ! !IROUTINE: fyppm
-!或许可以改一下分支预测，估计大部分都是同一个分支
 !
 ! !INTERFACE: 
  subroutine fyppm(c,  q,  dm, flux, im, jm, ng, jord, iv, jfirst, jlast)
@@ -1333,7 +1332,7 @@ if( lmt == 1 ) then
 #if defined(INNER_OMP)
 !$omp parallel do default(shared) private(j,i)
 #endif
-      do j=js1g1,jn2g1                 ! AR needed NS !TODO 这个和上面的这个或许可以合并？
+      do j=js1g1,jn2g1                 ! AR needed NS
         do i=1,im
           ar(i,j) = al(i,j+1)          ! AL ghosted N2S
         enddo
@@ -1766,7 +1765,7 @@ if( lmt == 1 ) then
 !-----------------------------------------------------------------------
 !BOP
 ! !IROUTINE: xtpv
-!或许可以改一下分支预测，估计大部分都是同一个分支
+!
 ! !INTERFACE: 
  subroutine xtpv(im, ffslv,  fxv,  qv,  cv,  iord,  mfxv,        &
                 cosav, id, dm, qtmpv, al, ar, a6,                &
@@ -2589,98 +2588,103 @@ if( lmt == 1 ) then
 ! LMT = 2: positive-definite constraint
 ! LMT = 3: Quasi-monotone constraint
 
- if( lmt == 1 ) then ! 把用的多的改到第一个分支！
+  if( lmt == 0 ) then
 
-  ! Improved (Lin 2001?) full constraint
-  
-  !dir$ concurrent
-      do jj = 1, jan
-        j = ja(jj)
-  
-          do i=1,im
-              da1 = dm(i,j) + dm(i,j)
-              dl = sign(min(abs(da1),abs(al(i,j)-p(i,j))), da1)
-              dr = sign(min(abs(da1),abs(ar(i,j)-p(i,j))), da1)
-              ar(i,j) = p(i,j) + dr
-              al(i,j) = p(i,j) - dl
-              a6(i,j) = D3_0*(dl-dr)
-          enddo
-  
+! Full constraint
+
+!dir$ concurrent
+    do jj = 1, jan
+      j = ja(jj)
+
+        do i=1,im
+           if(dm(i,j) .eq. D0_0) then
+               ar(i,j) = p(i,j)
+               al(i,j) = p(i,j)
+               a6(i,j) = D0_0
+           else
+               da1  = ar(i,j) - al(i,j)
+               da2  = da1**2
+               a6da = a6(i,j)*da1
+               if(a6da .lt. -da2) then
+                  a6(i,j) = D3_0*(al(i,j)-p(i,j))
+                  ar(i,j) = al(i,j) - a6(i,j)
+               elseif(a6da .gt. da2) then
+                  a6(i,j) = D3_0*(ar(i,j)-p(i,j))
+                  al(i,j) = ar(i,j) - a6(i,j)
+               endif
+           endif
+        enddo
+
+    enddo
+
+  elseif( lmt == 1 ) then
+
+! Improved (Lin 2001?) full constraint
+
+!dir$ concurrent
+    do jj = 1, jan
+      j = ja(jj)
+
+        do i=1,im
+            da1 = dm(i,j) + dm(i,j)
+            dl = sign(min(abs(da1),abs(al(i,j)-p(i,j))), da1)
+            dr = sign(min(abs(da1),abs(ar(i,j)-p(i,j))), da1)
+            ar(i,j) = p(i,j) + dr
+            al(i,j) = p(i,j) - dl
+            a6(i,j) = D3_0*(dl-dr)
+        enddo
+
+    enddo
+
+  elseif( lmt == 2 ) then
+
+! Positive definite constraint
+
+!dir$ concurrent
+    do jj = 1, jan
+      j = ja(jj)
+
+      do i=1,im
+        if(abs(ar(i,j)-al(i,j)) .lt. -a6(i,j)) then
+          fmin = p(i,j) + D0_25*(ar(i,j)-al(i,j))**2/a6(i,j) + a6(i,j)*r12
+          if(fmin.lt.D0_0) then
+            if(p(i,j).lt.ar(i,j) .and. p(i,j).lt.al(i,j)) then
+                ar(i,j) = p(i,j)
+                al(i,j) = p(i,j)
+                a6(i,j) = D0_0
+            elseif(ar(i,j) .gt. al(i,j)) then
+                a6(i,j) = D3_0*(al(i,j)-p(i,j))
+                ar(i,j) = al(i,j) - a6(i,j)
+            else
+                a6(i,j) = D3_0*(ar(i,j)-p(i,j))
+                al(i,j) = ar(i,j) - a6(i,j)
+            endif
+          endif
+        endif
       enddo
-      !print *, '[ASC debug] Y00: lmppmv  lmt guessed rithg 1!!!!'
-      return
-    else
-  !print *, '[ASC debug] Y00: lmppmv  lmt guessed wrong!!!!', lmt !我发现其他情况输出的都不是这几个正常的值，就是说其他的就都啥也不干
-endif
 
-!  if( lmt == 0 ) then
-!     do jj = 1, jan
-!       j = ja(jj)
+    enddo
 
-!         do i=1,im
-!            if(dm(i,j) .eq. D0_0) then
-!                ar(i,j) = p(i,j)
-!                al(i,j) = p(i,j)
-!                a6(i,j) = D0_0
-!            else
-!                da1  = ar(i,j) - al(i,j)
-!                da2  = da1**2
-!                a6da = a6(i,j)*da1
-!                if(a6da .lt. -da2) then
-!                   a6(i,j) = D3_0*(al(i,j)-p(i,j))
-!                   ar(i,j) = al(i,j) - a6(i,j)
-!                elseif(a6da .gt. da2) then
-!                   a6(i,j) = D3_0*(ar(i,j)-p(i,j))
-!                   al(i,j) = ar(i,j) - a6(i,j)
-!                endif
-!            endif
-!         enddo
+  elseif(lmt .eq. 3) then
 
-!     enddo
+! Quasi-monotone constraint
 
-!     print *, '[ASC debug] Y00: lmppmv  lmt guessed rithg 0!!!!'
-!   elseif( lmt == 2 ) then
+!dir$ concurrent
+    do jj = 1, jan
+      j = ja(jj)
 
-!     do jj = 1, jan
-!       j = ja(jj)
+      do i=1,im
+         da1 = D4_0*dm(i,j)
+         dl = sign(min(abs(da1),abs(al(i,j)-p(i,j))), da1)
+         dr = sign(min(abs(da1),abs(ar(i,j)-p(i,j))), da1)
+         ar(i,j) = p(i,j) + dr
+         al(i,j) = p(i,j) - dl
+         a6(i,j) = D3_0*(dl-dr)
+      enddo
 
-!       do i=1,im
-!         if(abs(ar(i,j)-al(i,j)) .lt. -a6(i,j)) then
-!           fmin = p(i,j) + D0_25*(ar(i,j)-al(i,j))**2/a6(i,j) + a6(i,j)*r12
-!           if(fmin.lt.D0_0) then
-!             if(p(i,j).lt.ar(i,j) .and. p(i,j).lt.al(i,j)) then
-!                 ar(i,j) = p(i,j)
-!                 al(i,j) = p(i,j)
-!                 a6(i,j) = D0_0
-!             elseif(ar(i,j) .gt. al(i,j)) then
-!                 a6(i,j) = D3_0*(al(i,j)-p(i,j))
-!                 ar(i,j) = al(i,j) - a6(i,j)
-!             else
-!                 a6(i,j) = D3_0*(ar(i,j)-p(i,j))
-!                 al(i,j) = ar(i,j) - a6(i,j)
-!             endif
-!           endif
-!         endif
-!       enddo
+    enddo
 
-!     enddo
-!     print *, '[ASC debug] Y00: lmppmv  lmt guessed rithg 2!!!!'
-!   elseif(lmt .eq. 3) then
-!     do jj = 1, jan
-!       j = ja(jj)
-
-!       do i=1,im
-!          da1 = D4_0*dm(i,j)
-!          dl = sign(min(abs(da1),abs(al(i,j)-p(i,j))), da1)
-!          dr = sign(min(abs(da1),abs(ar(i,j)-p(i,j))), da1)
-!          ar(i,j) = p(i,j) + dr
-!          al(i,j) = p(i,j) - dl
-!          a6(i,j) = D3_0*(dl-dr)
-!       enddo
-
-!     enddo
-!     print *, '[ASC debug] Y00: lmppmv  lmt guessed rithg 3!!!!'
-!   endif
+  endif
   return
 !EOC
  end subroutine lmppmv
