@@ -214,10 +214,10 @@ subroutine wv_sat_init
 
 ! Init "methods" module containing actual SVP formulae.
 
-  call wv_sat_methods_init(r8, tmelt, h2otrip, tboil, ttrice, &
-       epsilo, errstring)
+!   call wv_sat_methods_init(r8, tmelt, h2otrip, tboil, ttrice, &
+!        epsilo, errstring)
 
-  call handle_errmsg(errstring, subname="wv_sat_methods_init")
+!   call handle_errmsg(errstring, subname="wv_sat_methods_init")
 
   ! Add two to make the table slightly too big, just in case.
   plenest = ceiling(tmax-tmin) + 2
@@ -274,11 +274,7 @@ elemental function svp_water(t) result(es)
   real(r8), intent(in) :: t ! Temperature (K)
   real(r8) :: es            ! SVP (Pa)
 
-  es = 10._r8**(-7.90298_r8*(tboil/t-1._r8)+ &
-       5.02808_r8*log10(tboil/t)- &
-       1.3816e-7_r8*(10._r8**(11.344_r8*(1._r8-t/tboil))-1._r8)+ &
-       8.1328e-3_r8*(10._r8**(-3.49149_r8*(tboil/t-1._r8))-1._r8)+ &
-       log10(1013.246_r8))*100._r8
+  es = wv_sat_svp_water(T)
 
 end function svp_water
 
@@ -567,20 +563,8 @@ elemental subroutine qsat_water(t, p, es, qs, gam, dqsdt, enthalpy)
   ! Local variables
   real(r8) :: hltalt       ! Modified latent heat for T derivatives
 
-  es = 10._r8**(-7.90298_r8*(tboil/t-1._r8)+ &
-       5.02808_r8*log10(tboil/t)- &
-       1.3816e-7_r8*(10._r8**(11.344_r8*(1._r8-t/tboil))-1._r8)+ &
-       8.1328e-3_r8*(10._r8**(-3.49149_r8*(tboil/t-1._r8))-1._r8)+ &
-       log10(1013.246_r8))*100._r8
-
-   if ( (p - es) <= 0._r8 ) then
-     qs = 1.0_r8
-  else
-     qs = epsilo*es / (p - omeps*es)
-  end if
-
-  es = min(es, p)
-
+  call wv_sat_qsat_water(t, p, es, qs)
+  
   if (present(gam) .or. present(dqsdt) .or. present(enthalpy)) then
 
      ! "generalized" analytic expression for t derivative of es

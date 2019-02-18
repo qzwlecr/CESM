@@ -444,7 +444,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
    real(r8) tr9         ! Equation (6) times eq(4) in table A2
 !                              !  of R&D for 650-800 cm-1 region
    real(r8) sqrtu(pcols)       ! Sqrt of pressure weighted h20 pathlength
-   real(r8) fwk(pcols)         ! Equation(33) in R&D far wing correction
+   !real(r8) fwk(pcols)         ! Equation(33) in R&D far wing correction
    real(r8) fwku(pcols)        ! GU term in eqs(1) and (6) in table A2
    real(r8) to3co2(pcols)      ! P weighted temp in ozone band model
    real(r8) dpnm(pcols)        ! Pressure difference between two levels
@@ -682,8 +682,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
             dtx(i)      = tplnka(i,k2) - 250._r8
             dty(i)      = tpatha       - 250._r8
 
-            fwk(i)  = fwcoef + fwc1/(1._r8 + fwc2*u(i))
-            fwku(i) = fwk(i)*u(i)
+            fwku(i) = (fwcoef + fwc1/(1._r8 + fwc2*u(i)))*u(i)
 !
             te1  = tplnka(i,k2)
             te2  = te1 * te1
@@ -1151,8 +1150,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
             dtx(i)      = temh2o(i,kn) - 250._r8
             dty(i)      = tbar(i,kn) - 250._r8
             
-            fwk(i)    = fwcoef + fwc1/(1._r8 + fwc2*u(i))
-            fwku(i)   = fwk(i)*u(i)
+            fwku(i)   = (fwcoef + fwc1/(1._r8 + fwc2*u(i)))*u(i)
 
             aer_trn_ngh(i, 1:nlwbands)= &
               exp(-fdif * uinpl(i,kn) * odap_aer(i, k2, 1:nlwbands ) )
