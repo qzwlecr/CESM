@@ -669,7 +669,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
 
             tpatha = abs(tcg(i,k1) - tcg(i,k2))/dw(i)
             t_p = min(max(tpatha, min_tp_h2o), max_tp_h2o)
-            call qsat_water(t_p, pnew_mks, esx, qsx)
+            call qsat_water_cpp(t_p, pnew_mks, esx, qsx)
 
             q_path = dw(i) / abs(pnm(i,k1) - pnm(i,k2)) / rga
 
@@ -1139,7 +1139,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
             pnew_mks  = pnew(i) * sslp_mks
             t_p = min(max(tbar(i,kn), min_tp_h2o), max_tp_h2o)
 
-            call qsat_water(t_p, pnew_mks, esx, qsx)
+            call qsat_water_cpp(t_p, pnew_mks, esx, qsx)
 
             q_path = dw(i) / ABS(dpnm(i)) / rga
             
@@ -1894,7 +1894,7 @@ subroutine radems(lchnk   ,ncol    ,                            &
          tpathe   = tcg(i,k1)/w(i,k1)
          t_p = min(max(tpathe, min_tp_h2o), max_tp_h2o)
 ! todo
-         call qsat_water(t_p, pnew_mks, esx, qsx)
+         call qsat_water_cpp(t_p, pnew_mks, esx, qsx)
 
 !
 ! Compute effective RH along path
@@ -4088,7 +4088,7 @@ elemental subroutine qsat_water(t, p, es, qs) ! for inline
   ! Outputs
   real(r8), intent(out) :: es  ! Saturation vapor pressure
   real(r8), intent(out) :: qs  ! Saturation specific humidity
-
+!todo rgy change this to exp10
 
   es = 10._r8**(-7.90298_r8*(tboil/t-1._r8)+ &
        5.02808_r8*log10(tboil/t)- &

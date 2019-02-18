@@ -28,6 +28,7 @@
 //cpres  = cpair =shr_const_cpdair= 1.00464e3_R8  
 #define cpres 1004.64
 #define pref 1000.0
+#define omeps     (1-eps1)
 
 #define USE_EXP10
 
@@ -62,6 +63,25 @@ void inline qmmr_hPa_cpp_(double t, double p, double *es_out, double *qm){
   es = MIN(es, p);
   
   *es_out = es*0.01;
+}
+extern "C"
+void  qsat_water_cpp_(double* t_in, double* p_in, double *es_out, double *qs){
+    double p=*p_in;
+    double t=*t_in;
+    double tmp=(-7.90298*(tboil/t-1.0)+ \
+      5.02808*log10(tboil/t)- \
+      0.00000013816*(exp10(11.344*(1.0-t/tboil))-1.0)+\
+      0.0081328*(exp10(-3.49149*(tboil/t-1.0))-1.0)+\
+      log10(1013.246));
+  // printf("the tmp is %f",tmp);
+    double es=exp10(tmp)*100.0;;//exp10(tmp)*100.0;
+
+  if ( (p - es) < DBL_MIN )
+     *qs = 1.0;
+  else
+     *qs = eps1*es / (p -  omeps*es);
+  
+  *es_out = MIN(es, p);
 }
 
 //  int main(){
