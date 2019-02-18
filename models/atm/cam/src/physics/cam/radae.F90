@@ -651,7 +651,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
    end do
 !
 ! Non-nearest layer level loops
-!
+!$acc parallel loop collapse( 2 )
    do k1=pverp,ntoplw,-1
       do k2=pverp,ntoplw,-1
          if (k1 == k2) cycle
@@ -683,7 +683,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
             dty(i)      = tpatha       - 250._r8
 
             fwku(i) = (fwcoef + fwc1/(1._r8 + fwc2*u(i)))*u(i)
-!
+
             te1  = tplnka(i,k2)
             te2  = te1 * te1
             te3  = te2 * te1
@@ -811,9 +811,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
                abso(i,ib) = abso(i,ib) * uscl
             endif
                          
-!
-! Band-dependent indices for window
-!
+
             ib = 2
 
             uvar = ub(ib) * fdif
@@ -854,9 +852,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
             iuc1 = iuc + 1
             wuc = dvar - floor(dvar)
             wuc1 = 1.0_r8 - wuc
-!
-! Asymptotic value of absorptivity as U->infinity
-!
+
             fa = fat(1,ib) + &
                  fat(2,ib) * te1 + &
                  fat(3,ib) * te2 + &
@@ -934,18 +930,14 @@ subroutine radabs(lchnk   ,ncol    ,             &
             abso(i,ib) = min(max(fa * (1.0_r8 - l_star * c_star * &
                                  aer_trn_ttl(i,k1,k2,ib)), &
                              0.0_r8), 1.0_r8) 
-!
-! Invoke linear limit for scaling wrt u below min_u_h2o
-!
+
             if (uvar < min_u_h2o) then
                uscl = uvar / min_u_h2o
                abso(i,ib) = abso(i,ib) * uscl
             endif
 
          end do
-!
-! Line transmission in 800-1000 and 1000-1200 cm-1 intervals
-!
+
          do i=1,ncol
             term7_1 = coefj(1,1) + coefj(2,1)*dty(i)*(1._r8 + c16*dty(i))
             term8_1 = coefk(1,1) + coefk(2,1)*dty(i)*(1._r8 + c17*dty(i))
@@ -1002,9 +994,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
               to3(i)   = 1.0_r8/(1._r8 + 0.1_r8*tmp1 + 0.1_r8*tmp2)
             endif
          end do
-!
-! abso(i,4)      co2 15  micrometer band system
-!
+
          do i=1,ncol
             sqwp      = sqrt(abs(plco2(i,k1) - plco2(i,k2)))
             et        = exp(-480._r8/to3co2(i))
@@ -1042,7 +1032,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
                sqti(i) = sqrt(tlayr(i,k2))
             end do
          end if
-!考虑把这两个循环合并，然后删掉 f2co2 f3co2 rbeta7 f1sqwp
+      !考虑把这两个循环合并，然后删掉 f2co2 f3co2 rbeta7 f1sqwp
          do i=1,ncol
             tmp1      = log(1._r8 + f1sqwp(i))
             tmp2      = log(1._r8 + f2co2(i))
@@ -1051,9 +1041,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
             abso(i,4) = trab2(i)*co2em(i,k2)*absbnd
             tco2(i)   = 1._r8/(1.0_r8+10.0_r8*(u7(i)/sqrt(4._r8 + u7(i)*(1._r8 + rbeta7(i))))) !这个部分和L1044的重复了
          end do
-!
-! Calculate absorptivity due to trace gases, abstrc
-!
+
          call trcab(ncol     ,                            &
             k1      ,k2      ,ucfc11  ,ucfc12  ,un2o0   , &
             un2o1   ,uch4    ,uco211  ,uco212  ,uco213  , &
@@ -1062,9 +1050,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
             s2c     ,uptype  ,u       ,abplnk1 ,tco2    , &
             th2o    ,to3     ,abstrc  , &
             aer_trn_ttl)
-!
-! Sum total absorptivity
-!
+
          do i=1,ncol
             abstot(i,k1,k2) = abso(i,1) + abso(i,2) + &
                abso(i,3) + abso(i,4) + abstrc(i)
@@ -1072,7 +1058,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
       end do ! do k2 = 
    end do ! do k1 = 
 
-   
+!$acc parallel loop
    do k2=pver,ntoplw,-1
       do i=1,ncol
          tbar(i,1)   = 0.5_r8*(tint(i,k2+1) + tlayr(i,k2+1))
@@ -1093,9 +1079,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
          temh2o(i,4) = tbar(i,2)
          dpnm(i)     = pnm(i,k2+1) - pnm(i,k2) ! 这个可以拆除来
       end do
-!
-!  Weighted Planck functions for trace gases
-!
+
       do wvl = 1,14
          do i = 1,ncol
             bplnk(wvl,i,1) = 0.5_r8*(abplnk1(wvl,i,k2+1) + abplnk2(wvl,i,k2))
@@ -1227,9 +1211,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
             w11_10 = wp1 * w_1_10 
             w11_11 = wp1 * w_1_11 
 
-!
-! Non-window absorptivity
-!
+
             ib = 1
             
             fa = fat(1,ib) + &
@@ -1277,17 +1259,13 @@ subroutine radabs(lchnk   ,ncol    ,             &
                                  aer_trn_ngh(i,ib)), &
                              0.0_r8), 1.0_r8)
 
-!
-! Invoke linear limit for scaling wrt u below min_u_h2o
-!
+
             if (uvar < min_u_h2o) then
                uscl = uvar / min_u_h2o
                abso(i,ib) = abso(i,ib) * uscl
             endif
             
-!
-! Window absorptivity
-!
+
             ib = 2
             
             fa = fat(1,ib) + &
@@ -1335,18 +1313,14 @@ subroutine radabs(lchnk   ,ncol    ,             &
                                  aer_trn_ngh(i,ib)), &
                              0.0_r8), 1.0_r8)
 
-!
-! Invoke linear limit for scaling wrt u below min_u_h2o
-!
+
             if (uvar < min_u_h2o) then
                uscl = uvar / min_u_h2o
                abso(i,ib) = abso(i,ib) * uscl
             endif
             
          end do
-!
-! Line transmission in 800-1000 and 1000-1200 cm-1 intervals
-!
+
          do i=1,ncol
             term7_1 = coefj(1,1) + coefj(2,1)*dty(i)*(1._r8 + c16*dty(i))
             term8_1 = coefk(1,1) + coefk(2,1)*dty(i)*(1._r8 + c17*dty(i))
@@ -1361,9 +1335,9 @@ subroutine radabs(lchnk   ,ncol    ,             &
             tr1     = exp(-(k21*(sqrtu(i) + fc1*fwku(i))))
             tr2     = exp(-(k22*(sqrtu(i) + fc1*fwku(i))))
             tr1=tr1*aer_trn_ngh(i,idx_LW_0650_0800) 
-!                                         ! H2O line+STRAER trn 650--800 cm-1
+                                         ! H2O line+STRAER trn 650--800 cm-1
             tr2=tr2*aer_trn_ngh(i,idx_LW_0500_0650) 
-!                                         ! H2O line+STRAER trn 500--650 cm-1
+                                         ! H2O line+STRAER trn 500--650 cm-1
             tr5     = exp(-((coefh(1,3) + coefh(2,3)*dtx(i))*uc1(i)))
             tr6     = exp(-((coefh(1,4) + coefh(2,4)*dtx(i))*uc1(i)))
             tr9  = tr1*tr5
@@ -1371,9 +1345,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
             trab2(i)= 0.65_r8*tr9 + 0.35_r8*tr10
             th2o(i) = tr10
          end do
-!
-! abso(i,3)  o3  9.6 micrometer (nu3 and nu1 bands)
-!
+
          do i=1,ncol
             te        = (tbar(i,kn)*r293)**.7_r8
             dplos     = abs(plos(i,k2+1) - plos(i,k2))
@@ -1389,9 +1361,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
             abso(i,3) = o3bndi*o3emm(i,kn)*(h2otr(i,k2+1)/h2otr(i,k2))
             to3(i)    = 1.0_r8/(1._r8 + 0.1_r8*tmp1 + 0.1_r8*tmp2)
          end do
-!
-! abso(i,4)   co2 15  micrometer band system
-!
+
          do i=1,ncol
             dplco2   = plco2(i,k2+1) - plco2(i,k2)
             sqwp     = sqrt(uinpl(i,kn)*dplco2)
@@ -1429,9 +1399,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
             abso(i,4)= trab2(i)*emm(i,kn)*absbnd
             tco2(i)  = 1.0_r8/(1.0_r8+ 10.0_r8*u7_tmp/sqrt(4._r8 + u7_tmp*(1._r8 + rbeta7_tmp)))
          end do ! do i =
-!
-! Calculate trace gas absorptivity for nearest layer, abstrc
-!
+
          call trcabn(ncol      ,                            &
               k2      ,kn      ,ucfc11  ,ucfc12  ,un2o0   , &
               un2o1   ,uch4    ,uco211  ,uco212  ,uco213  , &
@@ -1440,9 +1408,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
               uptype  ,dw      ,s2c     ,u       ,pnew    , &
               abstrc  ,uinpl   , &
               aer_trn_ngh)
-!
-! Total next layer absorptivity:
-!
+
          do i=1,ncol
             absnxt(i,k2,kn) = abso(i,1) + abso(i,2) + &
                  abso(i,3) + abso(i,4) + abstrc(i)

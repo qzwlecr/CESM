@@ -2157,34 +2157,25 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
             alp  = alpha(ws,coszrs(i),gs,lm)
             gam  = gamma(ws,coszrs(i),gs,lm)
             ue   = u(ws,gs,lm)
-!
-!     Limit argument of exponential to 25, in case lm very large:
-!
+
             arg  = min(lm*ts,25._r8)
             extins = exp(-arg)
             ne = n(ue,extins)
             rdif(ns,i,k) = (ue*ue-1._r8)*(1._r8/extins - extins)/ne
             tdif(ns,i,k)   =   4._r8*ue/ne
-!
-!     Limit argument of exponential to 25, in case coszrs is very small:
-!
+
             arg       = min(ts/coszrs(i),25._r8)
             explay(ns,i,k) = exp(-arg)
             apg = alp + gam
             amg = alp - gam
             rdir(ns,i,k) = amg*(tdif(ns,i,k)*explay(ns,i,k)-1._r8) + apg*rdif(ns,i,k)
             tdir(ns,i,k) = apg*tdif(ns,i,k) + (amg*rdif(ns,i,k)-(apg-1._r8))*explay(ns,i,k)
-!
-!     Under rare conditions, reflectivies and transmissivities can be
-!     negative; zero out any negative values
-!
+
             rdir(ns,i,k) = max(rdir(ns,i,k),0.0_r8)
             tdir(ns,i,k) = max(tdir(ns,i,k),0.0_r8)
             rdif(ns,i,k) = max(rdif(ns,i,k),0.0_r8)
             tdif(ns,i,k) = max(tdif(ns,i,k),0.0_r8)
-!
-!     Clear-sky calculation
-!
+
             if (tauxcl(i,k) == 0.0_r8 .and. tauxci(i,k) == 0.0_r8) then
 
                rdirc(ns,i,k) = rdir(ns,i,k)
@@ -2195,9 +2186,7 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
             else
                tautot = tauray + taugab + aer_tau(i,k)
                taucsc = aer_tau_w(i,k)
-!
-! wtau already computed for all-sky
-!
+
                wt     = wtau + taucsc
                wtot   = wt/tautot
                gtot   = (wtau*gray + aer_tau_w_g(i,k))/wt
@@ -2209,17 +2198,13 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
                alp  = alpha(ws,coszrs(i),gs,lm)
                gam  = gamma(ws,coszrs(i),gs,lm)
                ue   = u(ws,gs,lm)
-!
-!     Limit argument of exponential to 25, in case lm very large:
-!
+
                arg  = min(lm*ts,25._r8)
                extins = exp(-arg)
                ne = n(ue,extins)
                rdifc(ns,i,k) = (ue*ue-1._r8)*(1._r8/extins - extins)/ne
                tdifc(ns,i,k)   =   4._r8*ue/ne
-!
-!     Limit argument of exponential to 25, in case coszrs is very small:
-!
+
                arg       = min(ts/coszrs(i),25._r8)
                explayc(ns,i,k) = exp(-arg)
                apg = alp + gam
@@ -2228,10 +2213,7 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
                                apg*rdifc(ns,i,k)
                tdirc(ns,i,k) = apg*tdifc(ns,i,k) + (amg*rdifc(ns,i,k) - (apg-1._r8))* &
                                explayc(ns,i,k)
-!
-!     Under rare conditions, reflectivies and transmissivities can be
-!     negative; zero out any negative values
-!
+
                rdirc(ns,i,k) = max(rdirc(ns,i,k),0.0_r8)
                tdirc(ns,i,k) = max(tdirc(ns,i,k),0.0_r8)
                rdifc(ns,i,k) = max(rdifc(ns,i,k),0.0_r8)

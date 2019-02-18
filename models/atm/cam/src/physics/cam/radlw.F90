@@ -303,7 +303,7 @@ subroutine radclwmx(lchnk   ,ncol    ,doabsems                  , &
 !
 ! Compute total absorptivity:
 !
-
+!$acc enter data copyin(pmid ,pint ,co2em   ,co2eml  ,tplnka  , s2c ,tcg,w ,h2otr   ,plco2   ,  plh2o   ,co2t,tint ,tlayr   ,plol    , plos    ,pmln    ,piln    ,ucfc11  ,ucfc12  , un2o0   ,un2o1   ,uch4    ,uco211  ,uco212 , uco213  ,uco221,uco222  ,uco223  ,uptype  , bn2o0   ,bn2o1   ,bch4    ,abplnk1 ,abplnk2 , abstot  ,absnxt  ,plh2ob  ,wb    ,   odap_aer,aer_trn_ttl, co2mmr) create(abstot,absnxt)
       call radabs(lchnk   ,ncol    ,                            &
                   pmid    ,pint    ,co2em   ,co2eml  ,tplnka  , &
                   s2c     ,tcg     ,w       ,h2otr   ,plco2   , &
@@ -314,6 +314,15 @@ subroutine radclwmx(lchnk   ,ncol    ,doabsems                  , &
                   bn2o0   ,bn2o1   ,bch4    ,abplnk1 ,abplnk2 , &
                   abstot  ,absnxt  ,plh2ob  ,wb      , &
                   odap_aer,aer_trn_ttl, co2mmr)
+!$acc exit data delete(pmid    ,pint    ,co2em   ,co2eml  ,tplnka  , &
+                  ! s2c     ,tcg     ,w       ,h2otr   ,plco2   , &
+                  ! plh2o   ,co2t    ,tint    ,tlayr   ,plol    , &
+                  ! plos    ,pmln    ,piln    ,ucfc11  ,ucfc12  , &
+                  ! un2o0   ,un2o1   ,uch4    ,uco211  ,uco212  , &
+                  ! uco213  ,uco221  ,uco222  ,uco223  ,uptype  , &
+                  ! bn2o0   ,bn2o1   ,bch4    ,abplnk1 ,abplnk2 , &
+                  ! abstot  ,absnxt  ,plh2ob  ,wb      , &
+                  ! odap_aer,aer_trn_ttl, co2mmr) copyout(abstot,absnxt)
    end if
 !
 ! Compute sums used in integrals (all longitude points)
