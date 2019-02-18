@@ -110,7 +110,7 @@
       enddo
 
 
-   do 2000 j=jfirst, jlast
+   do j=jfirst, jlast
    ! Top down
          do k=2,km+1
             do i= ifirst,ilast
@@ -123,18 +123,18 @@
             enddo
          enddo
 
-   2000  continue
+      enddo
 
-   do 133 j=jfirst, jlast
+   do j=jfirst, jlast
          do k=1,km+1
             do i= ifirst,ilast
                pk(i,j,k) = pe(i,k,j)**akap
             enddo
          enddo
          !call calpkcuda(pk,pe,akap,km,i1,i2,jfirst,jp,ptop)  或者整个传参？
-   133  continue
+      enddo
 
-   do 146 j=jfirst, jlast
+   do j=jfirst, jlast
    ! Bottom up
          do k=1,km
             do i= ifirst,ilast
@@ -151,7 +151,7 @@
                wz(i,j,k) = wz(i,j,k)+hs(i,j)
             enddo
          enddo
-   146  continue
+      enddo
 
       return
 !EOC

@@ -1101,52 +1101,6 @@ subroutine radcswmx(lchnk   ,ncol    ,                         &
 !CSD$ PRIVATE ( k, l, iconfig, l0, isn )
    do i=1,Nday
 
-!----------------------------------------------------------------------
-! INDEX CALCULATIONS FOR MAX OVERLAP
-! 
-! The column is divided into sets of adjacent layers, called regions, 
-! in which the clouds are maximally overlapped.  The clouds are
-! randomly overlapped between different regions.  The number of
-! regions in a column is set by nmxrgn, and the range of pressures
-! included in each region is set by pmxrgn.  
-! 
-! The following calculations determine the number of unique cloud 
-! configurations (assuming maximum overlap), called "streams",
-! within each region. Each stream consists of a vector of binary
-! clouds (either 0 or 100% cloud cover).  Over the depth of the region, 
-! each stream requires a separate calculation of radiative properties. These
-! properties are generated using the adding method from
-! the radiative properties for each layer calculated by raddedmx.
-! 
-! The upward and downward-propagating streams are treated
-! separately.
-! 
-! We will refer to a particular configuration of binary clouds
-! within a single max-overlapped region as a "stream".  We will 
-! refer to a particular arrangement of binary clouds over the entire column
-! as a "configuration".
-! 
-! This section of the code generates the following information:
-! (1. nrgn    : the true number of max-overlap regions (need not = nmxrgn)
-! (2. nstr    : the number of streams in a region (>=1)
-! (3. cstr    : flags for presence of clouds at each layer in each stream
-! (4. wstr    : the fractional horizontal area of a grid box covered
-! by each stream
-! (5. kx1,2   : level indices for top/bottom of each region
-! 
-! The max-overlap calculation proceeds in 3 stages:
-! (1. compute layer radiative properties in raddedmx.
-! (2. combine these properties between layers 
-! (3. combine properties to compute fluxes at each interface.  
-! 
-! Most of the indexing information calculated here is used in steps 2-3
-! after the call to raddedmx.
-! 
-! Initialize indices for layers to be max-overlapped
-! 
-! Loop to handle fix in totwgt=0. For original overlap config 
-! from npasses = 0.
-! 
          npasses = 0
          do
 !cdir novector
@@ -1511,17 +1465,6 @@ subroutine radcswmx(lchnk   ,ncol    ,                         &
 ! 
      end do
 ! 
-! solve for properties involving downward propagation of radiation.
-! the bulk properties are:
-! 
-! (1. exptdn   sol. beam dwn. trans from layers above
-! (2. rdndif   ref to dif rad for layers above
-! (3. tdntot   total trans for layers above
-! 
-
-!CSD$ PARALLEL DO PRIVATE( km1, is0, is1, j, jj, Ttdif, Trdif, Trdir, Ttdir, Texplay ) &
-!CSD$ PRIVATE( xexpt, xrdnd, tdnmexp,  ytdnd, yrdnd, rdenom, rdirexp, zexpt, zrdnd, ztdnt ) &
-!CSD$ PRIVATE( i, k, l0, ns, isn )
          do i = 1, Nday
             do k = 1, pverp
                km1 = k - 1
@@ -1532,10 +1475,6 @@ subroutine radcswmx(lchnk   ,ncol    ,                         &
 
                   j = icond(is0,km1,i)
 
-! 
-! If cloud in layer, use cloudy layer radiative properties (ccon == 1)
-! If clear layer, use clear-sky layer radiative properties (ccon /= 1)
-! 
                   if ( ccon(j,km1,i) == 1 ) then
                      Ttdif(:) = tdif(:,i,km1)
                      Trdif(:) = rdif(:,i,km1)
@@ -2218,34 +2157,25 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
             alp  = alpha(ws,coszrs(i),gs,lm)
             gam  = gamma(ws,coszrs(i),gs,lm)
             ue   = u(ws,gs,lm)
-!
-!     Limit argument of exponential to 25, in case lm very large:
-!
+
             arg  = min(lm*ts,25._r8)
             extins = exp(-arg)
             ne = n(ue,extins)
             rdif(ns,i,k) = (ue*ue-1._r8)*(1._r8/extins - extins)/ne
             tdif(ns,i,k)   =   4._r8*ue/ne
-!
-!     Limit argument of exponential to 25, in case coszrs is very small:
-!
+
             arg       = min(ts/coszrs(i),25._r8)
             explay(ns,i,k) = exp(-arg)
             apg = alp + gam
             amg = alp - gam
             rdir(ns,i,k) = amg*(tdif(ns,i,k)*explay(ns,i,k)-1._r8) + apg*rdif(ns,i,k)
             tdir(ns,i,k) = apg*tdif(ns,i,k) + (amg*rdif(ns,i,k)-(apg-1._r8))*explay(ns,i,k)
-!
-!     Under rare conditions, reflectivies and transmissivities can be
-!     negative; zero out any negative values
-!
+
             rdir(ns,i,k) = max(rdir(ns,i,k),0.0_r8)
             tdir(ns,i,k) = max(tdir(ns,i,k),0.0_r8)
             rdif(ns,i,k) = max(rdif(ns,i,k),0.0_r8)
             tdif(ns,i,k) = max(tdif(ns,i,k),0.0_r8)
-!
-!     Clear-sky calculation
-!
+
             if (tauxcl(i,k) == 0.0_r8 .and. tauxci(i,k) == 0.0_r8) then
 
                rdirc(ns,i,k) = rdir(ns,i,k)
@@ -2256,9 +2186,7 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
             else
                tautot = tauray + taugab + aer_tau(i,k)
                taucsc = aer_tau_w(i,k)
-!
-! wtau already computed for all-sky
-!
+
                wt     = wtau + taucsc
                wtot   = wt/tautot
                gtot   = (wtau*gray + aer_tau_w_g(i,k))/wt
@@ -2270,17 +2198,13 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
                alp  = alpha(ws,coszrs(i),gs,lm)
                gam  = gamma(ws,coszrs(i),gs,lm)
                ue   = u(ws,gs,lm)
-!
-!     Limit argument of exponential to 25, in case lm very large:
-!
+
                arg  = min(lm*ts,25._r8)
                extins = exp(-arg)
                ne = n(ue,extins)
                rdifc(ns,i,k) = (ue*ue-1._r8)*(1._r8/extins - extins)/ne
                tdifc(ns,i,k)   =   4._r8*ue/ne
-!
-!     Limit argument of exponential to 25, in case coszrs is very small:
-!
+
                arg       = min(ts/coszrs(i),25._r8)
                explayc(ns,i,k) = exp(-arg)
                apg = alp + gam
@@ -2289,10 +2213,7 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
                                apg*rdifc(ns,i,k)
                tdirc(ns,i,k) = apg*tdifc(ns,i,k) + (amg*rdifc(ns,i,k) - (apg-1._r8))* &
                                explayc(ns,i,k)
-!
-!     Under rare conditions, reflectivies and transmissivities can be
-!     negative; zero out any negative values
-!
+
                rdirc(ns,i,k) = max(rdirc(ns,i,k),0.0_r8)
                tdirc(ns,i,k) = max(tdirc(ns,i,k),0.0_r8)
                rdifc(ns,i,k) = max(rdifc(ns,i,k),0.0_r8)

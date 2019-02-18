@@ -26,22 +26,25 @@ module wv_sat_methods
 ! as arguments. If you need to do either, it is recommended to
 ! wrap the function so that it can be given an explicit (non-
 ! elemental) interface.
-
+  use physconst,    only: epsilo, &
+                          latvap, &
+                          latice, &
+                          rh2o,   &
+                          cpair,  &
+                          tmelt,  &
+                          h2otrip
 implicit none
 private
 save
 
 integer, parameter :: r8 = selected_real_kind(12) ! 8 byte real
 
-real(r8) :: tmelt   ! Melting point of water at 1 atm (K)
-real(r8) :: h2otrip ! Triple point temperature of water (K)
-real(r8) :: tboil   ! Boiling point of water at 1 atm (K)
+real(r8), parameter :: tboil = 373.16_r8
 
-real(r8) :: ttrice  ! Ice-water transition range
+real(r8), parameter :: ttrice = 20.00_r8  ! transition range from es over H2O to es over ice
 
-real(r8) :: epsilo  ! Ice-water transition range
-real(r8) :: omeps   ! 1._r8 - epsilo
-
+real(r8), parameter :: omeps = 1._r8 - epsilo
+real(r8) ,parameter:: X = 3.321928 !LOG2(10)      
 ! Indices representing individual schemes
 integer, parameter :: Invalid_idx = -1
 integer, parameter :: OldGoffGratch_idx = 0
@@ -92,25 +95,6 @@ subroutine wv_sat_methods_init(kind, tmelt_in, h2otrip_in, tboil_in, &
 
   errstring = ' '
 
-  if (kind /= r8) then
-     write(errstring,*) 'wv_sat_methods_init: ERROR: ', &
-          kind,' was input kind but ',r8,' is internal kind.'
-     return
-  end if
-
-  if (ttrice_in < 0._r8) then
-     write(errstring,*) 'wv_sat_methods_init: ERROR: ', &
-          ttrice_in,' was input for ttrice, but negative range is invalid.'
-     return
-  end if
-
-  tmelt = tmelt_in
-  h2otrip = h2otrip_in
-  tboil = tboil_in
-  ttrice = ttrice_in
-  epsilo = epsilo_in
-
-  omeps = 1._r8 - epsilo
 
 end subroutine wv_sat_methods_init
 
@@ -230,7 +214,7 @@ elemental subroutine wv_sat_qsat_water(t, p, es, qs, idx)
 
   integer,  intent(in), optional :: idx ! Scheme index
 
-  es = wv_sat_svp_water(t, idx)
+  es = wv_sat_svp_water(t)
 
   qs = wv_sat_svp_to_qsat(es, p)
 
@@ -255,7 +239,7 @@ elemental subroutine wv_sat_qsat_ice(t, p, es, qs, idx)
 
   integer,  intent(in), optional :: idx ! Scheme index
 
-  es = wv_sat_svp_ice(t, idx)
+  es = wv_sat_svp_ice(t)
 
   qs = wv_sat_svp_to_qsat(es, p)
 
@@ -280,7 +264,7 @@ elemental subroutine wv_sat_qsat_trans(t, p, es, qs, idx)
 
   integer,  intent(in), optional :: idx ! Scheme index
 
-  es = wv_sat_svp_trans(t, idx)
+  es = wv_sat_svp_trans(t)
 
   qs = wv_sat_svp_to_qsat(es, p)
 
@@ -298,24 +282,24 @@ elemental function wv_sat_svp_water(t, idx) result(es)
   integer,  intent(in), optional :: idx
   real(r8) :: es
 
-  integer :: use_idx
+  !integer :: use_idx
 
-  if (present(idx)) then
-     use_idx = idx
-  else
-     use_idx = default_idx
-  end if
+!   if (present(idx)) then
+!      use_idx = idx
+!   else
+!      use_idx = default_idx
+!   end if
 
-  select case (use_idx)
-  case(GoffGratch_idx)
+!   select case (use_idx)
+!   case(GoffGratch_idx)
      es = GoffGratch_svp_water(t)
-  case(MurphyKoop_idx)
-     es = MurphyKoop_svp_water(t)
-  case(OldGoffGratch_idx)
-     es = OldGoffGratch_svp_water(t)
-  case(Bolton_idx)
-     es = Bolton_svp_water(t)
-  end select
+!   case(MurphyKoop_idx)
+!       es = 0
+!   case(OldGoffGratch_idx)
+!      es = 0
+!   case(Bolton_idx)
+!      es = 0
+!   end select
 
 end function wv_sat_svp_water
 
@@ -324,24 +308,24 @@ elemental function wv_sat_svp_ice(t, idx) result(es)
   integer,  intent(in), optional :: idx
   real(r8) :: es
 
-  integer :: use_idx
+!   integer :: use_idx
 
-  if (present(idx)) then
-     use_idx = idx
-  else
-     use_idx = default_idx
-  end if
+!   if (present(idx)) then
+!      use_idx = idx
+!   else
+!      use_idx = default_idx
+!   end if
 
-  select case (use_idx)
-  case(GoffGratch_idx)
+!   select case (use_idx)
+!   case(GoffGratch_idx)
      es = GoffGratch_svp_ice(t)
-  case(MurphyKoop_idx)
-     es = MurphyKoop_svp_ice(t)
-  case(OldGoffGratch_idx)
-     es = OldGoffGratch_svp_ice(t)
-  case(Bolton_idx)
-     es = Bolton_svp_water(t)
-  end select
+!   case(MurphyKoop_idx)
+!    es = 0
+!   case(OldGoffGratch_idx)
+!    es = 0
+!   case(Bolton_idx)
+!    es = 0
+!   end select
 
 end function wv_sat_svp_ice
 
@@ -393,11 +377,18 @@ elemental function GoffGratch_svp_water(t) result(es)
   real(r8) :: es             ! SVP in Pa
 
   ! uncertain below -70 C
-  es = 10._r8**(-7.90298_r8*(tboil/t-1._r8)+ &
-       5.02808_r8*log10(tboil/t)- &
-       1.3816e-7_r8*(10._r8**(11.344_r8*(1._r8-t/tboil))-1._r8)+ &
-       8.1328e-3_r8*(10._r8**(-3.49149_r8*(tboil/t-1._r8))-1._r8)+ &
-       log10(1013.246_r8))*100._r8
+   es = 10._r8**(-7.90298_r8*(tboil/t-1._r8)+ &
+        5.02808_r8*log10(tboil/t)- &
+        1.3816e-7_r8*(10._r8**(11.344_r8*(1._r8-t/tboil))-1._r8)+ &
+        8.1328e-3_r8*(10._r8**(-3.49149_r8*(tboil/t-1._r8))-1._r8)+ &
+        log10(1013.246_r8))*100._r8
+
+
+  ! es = exp2(-7.90298_r8*(tboil/t-1._r8)*X + &
+  !    5.02808_r8*log2(tboil/t)  -&
+  !    0.00000013816_r8*(exp2(11.344_r8*(1._r8-t/tboil)*X)-1._r8)*X + &
+  !    0.0081328_r8*(exp2(-3.49149_r8*(tboil/t-1._r8)*X)-1._r8)*X+ &
+  !    X*log10(1013.246_r8)) * 100._r8;
 
 end function GoffGratch_svp_water
 

@@ -6,11 +6,7 @@ if !(-d $EXEROOT/ocn/source) mkdir -p $EXEROOT/ocn/source || exit 3
 if ($POP_AUTO_DECOMP == 'true') then
   @ ntasks = $NTASKS_OCN / $NINST_OCN
   cd $CASEBUILD
-  echo $OCN_GRID
-  echo $ntasks
-  echo $NTHRDS_OCN
-#you can config the output below
-  set config = `env UTILROOT=$UTILROOT ./generate_pop_decomp.pl -res $OCN_GRID -nproc $ntasks -thrds $NTHRDS_OCN `
+  set config = `env UTILROOT=$UTILROOT ./generate_pop_decomp.pl -res $OCN_GRID -nproc $ntasks -thrds $NTHRDS_OCN -output all`
   cd $CASEROOT 
   if ($config[1] >= 0) then
     ./xmlchange -file env_build.xml -id POP_BLCKX      -val $config[3]

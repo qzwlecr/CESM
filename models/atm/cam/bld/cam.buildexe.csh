@@ -1,11 +1,15 @@
 #! /bin/csh -f
 #build cuda here!
-cd /home/mike/workspace/asc19/CESM/models/atm/cam/bld/
-./cuda-build.sh
+set rootdir = `dirname $0`
+set abs_rootdir = `cd $rootdir && pwd`
+echo $abs_rootdir
+cd $abs_rootdir
+cd /local/zhanglichen/cesm/CESM/models/atm/cam/bld/ || exit 2  #这里要cd 到源代码里的那个地方，我不知道集群上的情况，所以你可能要改一下
+./cuda-build.sh || exit 2
 ls | grep cuda
 #所有的.cu都要用*_cuda.cu 结尾，因为编译脚本就是这么判断的, *_cuda.cu->*_cuda.o
 echo "move cuda.o to the obj dir!"
-cp ./*_cuda.o $OBJROOT/atm/obj
+mv ./*_cuda.o $OBJROOT/atm/obj
 #cp ./*_cuda.o $OBJROOT/cesm/obj
 
 echo $OBJROOT

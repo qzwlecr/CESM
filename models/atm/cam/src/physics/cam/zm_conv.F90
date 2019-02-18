@@ -3672,16 +3672,9 @@ elemental subroutine qmmr_hPa(t, p1, es, qm)
   real(r8), intent(out) :: es  ! Saturation vapor pressure (hPa)
   real(r8), intent(out) :: qm  ! Saturation mass mixing ratio
                                ! (vapor mass over dry mass, kg/kg)
-  real(r8)  tboil
+  real(r8),parameter  :: tboil = 373.16_r8 
   real(r8)  p
-  !call qmmr(t, p1*100._r8, es, qm)
-  !es = es*0.01_r8
-  !return
-!https://pages.mtu.edu/~shene/COURSES/cs201/NOTES/chap02/param.html
-!tboil 是parameter，所以应该是一个定值吧
-! After assigning a name to a value, one can use the name, rather than its value throughout the program. The compiler would convert that name to its corresponding value.
-!It is important to note that the name assigned to a value is simply an alias of the value. Therefore, that name is not a variable. 
-  tboil = 373.16_r8 !只看到了在wv_saturation.F90 里对这个有这样的初始化，所以我就把它这样写死了
+
   p=p1*100._r8
 
   es = 10._r8**(-7.90298_r8*(tboil/t-1._r8)+ &
