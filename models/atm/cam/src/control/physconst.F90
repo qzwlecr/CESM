@@ -80,7 +80,7 @@ module physconst
    real(r8), public, parameter :: cappa        = (shr_const_rgas/shr_const_mwdair)/shr_const_cpdair  ! R/Cp
    real(r8), public, parameter :: ez           = omega / sqrt(0.375_r8)    ! Coriolis expansion coeff -> omega/sqrt(0.375)   
    real(r8), public, parameter :: Cpd_on_Cpv   = shr_const_cpdair/shr_const_cpwv
-
+   real(r8), public, parameter ::  akap = rair/cpair
 !---------------  Variables below here are for WACCM-X -----------------------
    real(r8), public, dimension(:,:,:), pointer :: cpairv ! composition dependent specific heat at constant pressure
    real(r8), public, dimension(:,:,:), pointer :: rairv  ! composition dependent gas "constant"

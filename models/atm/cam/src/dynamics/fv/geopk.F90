@@ -37,7 +37,7 @@
 
       use shr_kind_mod, only: r8 => shr_kind_r8
       use dynamics_vars, only: T_FVDYCORE_GRID
-
+      use physconst,only :akap_ =>akap
       implicit none
 
 ! !INPUT PARAMETERS:
@@ -124,11 +124,13 @@
          enddo
 
       enddo
-
+      !print *, akap ！ 这个是定植
+     ! tmp=akap_*log()
    do j=jfirst, jlast
          do k=1,km+1
             do i= ifirst,ilast
-               pk(i,j,k) = pe(i,k,j)**akap
+               pk(i,j,k) = exp(akap_*log(pe(i,k,j)))
+                         !pe(i,k,j)**akap
             enddo
          enddo
          !call calpkcuda(pk,pe,akap,km,i1,i2,jfirst,jp,ptop)  或者整个传参？

@@ -1889,7 +1889,7 @@ subroutine dyn_run(ptop, ndt, te0, dyn_state, dyn_in, dyn_out, rc)
               do i=ifirstxy,ilastxy
                  do j=jfirstxy,jlastxy
                     do k=1,km+1
-                       pkxy(i,j,k) = pexy(i,k,j)**cappa
+                       pkxy(i,j,k) = pexy(i,k,j)**cappa !todo ASC RGY
                     enddo
                  enddo
               enddo

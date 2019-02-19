@@ -44,6 +44,6 @@ echo "run the cam"
 optirun mpirun ./cam >cam.run.log 2>&1|| exit 4
 
 echo "cprncdf !"
-rm -f ./RMST_f1.9_cmp_ibm_5.0 
-./cprncdf -X ../../../../tools/cprnc/  f19c4aqpgro_cam53_ys_intel.nc h0.nc  > RMST_f1.9_cmp_ibm_5.0
-cat ./RMST_f1.9_cmp_ibm_5.0
+rm -f ./result 
+./cprncdf -X ../../../../tools/cprnc/  f19c4aqpgro_cam53_ys_intel.nc h0.nc  > result
+cat ./result

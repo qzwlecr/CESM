@@ -7,7 +7,6 @@ EXP2/
 models/atm/cam/bld/
 models/atm/cam/bld/mct/
 tools/cprnc/
-**/RMST_f1.9_cmp_ibm_5.0*
 **/*.diff
 models/atm/cam/bld/cam
 **/*.log
@@ -16,7 +15,8 @@ models/atm/cam/bld/Depends
 models/atm/cam/bld/Filepath
 models/atm/cam/bld/Makefile
 models/atm/cam/bld/Srcfiles
-models/atm/cam/bld/cam
+models/atm/cam/bld/*.atm
+models/atm/cam/bld/*.drv
 models/atm/cam/bld/*.log
 models/atm/cam/bld/*_in
 models/atm/cam/bld/*ing
