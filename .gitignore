@@ -4,7 +4,7 @@ EXP2/
 *.mod
 *.nc
 # validation test for cam!
-models/atm/cam/bld/
+#models/atm/cam/bld/
 models/atm/cam/bld/mct/
 tools/cprnc/
 **/*.diff

@@ -31,7 +31,7 @@ module radae
   use cam_logfile,      only: iulog
   !use wv_saturation,    only: qsat_water
   use physconst,        only: gravit, cpair, epsilo, stebol, &
-                             pstd, mwdry, mwco2, mwo3
+                             pstd, mwdry, mwco2, mwo3,tmelt
 
   implicit none
 
@@ -152,9 +152,11 @@ module radae
 !   1 = 0-800 cm^-1 and 1200-2200 cm^-1 (rotation and rotation-vibration)
 !   2 = 800-1200 cm^-1                  (window)
 !
+! The H2O saturation table spans 160K to 351K in 1K intervals).
   real(r8), parameter:: min_tp_h2o = 160.0_r8        ! min T_p for pre-calculated abs/emis 
   real(r8), parameter:: max_tp_h2o = 349.999999_r8   ! max T_p for pre-calculated abs/emis
   integer, parameter :: ntemp = 192 ! Number of temperatures in H2O sat. table for Tp
+  real(r8) :: estblh2o(0:ntemp)       ! saturation vapor pressure for H2O for Tp rang
   integer, parameter :: o_fa = 6   ! Degree+1 of poly of T_e for absorptivity as U->inf.
   integer, parameter :: o_fe = 6   ! Degree+1 of poly of T_e for emissivity as U->inf.
 !-----------------------------------------------------------------------------
@@ -220,7 +222,7 @@ module radae
   real(r8), parameter ::  r300                = 1._r8/300._r8 ! 1/300
   real(r8), parameter ::  rsslp               = 1._r8/sslp! Reciprocal of sea level pressure
   real(r8), parameter ::  r2sslp              = 1._r8/(2._r8*sslp)! 1/2 of rsslp
-
+  real(r8), parameter :: tboil = 373.16_r8
 !
 !Constants for computing U corresponding to H2O cont. path
 !
@@ -228,6 +230,7 @@ module radae
 
   real(r8), parameter ::  sslp_mks           = sslp / 10.0_r8! Sea-level pressure in MKS units
   real(r8), parameter ::   rmw   = amd/amco2
+
 
 ! Public Interfaces
 !====================================================================================
@@ -598,6 +601,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
    real(r8) q_path           ! effective specific humidity along path
    real(r8) rh_path          ! effective relative humidity along path
 
+   integer  iest             ! index in estblh2o
       integer bnd_idx        ! LW band index
       real(r8) aer_pth_dlt   ! [kg m-2] STRAER path between interface levels k1 and k2
       real(r8) aer_pth_ngh(pcols)
@@ -669,8 +673,20 @@ subroutine radabs(lchnk   ,ncol    ,             &
 
             tpatha = abs(tcg(i,k1) - tcg(i,k2))/dw(i)
             t_p = min(max(tpatha, min_tp_h2o), max_tp_h2o)
-            call qsat_water_cpp(t_p, pnew_mks, esx, qsx)
-
+            esx = exp(-7.90298_r8*(tboil/t_p-1._r8)*log(10._r8)+ &
+            5.02808_r8*log(tboil/t_p)- &
+            1.3816e-7_r8*(exp(11.344_r8*(1._r8-t_p/tboil)*log(10._r8))-1._r8)*log(10._r8)+ &
+            8.1328e-3_r8*(exp(-3.49149_r8*(tboil/t_p-1._r8)*log(10._r8))-1._r8)*log(10._r8)+ &
+            log(1013.246_r8))*100._r8
+     
+             if ( (pnew_mks - esx) <= 0._r8 ) then
+               qsx = 1.0_r8
+            else
+               qsx = epsilo*esx / (pnew_mks - omeps*esx)
+            end if
+          
+            esx = min(esx, pnew_mks)
+                 
             q_path = dw(i) / abs(pnm(i,k1) - pnm(i,k2)) / rga
 
             ub(1) = abs(plh2ob(1,i,k1) - plh2ob(1,i,k2)) / psi(t_p,1)
@@ -1122,9 +1138,11 @@ subroutine radabs(lchnk   ,ncol    ,             &
             pnew(i)  = u(i)/(winpl(i,kn)*dw(i))
             pnew_mks  = pnew(i) * sslp_mks
             t_p = min(max(tbar(i,kn), min_tp_h2o), max_tp_h2o)
-
-            call qsat_water_cpp(t_p, pnew_mks, esx, qsx)
-
+            ! iest = floor(t_p) - min_tp_h2o
+            ! esx = estblh2o(iest) + (estblh2o(iest+1)-estblh2o(iest)) * &
+            !      (t_p - min_tp_h2o - iest)
+            ! qsx = epsilo * esx / (pnew_mks - omeps * esx)
+            call qsat_water(t_p, pnew_mks, esx, qsx)
             q_path = dw(i) / ABS(dpnm(i)) / rga
             
             ds2c     = abs(s2c(i,k2) - s2c(i,k2+1))
@@ -1761,6 +1779,7 @@ subroutine radems(lchnk   ,ncol    ,                            &
    real(r8) pnew_mks         ! pnew in MKS units
    real(r8) q_path           ! effective specific humidity along path
    real(r8) rh_path          ! effective relative humidity along path
+   integer  iest             ! index in estblh2o
 
 !
 !---------------------------Statement functions-------------------------
@@ -1859,9 +1878,11 @@ subroutine radems(lchnk   ,ncol    ,                            &
 !
          tpathe   = tcg(i,k1)/w(i,k1)
          t_p = min(max(tpathe, min_tp_h2o), max_tp_h2o)
-! todo
-         call qsat_water_cpp(t_p, pnew_mks, esx, qsx)
-
+         ! iest = floor(t_p) - min_tp_h2o
+            ! esx = estblh2o(iest) + (estblh2o(iest+1)-estblh2o(iest)) * &
+            !      (t_p - min_tp_h2o - iest)
+            ! qsx = epsilo * esx / (pnew_mks - omeps * esx)
+         call qsat_water(t_p, pnew_mks, esx, qsx)
 !
 ! Compute effective RH along path
 !
@@ -2590,7 +2611,7 @@ subroutine radae_init(gravx, epsilox, stebol, pstdx, mwdryx, mwco2x, mwo3x)
    integer ndims                  ! number of dimensions
    integer dims(PIO_MAX_VAR_DIMS)  ! vector of dimension ids
    integer natt                   ! number of attributes
-
+   integer tmin,tmax,itype,t
    integer ierr                  ! ierr flag returned from pio (pio handles errors internally so it is not checked)
 !
 ! Constants to set
@@ -2744,6 +2765,21 @@ subroutine radae_init(gravx, epsilox, stebol, pstdx, mwdryx, mwco2x, mwo3x)
    ierr =  pio_get_var (ncid_ae, ln_eh2owid, ln_eh2ow)
       
    call pio_closefile(ncid_ae)
+!
+! Set up table of H2O saturation vapor pressures for use in calculation
+!     effective path RH.  Need separate table from table in wv_saturation 
+!     because:
+!     (1. Path temperatures can fall below minimum of that table; and
+!     (2. Abs/Emissivity tables are derived with RH for water only.
+!
+   tmin = nint(min_tp_h2o)
+   tmax = nint(max_tp_h2o)+1
+   itype = 0
+   do t = tmin, tmax
+      !call gffgch(real(t,r8),estblh2o(t-tmin),itype)
+   end do
+
+
 
 end subroutine radae_init
 
@@ -4038,7 +4074,7 @@ end subroutine trcplk
 
 !====================================================================================
 
-elemental subroutine qsat_water(t, p, es, qs) ! for inline
+ subroutine qsat_water(t, p, es, qs) ! for inline
   !------------------------------------------------------------------!
   ! Purpose:                                                         !
   !   Calculate SVP over water at a given temperature, and then      !
@@ -4055,12 +4091,16 @@ elemental subroutine qsat_water(t, p, es, qs) ! for inline
   real(r8), intent(out) :: es  ! Saturation vapor pressure
   real(r8), intent(out) :: qs  ! Saturation specific humidity
 !todo rgy change this to exp10
-
-  es = 10._r8**(-7.90298_r8*(tboil/t-1._r8)+ &
-       5.02808_r8*log10(tboil/t)- &
-       1.3816e-7_r8*(10._r8**(11.344_r8*(1._r8-t/tboil))-1._r8)+ &
-       8.1328e-3_r8*(10._r8**(-3.49149_r8*(tboil/t-1._r8))-1._r8)+ &
-       log10(1013.246_r8))*100._r8
+   es = exp(-7.90298_r8*(tboil/t-1._r8)*log(10._r8)+ &
+   5.02808_r8*log(tboil/t)- &
+   1.3816e-7_r8*(exp(11.344_r8*(1._r8-t/tboil)*log(10._r8))-1._r8)*log(10._r8)+ &
+   8.1328e-3_r8*(exp(-3.49149_r8*(tboil/t-1._r8)*log(10._r8))-1._r8)*log(10._r8)+ &
+   log(1013.246_r8))*100._r8
+!   es = 10._r8**(-7.90298_r8*(tboil/t-1._r8)+ &
+!        5.02808_r8*log10(tboil/t)- &
+!        1.3816e-7_r8*(10._r8**(11.344_r8*(1._r8-t/tboil))-1._r8)+ &
+!        8.1328e-3_r8*(10._r8**(-3.49149_r8*(tboil/t-1._r8))-1._r8)+ &
+!        log10(1013.246_r8))*100._r8
 
    if ( (p - es) <= 0._r8 ) then
      qs = 1.0_r8

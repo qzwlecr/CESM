@@ -820,6 +820,20 @@ CONTAINS
 ! LMT = 2: positive-definite constraint
 ! LMT = 3: Quasi-monotone constraint
 
+if( lmt == 1 ) then
+
+  ! Improved (Lin 2001?) full constraint
+        do i=1,im
+             da1 = dm(i) + dm(i)
+              dl = sign(min(abs(da1),abs(al(i)-p(i))), da1)
+              dr = sign(min(abs(da1),abs(ar(i)-p(i))), da1)
+           ar(i) = p(i) + dr
+           al(i) = p(i) - dl
+           a6(i) = D3_0*(dl-dr)
+        enddo
+        return
+    endif
+   ! print *, lmt ,'\n'
   if( lmt == 0 ) then
 
 ! Full constraint
@@ -841,18 +855,6 @@ CONTAINS
          endif
      endif
   enddo
-
-  elseif( lmt == 1 ) then
-
-! Improved (Lin 2001?) full constraint
-      do i=1,im
-           da1 = dm(i) + dm(i)
-            dl = sign(min(abs(da1),abs(al(i)-p(i))), da1)
-            dr = sign(min(abs(da1),abs(ar(i)-p(i))), da1)
-         ar(i) = p(i) + dr
-         al(i) = p(i) - dl
-         a6(i) = D3_0*(dl-dr)
-      enddo
 
   elseif( lmt == 2 ) then
 ! Positive definite constraint

@@ -125,7 +125,6 @@
 
       enddo
       !print *, akap ！ 这个是定植
-     ! tmp=akap_*log()
    do j=jfirst, jlast
          do k=1,km+1
             do i= ifirst,ilast
@@ -133,7 +132,6 @@
                          !pe(i,k,j)**akap
             enddo
          enddo
-         !call calpkcuda(pk,pe,akap,km,i1,i2,jfirst,jp,ptop)  或者整个传参？
       enddo
 
    do j=jfirst, jlast

@@ -40,8 +40,9 @@ void inline qmmr_hPa_cpp_(double t, double p, double *es_out, double *qm){
       0.00000013816*(exp10(11.344*(1.0-t/tboil))-1.0)+\
       0.0081328*(exp10(-3.49149*(tboil/t-1.0))-1.0)+\
       log10(1013.246));
-  // printf("the tmp is %f",tmp);
     double es=exp10(tmp)*100.0;;//exp10(tmp)*100.0;
+   //printf("the es is %f\n",es);
+
 #else
 
  #define X log2(10)    //看来这个exp2还真的快不少23333,但是wls算错了？？
@@ -64,33 +65,16 @@ void inline qmmr_hPa_cpp_(double t, double p, double *es_out, double *qm){
   
   *es_out = es*0.01;
 }
-extern "C"
-void  qsat_water_cpp_(double* t_in, double* p_in, double *es_out, double *qs){
-    double p=*p_in;
-    double t=*t_in;
-    double tmp=(-7.90298*(tboil/t-1.0)+ \
-      5.02808*log10(tboil/t)- \
-      0.00000013816*(exp10(11.344*(1.0-t/tboil))-1.0)+\
-      0.0081328*(exp10(-3.49149*(tboil/t-1.0))-1.0)+\
-      log10(1013.246));
-  // printf("the tmp is %f",tmp);
-    double es=exp10(tmp)*100.0;;//exp10(tmp)*100.0;
 
-  if ( (p - es) < DBL_MIN )
-     *qs = 1.0;
-  else
-     *qs = eps1*es / (p -  omeps*es);
-  
-  *es_out = MIN(es, p);
-}
-
-//  int main(){
-//      double es,qm;
-//      for(double i=0;i<1.0;i++){
-//          qmmr_hPa_cpp_(300.0,10.0,&es,&qm);
-//      }
-//      return 0; 
-//  }
+//   int main(){
+//       double es,qm;
+//       for(double i=160;i<350;i+=0.0001){
+//           //0.001 space cost, 0.7MB
+//           //0.0001 space cost, 7MB
+//           qmmr_hPa_cpp_(i,10.0,&es,&qm);
+//       }
+//       return 0; 
+//   }
 extern "C" //牛顿迭代法解方程？
 void ientropy_cpp_ (double* s_in,double* p_in,double* qt_in,double* T_out,double* qst_out,double* Tfg)
 {
