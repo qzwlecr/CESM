@@ -32,8 +32,56 @@
 
 #define USE_EXP10
 
+
+#define PRECICE  1000000
+#define TABLE_SIZE PRECICE*(350-160+1) // the fortran start from 1
+
+#define GffgchCompile(i) exp10(-7.90298*(tboil/(double)(i)-1.0)+ \
+      5.02808*log10(tboil/(double)(i))- \
+      0.00000013816*(exp10(11.344*(1.0-(double)(i)/tboil))-1.0)+\
+      0.0081328*(exp10(-3.49149*(tboil/(double)(i)-1.0))-1.0)+\
+      log10(1013.246))*100.0
+
+#define GffgchIndex(i)  GffgchCompile(((i)/PRECICE-160))
+
+//static double test=GffgchIndex(10);
+
+//1000          1.4MB
+//10000         14MB 
+        
+static double gffgchTable[TABLE_SIZE];
+static bool volatile ifGffgchInit=false;
+
+void inline gffgch_core(double i){
+       double tmp=(-7.90298*(tboil/i-1.0)+ \
+      5.02808*log10(tboil/i)- \
+      0.00000013816*(exp10(11.344*(1.0-i/tboil))-1.0)+\
+      0.0081328*(exp10(-3.49149*(tboil/i-1.0))-1.0)+\
+      log10(1013.246));
+      unsigned long location=i*PRECICE;
+      //printf("[ASC debug] Y00: gffgch_core %p\n",gffgchTable);
+      gffgchTable[location]=exp10(tmp)*100.0;
+
+}
+
+extern "C" //init the ptr
+void asc_gffgch_init_ptr_(double** Tabl_ptr){
+       *Tabl_ptr=gffgchTable;
+       printf("[ASC debug] Y00: Tabl_ptr %p with table size %d\n",Tabl_ptr,sizeof(gffgchTable));
+}
+extern "C" //init the table (load it from disk / shared memory)
+void asc_gffgch_init_table_(){
+      //  if(ifGffgchInit){
+      //     return;
+      //  }
+
+}
+
+
+
 void inline qmmr_hPa_cpp_(double t, double p, double *es_out, double *qm){
     p=p*100;
+    //t=t+1.0/50000 ;//POC
 #ifdef USE_EXP10
     double tmp=(-7.90298*(tboil/t-1.0)+ \
       5.02808*log10(tboil/t)- \
@@ -45,7 +93,7 @@ void inline qmmr_hPa_cpp_(double t, double p, double *es_out, double *qm){
 
 #else
 
- #define X log2(10)    //看来这个exp2还真的快不少23333,但是wls算错了？？
+ #define X log2(10)    
     double tmp=(-7.90298*(tboil/t-1.0)*X + \
      5.02808*log2(tboil/t)  -\
      0.00000013816*(exp2(11.344*(1.0-t/tboil)*X)-1.0)*X + \
@@ -67,12 +115,9 @@ void inline qmmr_hPa_cpp_(double t, double p, double *es_out, double *qm){
 }
 
 //   int main(){
-//       double es,qm;
-//       for(double i=160;i<350;i+=0.0001){
-//           //0.001 space cost, 0.7MB
-//           //0.0001 space cost, 7MB
-//           qmmr_hPa_cpp_(i,10.0,&es,&qm);
-//       }
+//       double* es;
+//           asc_gffgch_init_table_();
+//           asc_gffgch_init_ptr_(&es);
 //       return 0; 
 //   }
 extern "C" //牛顿迭代法解方程？

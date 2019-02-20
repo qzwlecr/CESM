@@ -29,10 +29,9 @@ module radae
         idx_LW_1000_1200, idx_LW_0800_1000,  idx_LW_1200_2000
   use abortutils,       only: endrun
   use cam_logfile,      only: iulog
-  !use wv_saturation,    only: qsat_water
   use physconst,        only: gravit, cpair, epsilo, stebol, &
                              pstd, mwdry, mwco2, mwo3,tmelt
-
+  use ASCHACK,          only:asc_gffgch_table,PRECISION,asc_gffgch_init
   implicit none
 
   save
@@ -672,20 +671,11 @@ subroutine radabs(lchnk   ,ncol    ,             &
             pnew_mks  = pnew(i) * sslp_mks
 
             tpatha = abs(tcg(i,k1) - tcg(i,k2))/dw(i)
-            t_p = min(max(tpatha, min_tp_h2o), max_tp_h2o)
-            esx = exp(-7.90298_r8*(tboil/t_p-1._r8)*log(10._r8)+ &
-            5.02808_r8*log(tboil/t_p)- &
-            1.3816e-7_r8*(exp(11.344_r8*(1._r8-t_p/tboil)*log(10._r8))-1._r8)*log(10._r8)+ &
-            8.1328e-3_r8*(exp(-3.49149_r8*(tboil/t_p-1._r8)*log(10._r8))-1._r8)*log(10._r8)+ &
-            log(1013.246_r8))*100._r8
-     
-             if ( (pnew_mks - esx) <= 0._r8 ) then
-               qsx = 1.0_r8
-            else
-               qsx = epsilo*esx / (pnew_mks - omeps*esx)
-            end if
-          
-            esx = min(esx, pnew_mks)
+            t_p = min(max(tpatha, min_tp_h2o), max_tp_h2o)  !+1._r8/500000._r8 !POC
+            iest = floor(t_p*PRECISION) - 160*PRECISION
+            esx = asc_gffgch_table(iest) +&
+             (asc_gffgch_table(iest+1)-asc_gffgch_table(iest)) *(t_p*PRECISION - floor(t_p*PRECISION))
+            qsx = epsilo * esx / (pnew_mks - omeps * esx)
                  
             q_path = dw(i) / abs(pnm(i,k1) - pnm(i,k2)) / rga
 
@@ -1138,11 +1128,12 @@ subroutine radabs(lchnk   ,ncol    ,             &
             pnew(i)  = u(i)/(winpl(i,kn)*dw(i))
             pnew_mks  = pnew(i) * sslp_mks
             t_p = min(max(tbar(i,kn), min_tp_h2o), max_tp_h2o)
-            ! iest = floor(t_p) - min_tp_h2o
-            ! esx = estblh2o(iest) + (estblh2o(iest+1)-estblh2o(iest)) * &
-            !      (t_p - min_tp_h2o - iest)
-            ! qsx = epsilo * esx / (pnew_mks - omeps * esx)
-            call qsat_water(t_p, pnew_mks, esx, qsx)
+
+            iest = floor(t_p*PRECISION) - 160*PRECISION
+            esx = asc_gffgch_table(iest) +&
+             (asc_gffgch_table(iest+1)-asc_gffgch_table(iest)) *(t_p*PRECISION - floor(t_p*PRECISION))
+            qsx = epsilo * esx / (pnew_mks - omeps * esx)
+
             q_path = dw(i) / ABS(dpnm(i)) / rga
             
             ds2c     = abs(s2c(i,k2) - s2c(i,k2+1))
@@ -1878,11 +1869,12 @@ subroutine radems(lchnk   ,ncol    ,                            &
 !
          tpathe   = tcg(i,k1)/w(i,k1)
          t_p = min(max(tpathe, min_tp_h2o), max_tp_h2o)
-         ! iest = floor(t_p) - min_tp_h2o
-            ! esx = estblh2o(iest) + (estblh2o(iest+1)-estblh2o(iest)) * &
-            !      (t_p - min_tp_h2o - iest)
-            ! qsx = epsilo * esx / (pnew_mks - omeps * esx)
-         call qsat_water(t_p, pnew_mks, esx, qsx)
+
+         iest = floor(t_p*PRECISION) - 160*PRECISION
+         esx = asc_gffgch_table(iest) +&
+          (asc_gffgch_table(iest+1)-asc_gffgch_table(iest)) *(t_p*PRECISION - floor(t_p*PRECISION))
+         qsx = epsilo * esx / (pnew_mks - omeps * esx)
+
 !
 ! Compute effective RH along path
 !
@@ -2618,6 +2610,7 @@ subroutine radae_init(gravx, epsilox, stebol, pstdx, mwdryx, mwco2x, mwo3x)
 !
 
    write(iulog,*)'[ASC debug] Y00: radae_init called!'
+   call asc_gffgch_init()
    ! gravit     = gravx
    ! gravit_cgs = 100._r8*gravx
    ! rga        = 1._r8/gravit_cgs
@@ -4072,45 +4065,5 @@ subroutine trcplk(ncol    ,                                     &
 end subroutine trcplk
 
 
-!====================================================================================
-
- subroutine qsat_water(t, p, es, qs) ! for inline
-  !------------------------------------------------------------------!
-  ! Purpose:                                                         !
-  !   Calculate SVP over water at a given temperature, and then      !
-  !   calculate and return saturation specific humidity.             !
-  !   Optionally return various temperature derivatives or enthalpy  !
-  !   at saturation.                                                 !
-  !------------------------------------------------------------------!
-
-  real(r8), parameter :: tboil = 373.16_r8
-  ! Inputs
-  real(r8), intent(in) :: t    ! Temperature
-  real(r8), intent(in) :: p    ! Pressure
-  ! Outputs
-  real(r8), intent(out) :: es  ! Saturation vapor pressure
-  real(r8), intent(out) :: qs  ! Saturation specific humidity
-!todo rgy change this to exp10
-   es = exp(-7.90298_r8*(tboil/t-1._r8)*log(10._r8)+ &
-   5.02808_r8*log(tboil/t)- &
-   1.3816e-7_r8*(exp(11.344_r8*(1._r8-t/tboil)*log(10._r8))-1._r8)*log(10._r8)+ &
-   8.1328e-3_r8*(exp(-3.49149_r8*(tboil/t-1._r8)*log(10._r8))-1._r8)*log(10._r8)+ &
-   log(1013.246_r8))*100._r8
-!   es = 10._r8**(-7.90298_r8*(tboil/t-1._r8)+ &
-!        5.02808_r8*log10(tboil/t)- &
-!        1.3816e-7_r8*(10._r8**(11.344_r8*(1._r8-t/tboil))-1._r8)+ &
-!        8.1328e-3_r8*(10._r8**(-3.49149_r8*(tboil/t-1._r8))-1._r8)+ &
-!        log10(1013.246_r8))*100._r8
-
-   if ( (p - es) <= 0._r8 ) then
-     qs = 1.0_r8
-  else
-     qs = epsilo*es / (p - omeps*es)
-  end if
-
-  es = min(es, p)
-
-
-end subroutine qsat_water
 
 end module radae

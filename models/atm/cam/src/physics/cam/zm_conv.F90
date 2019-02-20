@@ -3369,7 +3369,7 @@ do k = pver, msg+1, -1
          qtmix(i,k) = qtp0(i)
          tfguess = t(i,k)
          !rcall = 1
-         call ientropy_cpp (smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess)
+         call ientropy (smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess)
       end if
 
 ! Entraining levels
@@ -3409,7 +3409,7 @@ do k = pver, msg+1, -1
 
          tfguess = tmix(i,k+1)
          !rcall = 2
-         call ientropy_cpp(smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess)   
+         call ientropy(smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess)   
 
 !
 ! Determine if this is lcl of this column if qsmix <= qtmix.
@@ -3428,7 +3428,7 @@ do k = pver, msg+1, -1
 
             tfguess = tmix(i,k)
            ! rcall = 3
-            call ientropy_cpp (slcl,pl(i),qtlcl,tl(i),qslcl,tfguess)
+            call ientropy (slcl,pl(i),qtlcl,tl(i),qslcl,tfguess)
 
 !            write(iulog,*)' '
 !            write(iulog,*)' p',p(i,k+1),pl(i),p(i,lcl(i))
@@ -3524,7 +3524,7 @@ do k = pver, msg+1, -1
 
             tfguess = tmix(i,k)
             !rcall =4
-            call ientropy_cpp (new_s, p(i,k), new_q, tmix(i,k), qsmix(i,k), tfguess)
+            call ientropy (new_s, p(i,k), new_q, tmix(i,k), qsmix(i,k), tfguess)
             
          end do  ! Iteration loop for freezing processes.
 
@@ -3581,21 +3581,21 @@ entropy = (cpres + qtot*cpliq)*log( TK/tfreez) - rgas*log( (p-e)/pref ) + &
 return
 end FUNCTION entropy
 
+
 !
 !-----------------------------------------------------------------------------------------
-   SUBROUTINE ientropy (s,p,qt,T,qsat,Tfg)
+SUBROUTINE ientropy (s,p,qt,T,qst,Tfg)
 !-----------------------------------------------------------------------------------------
 !
 ! p(mb), Tfg/T(K), qt/qv(kg/kg), s(J/kg). 
 ! Inverts entropy, pressure and total water qt 
 ! for T and saturated vapor mixing ratio
 ! 
-
      use phys_grid, only: get_rlon_p, get_rlat_p
 
      real(r8), intent(in)  :: s, p, Tfg, qt
-     real(r8), intent(out) :: qsat, T
-     real(r8) :: qv,Ts,dTs,fs1,fs2,esat     
+     real(r8), intent(out) :: qst, T
+     real(r8) :: qv,Ts,dTs,fs1,fs2,est
      real(r8) :: pref,eref,L,e
      real(r8) :: this_lat,this_lon
      integer :: LOOPMAX,i
@@ -3610,260 +3610,49 @@ eref = 6.106_r8           ! sat p at tfreez (mb)
 
 Ts = Tfg                  ! Better first guess based on Tprofile from conv.
 
-converge: do i=0, LOOPMAX
+do i=0, LOOPMAX
 
    L = rl - (cpliq - cpwv)*(Ts-tfreez) 
 
-   esat = c1*exp(c2*(Ts-tfreez)/(c3+Ts-tfreez)) ! Bolton (eq. 10)
-   qsat = eps1*esat/(p-esat)     
-   qv = min(qt,qsat) 
+   call qmmr_hPa(Ts, p, est, qst)
+   qv = min(qt,qst) 
    e = qv*p / (eps1 +qv)  ! Bolton (eq. 16)
    fs1 = (cpres + qt*cpliq)*log( Ts/tfreez ) - rgas*log( (p-e)/pref ) + &
-        L*qv/Ts - qv*rh2o*log(qv/qsat) - s
+        L*qv/Ts - qv*rh2o*log(qv/qst) - s
    
    L = rl - (cpliq - cpwv)*(Ts-1._r8-tfreez)         
 
-   esat = c1*exp(c2*(Ts-1._r8-tfreez)/(c3+Ts-1._r8-tfreez))
-   qsat = eps1*esat/(p-esat)  
-   qv = min(qt,qsat) 
+   call qmmr_hPa(Ts-1._r8, p, est, qst)
+   qv = min(qt,qst) 
    e = qv*p / (eps1 +qv)
    fs2 = (cpres + qt*cpliq)*log( (Ts-1._r8)/tfreez ) - rgas*log( (p-e)/pref ) + &
-        L*qv/(Ts-1._r8) - qv*rh2o*log(qv/qsat) - s 
+        L*qv/(Ts-1._r8) - qv*rh2o*log(qv/qst) - s 
    
    dTs = fs1/(fs2 - fs1)
    Ts  = Ts+dTs
-   if (abs(dTs).lt.0.001_r8) exit converge
-   if (i .eq. LOOPMAX - 1) then
-
-      call endrun('**** ZM_CONV IENTROPY: Tmix did not converge ****')
-   end if
-enddo converge
+   if (abs(dTs).lt.0.001_r8) go to 2333
+enddo 
+call endrun('**** ZM_CONV IENTROPY: Tmix did not converge ****')
 
 ! Replace call to satmixutils.
 
-esat = c1*exp(c2*(Ts-tfreez)/(c3+Ts-tfreez))
-qsat=eps1*esat/(p-esat)
+2333 call qmmr_hPa(Ts, p, est, qst)
 
-qv = min(qt,qsat)                             !       /* check for saturation */
+qv = min(qt,qst)                             !       /* check for saturation */
 T = Ts 
 
  100    format (A,I1,I4,I4,7(A,F6.2))
 
 return
 end SUBROUTINE ientropy
-!TODO 为什么这个并不行
-!
-!-----------------------------------------------------------------------------------------
-SUBROUTINE ientropy_6 (s,p,qt,T,qst,Tfg)
-!-----------------------------------------------------------------------------------------
-!
-! p(mb), Tfg/T(K), qt/qv(kg/kg), s(J/kg). 
-! Inverts entropy, pressure and total water qt 
-! for T and saturated vapor mixing ratio
-! 
-
-  use phys_grid, only: get_rlon_p, get_rlat_p
-
-  real(r8), intent(in)  :: s, p, Tfg, qt
-  real(r8), intent(out) :: qst, T
-  real(r8) :: est, this_lat,this_lon
-  real(r8) :: a,b,c,d,ebr,fa,fb,fc,pbr,qbr,rbr,sbr,tol1,xm,tol
-  integer :: i
-
-  logical :: converged
-
-  ! Max number of iteration loops.
-  integer, parameter :: LOOPMAX = 100
-  real(r8), parameter :: EPS = 3.e-8_r8
-
-  converged = .false.
-
-  ! Invert the entropy equation -- use Brent's method
-  ! Brent, R. P. Ch. 3-4 in Algorithms for Minimization Without Derivatives. Englewood Cliffs, NJ: Prentice-Hall, 1973.
-
-  T = Tfg                  ! Better first guess based on Tprofile from conv.
-
-  a = Tfg-10    !low bracket
-  b = Tfg+10    !high bracket
-
-  fa = entropy(a, p, qt) - s
-  fb = entropy(b, p, qt) - s
-
-  c=b
-  fc=fb
-  tol=0.001_r8
-
-  converge: do i=0, LOOPMAX
-     if ((fb > 0.0_r8 .and. fc > 0.0_r8) .or. &
-          (fb < 0.0_r8 .and. fc < 0.0_r8)) then
-        c=a
-        fc=fa
-        d=b-a
-        ebr=d
-     end if
-     if (abs(fc) < abs(fb)) then
-        a=b
-        b=c
-        c=a
-        fa=fb
-        fb=fc
-        fc=fa
-     end if
-
-     tol1=2.0_r8*EPS*abs(b)+0.5_r8*tol
-     xm=0.5_r8*(c-b)
-     converged = (abs(xm) <= tol1 .or. fb == 0.0_r8)
-     if (converged) exit converge
-
-     if (abs(ebr) >= tol1 .and. abs(fa) > abs(fb)) then
-        sbr=fb/fa
-        if (a == c) then
-           pbr=2.0_r8*xm*sbr
-           qbr=1.0_r8-sbr
-        else
-           qbr=fa/fc
-           rbr=fb/fc
-           pbr=sbr*(2.0_r8*xm*qbr*(qbr-rbr)-(b-a)*(rbr-1.0_r8))
-           qbr=(qbr-1.0_r8)*(rbr-1.0_r8)*(sbr-1.0_r8)
-        end if
-        if (pbr > 0.0_r8) qbr=-qbr
-        pbr=abs(pbr)
-        if (2.0_r8*pbr  <  min(3.0_r8*xm*qbr-abs(tol1*qbr),abs(ebr*qbr))) then
-           ebr=d
-           d=pbr/qbr
-        else
-           d=xm
-           ebr=d
-        end if
-     else
-        d=xm
-        ebr=d
-     end if
-     a=b
-     fa=fb
-     b=b+merge(d,sign(tol1,xm), abs(d) > tol1 )
-
-     fb = entropy(b, p, qt) - s
-
-  end do converge
-
-  T = b
-  call qsat_hPa(T, p, est, qst)
-
-  if (.not. converged) then
-
-     call endrun('**** ZM_CONV IENTROPY: Tmix did not converge ****')
-  end if
-
-100 format (A,I1,I4,I4,7(A,F6.2))
-
-end SUBROUTINE ientropy_6
-
-! Wrapper for qsat_water that does translation between Pa and hPa
-! qsat_water uses Pa internally, so get it right, need to pass in Pa.
-! Afterward, set es back to hPa.
-elemental subroutine qsat_hPa(t, p, es, qm)
-  use wv_saturation, only: qsat_water
-
-  ! Inputs
-  real(r8), intent(in) :: t    ! Temperature (K)
-  real(r8), intent(in) :: p    ! Pressure (hPa)
-  ! Outputs
-  real(r8), intent(out) :: es  ! Saturation vapor pressure (hPa)
-  real(r8), intent(out) :: qm  ! Saturation mass mixing ratio
-                               ! (vapor mass over dry mass, kg/kg)
-
-  call qsat_water(t, p*100._r8, es, qm)
-
-  es = es*0.01_r8
-
-end subroutine qsat_hPa
-! !
-! !-----------------------------------------------------------------------------------------
-!    SUBROUTINE ientropy (rcall,icol,lchnk,s,p,qt,T,qst,Tfg)
-! !-----------------------------------------------------------------------------------------
-! !
-! ! p(mb), Tfg/T(K), qt/qv(kg/kg), s(J/kg). 
-! ! Inverts entropy, pressure and total water qt 
-! ! for T and saturated vapor mixing ratio
-! ! 
-
-!      use phys_grid, only: get_rlon_p, get_rlat_p
-
-!      integer, intent(in) :: icol, lchnk, rcall
-!      real(r8), intent(in)  :: s, p, Tfg, qt
-!      real(r8), intent(out) :: qst, T
-!      real(r8) :: qv,Ts,dTs,fs1,fs2,est
-!      real(r8) :: pref,eref,L,e
-!      real(r8) :: this_lat,this_lon
-!      integer :: LOOPMAX,i
-!      !asc cuda hack  
-!       call ientropy_cpp(s,p,qt,T,qst,Tfg)
-!       return
-
-! LOOPMAX = 100                   !* max number of iteration loops 
-
-! ! Values for entropy
-! pref = 1000.0_r8           ! mb ref pressure.
-! eref = 6.106_r8           ! sat p at tfreez (mb)
-
-! ! Invert the entropy equation -- use Newton's method
-
-! Ts = Tfg                  ! Better first guess based on Tprofile from conv.
-
-! converge: do i=0, LOOPMAX
-
-!    L = rl - (cpliq - cpwv)*(Ts-tfreez) 
-
-!    call qmmr_hPa(Ts, p, est, qst) !这里编译器应该直接把L3662 inline过来
-!    qv = min(qt,qst) 
-!    e = qv*p / (eps1 +qv)  ! Bolton (eq. 16)
-!    fs1 = (cpres + qt*cpliq)*log( Ts/tfreez ) - rgas*log( (p-e)/pref ) + &
-!         L*qv/Ts - qv*rh2o*log(qv/qst) - s
-   
-!    L = rl - (cpliq - cpwv)*(Ts-1._r8-tfreez)         
-
-!    call qmmr_hPa(Ts-1._r8, p, est, qst)
-!    qv = min(qt,qst) 
-!    e = qv*p / (eps1 +qv)
-!    fs2 = (cpres + qt*cpliq)*log( (Ts-1._r8)/tfreez ) - rgas*log( (p-e)/pref ) + &
-!         L*qv/(Ts-1._r8) - qv*rh2o*log(qv/qst) - s 
-   
-!    dTs = fs1/(fs2 - fs1)
-!    Ts  = Ts+dTs
-!    if (abs(dTs).lt.0.001_r8) exit converge
-!    if (i .eq. LOOPMAX - 1) then
-!       this_lat = get_rlat_p(lchnk, icol)*57.296_r8
-!       this_lon = get_rlon_p(lchnk, icol)*57.296_r8
-!       write(iulog,*) '*** ZM_CONV: IENTROPY: Failed and about to exit, info follows ****'
-!       write(iulog,100) 'ZM_CONV: IENTROPY. Details: call#,lchnk,icol= ',rcall,lchnk,icol, &
-!        ' lat: ',this_lat,' lon: ',this_lon, &
-!        ' P(mb)= ', p, ' Tfg(K)= ', Tfg, ' qt(g/kg) = ', 1000._r8*qt, &
-!        ' qst(g/kg) = ', 1000._r8*qst,', s(J/kg) = ',s
-!       call endrun('**** ZM_CONV IENTROPY: Tmix did not converge ****')
-!    end if
-! enddo converge
-
-! ! Replace call to satmixutils.
-
-! call qmmr_hPa(Ts, p, est, qst)
-
-! qv = min(qt,qst)                             !       /* check for saturation */
-! T = Ts 
-
-!  100    format (A,I1,I4,I4,7(A,F6.2))
-
-! return
-! end SUBROUTINE ientropy
-
 ! Wrapper for qmmr that does translation between Pa and hPa
 ! qmmr uses Pa internally, so get qmmr right, need to pass in Pa.
 ! Afterward, set es back to hPa.
  subroutine qmmr_hPa(t, p1, es, qm)
-  use wv_saturation, only: qmmr
+   use ASCHACK, only:asc_gffgch_table,PRECISION
 
   ! Inputs
-  real(r8), intent(in) :: t    ! Temperature (K)
+  real(r8), intent(in) :: t    ! Temperature (K) 
   real(r8), intent(in) :: p1    ! Pressure (hPa)
   ! Outputs
   real(r8), intent(out) :: es  ! Saturation vapor pressure (hPa)
@@ -3871,18 +3660,20 @@ end subroutine qsat_hPa
                                ! (vapor mass over dry mass, kg/kg)
   real(r8),parameter  :: tboil = 373.16_r8 
   real(r8)  p
+  integer  iest             ! index in estblh2o
+  real(r8) esx              ! 
 
-  p=p1*100._r8
   es = exp(-7.90298_r8*(tboil/t-1._r8)*log(10._r8)+ &
   5.02808_r8*log(tboil/t)- &
   1.3816e-7_r8*(exp(11.344_r8*(1._r8-t/tboil)*log(10._r8))-1._r8)*log(10._r8)+ &
   8.1328e-3_r8*(exp(-3.49149_r8*(tboil/t-1._r8)*log(10._r8))-1._r8)*log(10._r8)+ &
   log(1013.246_r8))*100._r8
-!   es = 10._r8**(-7.90298_r8*(tboil/t-1._r8)+ &
-!       5.02808_r8*log10(tboil/t)- &
-!       1.3816e-7_r8*(10._r8**(11.344_r8*(1._r8-t/tboil))-1._r8)+ &
-!       8.1328e-3_r8*(10._r8**(-3.49149_r8*(tboil/t-1._r8))-1._r8)+ &
-!       log10(1013.246_r8))*100._r8
+  !if use the asc_gffgch_table
+  iest = floor(t*PRECISION) - 160*PRECISION
+  esx = asc_gffgch_table(iest) +&
+   (asc_gffgch_table(iest+1)-asc_gffgch_table(iest)) *(t*PRECISION - floor(t*PRECISION))
+  
+  p=p1*100._r8
 
   if ( (p - es) < epsilon(1.0_r8)**2 ) then
      qm = huge(1.0_r8)

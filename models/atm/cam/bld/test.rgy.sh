@@ -15,7 +15,7 @@ export LD_LIBRARY_PATH=/media/rgy/win-file/document/computer/HPC/cesm/netcdf-bui
 
 INTEL='/media/rgy/linux-file/intel_parallel_studio/'
 
-rm -f ./*.o
+#rm -f ./*.o
 ./cuda-build.sh || exit 1
 
  ./configure -dyn fv -hgrid 1.9x2.5 -ntasks 1 -phys cam4 -ocn aquaplanet -pergro -fc gfortran  -fopt '-lmkl:sequential  -g -O3' #-debug
@@ -25,6 +25,7 @@ rm -f ./*.o
 
 export FC=ifort
 gmake -j 2 > gmake.log 2>&1
+tail ./gmake.log
 
 echo "now link the cam"
 rm -f ./cam 
