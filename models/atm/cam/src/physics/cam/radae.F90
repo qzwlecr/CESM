@@ -2610,7 +2610,6 @@ subroutine radae_init(gravx, epsilox, stebol, pstdx, mwdryx, mwco2x, mwo3x)
 !
 
    write(iulog,*)'[ASC debug] Y00: radae_init called!'
-   call asc_gffgch_init()
    ! gravit     = gravx
    ! gravit_cgs = 100._r8*gravx
    ! rga        = 1._r8/gravit_cgs

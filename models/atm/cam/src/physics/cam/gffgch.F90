@@ -17,7 +17,7 @@ subroutine asc_gffgch_init()
    CALL C_F_POINTER(Cptr, asc_gffgch_table,[TABL_SIZE])
    !print *, '[ASC debug] Y00: asc_gffgch_init_ptr !',asc_gffgch_table
    ! for debuging!!
-   call init_qmmr_table()
+   !call init_qmmr_table()
 end subroutine asc_gffgch_init
 
 subroutine init_qmmr_table()

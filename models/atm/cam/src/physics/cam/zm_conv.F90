@@ -3649,7 +3649,7 @@ end SUBROUTINE ientropy
 ! qmmr uses Pa internally, so get qmmr right, need to pass in Pa.
 ! Afterward, set es back to hPa.
  subroutine qmmr_hPa(t, p1, es, qm)
-   use ASCHACK, only:asc_gffgch_table,PRECISION
+   use ASCHACK, only:asc_gffgch_table,PRECISION,TABL_SIZE
 
   ! Inputs
   real(r8), intent(in) :: t    ! Temperature (K) 
@@ -3663,16 +3663,20 @@ end SUBROUTINE ientropy
   integer  iest             ! index in estblh2o
   real(r8) esx              ! 
 
-  es = exp(-7.90298_r8*(tboil/t-1._r8)*log(10._r8)+ &
-  5.02808_r8*log(tboil/t)- &
-  1.3816e-7_r8*(exp(11.344_r8*(1._r8-t/tboil)*log(10._r8))-1._r8)*log(10._r8)+ &
-  8.1328e-3_r8*(exp(-3.49149_r8*(tboil/t-1._r8)*log(10._r8))-1._r8)*log(10._r8)+ &
-  log(1013.246_r8))*100._r8
+
   !if use the asc_gffgch_table
-  iest = floor(t*PRECISION) - 160*PRECISION
-  esx = asc_gffgch_table(iest) +&
-   (asc_gffgch_table(iest+1)-asc_gffgch_table(iest)) *(t*PRECISION - floor(t*PRECISION))
-  
+  !iest = floor(t*PRECISION) - 160*PRECISION
+  !if (iest .lt. 0 .OR. iest .gt. TABL_SIZE) then
+  !print *, t ,"ASC t"
+     es = exp(-7.90298_r8*(tboil/t-1._r8)*log(10._r8)+ &
+     5.02808_r8*log(tboil/t)- &
+     1.3816e-7_r8*(exp(11.344_r8*(1._r8-t/tboil)*log(10._r8))-1._r8)*log(10._r8)+ &
+     8.1328e-3_r8*(exp(-3.49149_r8*(tboil/t-1._r8)*log(10._r8))-1._r8)*log(10._r8)+ &
+     log(1013.246_r8))*100._r8
+!  else
+!   es = asc_gffgch_table(iest) +&
+!    (asc_gffgch_table(iest+1)-asc_gffgch_table(iest)) *(t*PRECISION - floor(t*PRECISION))
+!  endif
   p=p1*100._r8
 
   if ( (p - es) < epsilon(1.0_r8)**2 ) then

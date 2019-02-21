@@ -3,6 +3,16 @@
 #include <float.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/shm.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/file.h>
+
 #define MAX(a,b) ((a) > (b) ? a : b)
 #define MIN(a,b) ((a) < (b) ? a : b)
 
@@ -49,8 +59,93 @@
 //1000          1.4MB
 //10000         14MB 
         
-static double gffgchTable[TABLE_SIZE];
+static double* gffgchTable;
 static bool volatile ifGffgchInit=false;
+
+void error() {
+  printf("%d:%s",errno,strerror(errno));
+  exit(-1);
+}
+//https://stackoverflow.com/questions/6182877/file-locks-for-linux
+int acquireLock (char *fileSpec) {
+    int lockFd;
+    if ((lockFd = open (fileSpec, O_CREAT | O_RDWR, 0666))  < 0)
+        return -1;
+
+    if (flock (lockFd, LOCK_EX | LOCK_NB) < 0) {
+        close (lockFd);
+        return -1;
+    }
+
+    return lockFd;
+}
+
+void releaseLock (int lockFd) {
+    flock (lockFd, LOCK_UN);
+    close (lockFd);
+}
+void readData(char* fileName) {
+
+  // Generate a key for memory sharing
+  key_t key = ftok("/tmp",'r');
+  if(key<1) perror("ftok");
+  // Get the size of data file
+  struct stat data_stat;
+  stat(fileName,&data_stat);
+  int size = data_stat.st_size;
+  char* shmem_ptr;
+
+  if (acquireLock("/tmp/CESM.lock") != -1) {
+    // we got the lock !
+    // Create a shared memory block.
+    printf("[ASC debug] Y00: Master ...\n");
+
+    int mem_id = shmget(key,size+1,IPC_CREAT | IPC_EXCL | 0666);
+    if (mem_id<0) error();
+      shmem_ptr = (char*)shmat(mem_id,NULL,0);
+    if (shmem_ptr<0) error();
+    // Open the data file
+    printf("[ASC debug] Y00: Master mem init\n");
+
+    FILE* data = fopen(fileName,"r");
+    if (!data) error();
+    // Read the data file into the shared memory block.
+    int i = 0;
+    char c;
+    while (i<size) {
+      shmem_ptr[i] = fgetc(data);
+      i++;
+    }
+    shmem_ptr[i] = EOF;
+    fclose(data);
+    printf("[ASC debug] Y00: master finished reading, with size %d\n",size);
+    //releaseLock (fd);
+
+  } else {
+  // Other processes have read the data.
+    printf("[ASC debug] Y00: get the table with shm ...\n");
+    sleep(100);//just wait for the master 
+    // int fd;
+    //  if ((fd = acquireLock ("/tmp/CESM.lock")) < 0) {
+    //      fprintf (stderr, "[ASC debug] Y00: waiting for master to read the table.\n");
+    //      sleep(10);
+    //  }
+    //  releaseLock (fd);
+
+    int mem_id = shmget(key,size+1,IPC_CREAT);
+    if (mem_id<0) error();
+      shmem_ptr = (char*)shmat(mem_id,NULL,0);
+    if (shmem_ptr<0) error();
+    // Print the data.
+    //int i = 0;
+   //  while(shmem_ptr[i] != EOF) {
+   //    printf("%c",shmem_ptr[i]);
+   //    sleep(0.1);
+   //    i++;
+   //  }
+  }
+  gffgchTable=(double* )shmem_ptr;
+}
 
 void inline gffgch_core(double i){
        double tmp=(-7.90298*(tboil/i-1.0)+ \
@@ -67,15 +162,15 @@ void inline gffgch_core(double i){
 extern "C" //init the ptr
 void asc_gffgch_init_ptr_(double** Tabl_ptr){
        *Tabl_ptr=gffgchTable;
-       printf("[ASC debug] Y00: Tabl_ptr %p with table size %d\n",Tabl_ptr,sizeof(gffgchTable));
+       printf("[ASC debug] Y00: Tabl_ptr %p \n",Tabl_ptr);
 }
 extern "C" //init the table (load it from disk / shared memory)
+#define rgy_pc "/media/rgy/win-file/document/computer/HPC/cesm/data"
 void asc_gffgch_init_table_(){
-      //  if(ifGffgchInit){
-      //     return;
-      //  }
+      readData(rgy_pc);
 
 }
+
 
 
 

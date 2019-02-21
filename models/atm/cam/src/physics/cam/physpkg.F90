@@ -35,6 +35,7 @@ module physpkg
   use cam_logfile,     only: iulog
   use camsrfexch,      only: cam_export
   use phys_control,    only: do_waccm_phys
+  use ASCHACK,          only:asc_gffgch_table,PRECISION,asc_gffgch_init
 
   implicit none
   private
@@ -679,6 +680,7 @@ subroutine phys_init( phys_state, phys_tend, pbuf2d, cam_out )
     !-----------------------------------------------------------------------
 
     ! Get microphysics option
+    call asc_gffgch_init()
     call phys_getopts(microp_scheme_out = microp_scheme)
     call phys_getopts(do_clubb_sgs_out  = do_clubb_sgs )
 

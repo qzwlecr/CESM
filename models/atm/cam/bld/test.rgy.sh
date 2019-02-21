@@ -1,4 +1,5 @@
 #!/bin/bash
+ipcrm -a
 ulimit -s unlimited
 #echo 'you need to download tar cam53_f19c4aqpgro_ys.tar.gz and cam.zip from sftp first'
 #echo "you need to build cprnc in tools/cprnc first"
