@@ -3264,6 +3264,84 @@ subroutine ccsm_run()
       ! NOTICE: non-exist in B and E1850CN, delete it.
       !----------------------------------------------------------
 
+      if (ocean_tight_coupling) then
+      if (ocn_present .and. ocnrun_alarm) then
+         do eoi = 1,num_inst_ocn
+            if (iamin_OCNID(eoi)) then
+               if (run_barriers) then
+                  call t_drvstartf ('DRIVER_OCN_RUN_BARRIER')
+                  call mpi_barrier(mpicom_OCNID(eoi),ierr)
+                  call t_drvstopf ('DRIVER_OCN_RUN_BARRIER')
+                  time_brun = mpi_wtime()
+               endif
+               call t_drvstartf ('DRIVER_OCN_RUN',barrier=mpicom_OCNID(eoi))
+               if (drv_threading) call seq_comm_setnthreads(nthreads_OCNID)
+               if (ocn_prognostic) call mct_avect_vecmult(x2o_oo(eoi),areacor_oo(eoi)%drv2mdl,seq_flds_x2o_fluxes)
+               call ocn_run_mct( EClock_o, cdata_oo(eoi), x2o_oo(eoi), o2x_oo(eoi))
+               call mct_avect_vecmult(o2x_oo(eoi),areacor_oo(eoi)%mdl2drv,seq_flds_o2x_fluxes)
+               if (drv_threading) call seq_comm_setnthreads(nthreads_GLOID)
+               call t_drvstopf  ('DRIVER_OCN_RUN')
+               if (run_barriers) then
+                  time_erun = mpi_wtime()
+                  cktime = time_erun-time_brun
+                  cktime_acc(5) = cktime_acc(5) + cktime
+                  cktime_cnt(5) = cktime_cnt(5) + 1
+                  write(logunit,107) ' rstamp ocn_run_time: model date = ', &
+                     ymd,tod,' avg dt = ',cktime_acc(5)/cktime_cnt(5),' dt = ',cktime
+               endif
+            endif
+         enddo
+      endif
+      endif
+ 
+      !----------------------------------------------------------
+      ! ocn -> cpl, tight coupling (sequential type mode)
+      !----------------------------------------------------------
+
+      if (ocean_tight_coupling) then
+      if (iamin_CPLALLOCNID) then
+      if (ocn_present .and. ocnnext_alarm) then
+         if (run_barriers) then
+            call t_drvstartf ('DRIVER_O2CT_BARRIER')
+            call mpi_barrier(mpicom_CPLALLOCNID,ierr)
+            call t_drvstopf ('DRIVER_O2CT_BARRIER')
+         endif
+         call t_drvstartf ('DRIVER_O2CT',cplcom=.true.,barrier=mpicom_CPLALLOCNID)
+         do eoi = 1,num_inst_ocn
+            if (iamin_CPLOCNID(eoi)) then
+               call t_drvstartf ('driver_o2ct_ocno2ocnx',barrier=mpicom_CPLOCNID(eoi))
+               call seq_map_map(mapper_Co2x(eoi), o2x_oo(eoi), o2x_ox(eoi), msgtag=CPLOCNID(eoi)*100+eoi*10+4)
+               call t_drvstopf  ('driver_o2ct_ocno2ocnx')
+            endif
+         enddo
+         if (iamin_CPLOCNID(ens1)) then
+            call t_drvstartf ('driver_o2ct_infoexch',barrier=mpicom_CPLOCNID(ens1))
+            call seq_infodata_exchange(infodata,CPLOCNID(ens1),'ocn2cpl_run')
+            call t_drvstopf  ('driver_o2ct_infoexch')
+         endif
+         call t_drvstopf  ('DRIVER_O2CT',cplcom=.true.)
+         if (iamin_CPLID) then
+            if (run_barriers) then
+               call t_drvstartf ('DRIVER_OCNPOSTT_BARRIER')
+               call mpi_barrier(mpicom_CPLID,ierr)
+               call t_drvstopf ('DRIVER_OCNPOSTT_BARRIER')
+            endif
+            call t_drvstartf  ('DRIVER_OCNPOSTT',cplrun=.true.,barrier=mpicom_CPLID)
+            if (drv_threading) call seq_comm_setnthreads(nthreads_CPLID)
+            if (info_debug > 1) then
+               call t_drvstartf ('driver_ocnpostt_diagav',barrier=mpicom_CPLID)
+               do eoi = 1,num_inst_ocn
+                  call seq_diag_avect_mct(cdata_ox,o2x_ox(eoi),'recv ocn'//trim(ocn_suffix(eoi)))
+               enddo
+               call t_drvstopf  ('driver_ocnpostt_diagav')
+            endif
+            if (drv_threading) call seq_comm_setnthreads(nthreads_GLOID)
+            call t_drvstopf  ('DRIVER_OCNPOSTT',cplrun=.true.)
+         endif
+      endif
+      endif
+      endif
+
       !----------------------------------------------------------
       ! OCN PREP
       !----------------------------------------------------------
@@ -3787,9 +3865,10 @@ subroutine ccsm_run()
       endif
 
       !----------------------------------------------------------
-      ! Run Ocn Model HERE
+      ! Run Ocn Model HERE if NOT ocean_tight_coupling
       !----------------------------------------------------------
 
+      if (.not.ocean_tight_coupling) then
       if (ocn_present .and. ocnrun_alarm) then
          do eoi = 1,num_inst_ocn
             if (iamin_OCNID(eoi)) then
@@ -3817,7 +3896,8 @@ subroutine ccsm_run()
             endif
          enddo
       endif
-
+      endif
+ 
       !----------------------------------------------------------
       ! RUN atm model
       !----------------------------------------------------------
@@ -3946,6 +4026,7 @@ subroutine ccsm_run()
       ! ocn -> cpl, loose coupling (concurrent type mode)
       !----------------------------------------------------------
 
+      if (.not.ocean_tight_coupling) then
       if (iamin_CPLALLOCNID) then
       if (ocn_present .and. ocnnext_alarm) then
          if (run_barriers) then
@@ -3986,6 +4067,7 @@ subroutine ccsm_run()
             if (drv_threading) call seq_comm_setnthreads(nthreads_GLOID)
             call t_drvstopf  ('DRIVER_OCNPOST',cplrun=.true.)
          endif
+      endif
       endif
       endif
 
