@@ -3306,7 +3306,7 @@ subroutine trcab(ncol    ,                                     &
    real(r8) ds2c(pcols)             ! continuum path length
 !
    real(r8) duptyp(pcols)           ! p-type path length
-   real(r8) tw(pcols,6)             ! h2o transmission factor
+   real(r8) tw(6)             ! h2o transmission factor
 !   real(r8) g1(6)                   !         "
 !   real(r8) g2(6)                   !         "
 !   real(r8) g3(6)                   !         "
@@ -3325,6 +3325,7 @@ subroutine trcab(ncol    ,                                     &
 !
    real(r8) tlw                     ! h2o transmission
    real(r8) tch4                    ! ch4 transmission
+   real(r8) tmp
 !
 !--------------------------Data Statements------------------------------
 !
@@ -3354,27 +3355,11 @@ subroutine trcab(ncol    ,                                     &
       duptyp(i) = abs(uptype(i,k1) - uptype(i,k2))
    end do
 !
-   do l = 1,6
-      do i = 1,ncol
-         psi1 = exp(abp(l)*tt(i) + bbp(l)*tt(i)*tt(i))
-         phi1 = exp(ab(l)*tt(i) + bb(l)*tt(i)*tt(i))
-         p1 = pnew(i)*(psi1/phi1)*rsslp
-         w1 = dw(i)*phi1  !这个地方的指数表达式可以化简 TODO
-         tw(i,l) = exp(-g1(l)*p1*(sqrt(1.0_r8 + g2(l)*(w1/p1)) - 1.0_r8) - &
-                   g3(l)*ds2c(i)-g4(l)*duptyp(i))
-      end do
-   end do
-!
-   do i=1,ncol  !这个和上面的合并？
-      tw(i,1)=tw(i,1)*(0.7_r8*aer_trn_ttl(i,k1,k2,idx_LW_0650_0800)+&! l=1: 0750--0820 cm-1
-                       0.3_r8*aer_trn_ttl(i,k1,k2,idx_LW_0800_1000)) 
-      tw(i,2)=tw(i,2)*aer_trn_ttl(i,k1,k2,idx_LW_0800_1000) ! l=2: 0820--0880 cm-1
-      tw(i,3)=tw(i,3)*aer_trn_ttl(i,k1,k2,idx_LW_0800_1000) ! l=3: 0880--0900 cm-1
-      tw(i,4)=tw(i,4)*aer_trn_ttl(i,k1,k2,idx_LW_0800_1000) ! l=4: 0900--1000 cm-1
-      tw(i,5)=tw(i,5)*aer_trn_ttl(i,k1,k2,idx_LW_1000_1200) ! l=5: 1000--1120 cm-1
-      tw(i,6)=tw(i,6)*aer_trn_ttl(i,k1,k2,idx_LW_1000_1200) ! l=6: 1120--1170 cm-1
-   end do                    ! end loop over lon
-   do i = 1,ncol
+
+
+!DIR$ SIMD
+   do i=1,ncol  !这个和下面的合并？ 检查这个访存的状况，这个tw或许需要转方向 TODO
+
       du1 = abs(ucfc11(i,k1) - ucfc11(i,k2))
       du2 = abs(ucfc12(i,k1) - ucfc12(i,k2))
 !
@@ -3388,17 +3373,35 @@ subroutine trcab(ncol    ,                                     &
 !
 ! Absorptivity for CFC11 bands
 !
-      acfc1 =  50.0_r8*(1.0_r8 - exp(-54.09_r8*du1))*tw(i,1)*abplnk1(7,i,k2)
-      acfc2 =  60.0_r8*(1.0_r8 - exp(-5130.03_r8*du1))*tw(i,2)*abplnk1(8,i,k2)
-      acfc3 =  60.0_r8*(1.0_r8 - tcfc3)*tw(i,4)*tcfc6*abplnk1(9,i,k2)
-      acfc4 = 100.0_r8*(1.0_r8 - tcfc4)*tw(i,5)*abplnk1(10,i,k2)
+      tmp=tt(i)*tt(i)
+
+      do l = 1,6
+        psi1 = exp(abp(l)*tt(i) + bbp(l)*tmp) ! 注意，检查这里的bbp 被编译成了常量？？
+        phi1 = exp(ab(l)*tt(i) + bb(l)*tmp)
+        p1 = pnew(i)*(psi1/phi1)*rsslp
+        w1 = dw(i)*phi1  
+        tw(l) = exp(-g1(l)*p1*(sqrt(1.0_r8 + g2(l)*(w1/p1)) - 1.0_r8) - &
+                  g3(l)*ds2c(i)-g4(l)*duptyp(i))
+      end do
+      tw(1)=tw(1)*(0.7_r8*aer_trn_ttl(i,k1,k2,idx_LW_0650_0800)+&! l=1: 0750--0820 cm-1
+      0.3_r8*aer_trn_ttl(i,k1,k2,idx_LW_0800_1000)) 
+      tw(2)=tw(2)*aer_trn_ttl(i,k1,k2,idx_LW_0800_1000) ! l=2: 0820--0880 cm-1
+      tw(3)=tw(3)*aer_trn_ttl(i,k1,k2,idx_LW_0800_1000) ! l=3: 0880--0900 cm-1
+      tw(4)=tw(4)*aer_trn_ttl(i,k1,k2,idx_LW_0800_1000) ! l=4: 0900--1000 cm-1
+      tw(5)=tw(5)*aer_trn_ttl(i,k1,k2,idx_LW_1000_1200) ! l=5: 1000--1120 cm-1
+      tw(6)=tw(6)*aer_trn_ttl(i,k1,k2,idx_LW_1000_1200) ! l=6: 1120--1170 cm-1
+      
+      acfc1 =  50.0_r8*(1.0_r8 - exp(-54.09_r8*du1))*tw(1)*abplnk1(7,i,k2)
+      acfc2 =  60.0_r8*(1.0_r8 - exp(-5130.03_r8*du1))*tw(2)*abplnk1(8,i,k2)
+      acfc3 =  60.0_r8*(1.0_r8 - tcfc3)*tw(4)*tcfc6*abplnk1(9,i,k2)
+      acfc4 = 100.0_r8*(1.0_r8 - tcfc4)*tw(5)*abplnk1(10,i,k2)
 !
 ! Absorptivity for CFC12 bands
 !
-      acfc5 = 45.0_r8*(1.0_r8 - exp(-1272.35_r8*du2))*tw(i,3)*abplnk1(11,i,k2)
-      acfc6 = 50.0_r8*(1.0_r8 - tcfc6)* tw(i,4) * abplnk1(12,i,k2)
-      acfc7 = 80.0_r8*(1.0_r8 - tcfc7)* tw(i,5) * tcfc4*abplnk1(13,i,k2)
-      acfc8 = 70.0_r8*(1.0_r8 - tcfc8)* tw(i,6) * abplnk1(14,i,k2)
+      acfc5 = 45.0_r8*(1.0_r8 - exp(-1272.35_r8*du2))*tw(3)*abplnk1(11,i,k2)
+      acfc6 = 50.0_r8*(1.0_r8 - tcfc6)* tw(4) * abplnk1(12,i,k2)
+      acfc7 = 80.0_r8*(1.0_r8 - tcfc7)* tw(5) * tcfc4*abplnk1(13,i,k2)
+      acfc8 = 70.0_r8*(1.0_r8 - tcfc8)* tw(6) * abplnk1(14,i,k2)
 !
 ! Emissivity for CH4 band 1306 cm-1
 !
@@ -3434,7 +3437,7 @@ subroutine trcab(ncol    ,                                     &
 ! 1168 cm-1 band
 !
       an2o3 = 2.54034_r8*sqti(i)*log(1.0_r8 + func(du03,dbeta03))* &
-              tw(i,6)*tcfc8*abplnk1(6,i,k2)
+              tw(6)*tcfc8*abplnk1(6,i,k2)
 !
 ! Emissivity for 1064 cm-1 band of CO2
 !
@@ -3445,7 +3448,7 @@ subroutine trcab(ncol    ,                                     &
       dbetc2 = 2.0_r8*dbetc1
       aco21 = 3.7571_r8*sqti(i)*log(1.0_r8 + func(du11,dbetc1) &
               + func(du12,dbetc2) + func(du13,dbetc2)) &
-              *to3(i)*tw(i,5)*tcfc4*tcfc7*abplnk1(2,i,k2)
+              *to3(i)*tw(5)*tcfc4*tcfc7*abplnk1(2,i,k2)
 !
 ! Emissivity for 961 cm-1 band
 !
@@ -3454,7 +3457,7 @@ subroutine trcab(ncol    ,                                     &
       du23 = abs(uco223(i,k1) - uco223(i,k2))
       aco22 = 3.8443_r8*sqti(i)*log(1.0_r8 + func(du21,dbetc1) &
               + func(du22,dbetc1) + func(du23,dbetc2)) &
-              *tw(i,4)*tcfc3*tcfc6*abplnk1(1,i,k2)
+              *tw(4)*tcfc3*tcfc6*abplnk1(1,i,k2)
 !
 ! total trace gas absorptivity
 !
@@ -3586,7 +3589,7 @@ subroutine trcabn(ncol    ,                                     &
 !
    real(r8) ds2c(pcols)          ! continuum path length
    real(r8) duptyp(pcols)        ! p-type path length
-   real(r8) tw(pcols,6)          ! h2o transmission overlap
+   real(r8) tw(6)          ! h2o transmission overlap
 !   real(r8) g1(6)                ! h2o overlap factor
 !   real(r8) g2(6)                !         "
 !
@@ -3605,6 +3608,8 @@ subroutine trcabn(ncol    ,                                     &
    real(r8) tcfc8                !         "
    real(r8) tlw                  ! h2o transmission
    real(r8) tch4                 ! ch4 transmission
+   real(r8) tmp
+
 !
 !--------------------------Data Statements------------------------------
 !
@@ -3635,28 +3640,26 @@ subroutine trcabn(ncol    ,                                     &
       duptyp(i) = abs(uptype(i,k2+1) - uptype(i,k2))*uinpl(i,kn)
    end do
 !
-   do l = 1,6
-      do i = 1,ncol
-         psi1 = exp(abp(l)*tt(i)+bbp(l)*tt(i)*tt(i))
-         phi1 = exp(ab(l)*tt(i)+bb(l)*tt(i)*tt(i))
-         p1 = pnew(i) * (psi1/phi1) *rsslp
-         w1 = dw(i) * winpl(i,kn) * phi1
-         tw(i,l) = exp(- g1(l)*p1*(sqrt(1.0_r8+g2(l)*(w1/p1))-1.0_r8) &
-                   - g3(l)*ds2c(i)-g4(l)*duptyp(i))
-      end do
-   end do
-!
+!DIR$ SIMD
    do i=1,ncol
-      tw(i,1)=tw(i,1)*(0.7_r8*aer_trn_ngh(i,idx_LW_0650_0800)+&! l=1: 0750--0820 cm-1
-                       0.3_r8*aer_trn_ngh(i,idx_LW_0800_1000))
-      tw(i,2)=tw(i,2)*aer_trn_ngh(i,idx_LW_0800_1000) ! l=2: 0820--0880 cm-1
-      tw(i,3)=tw(i,3)*aer_trn_ngh(i,idx_LW_0800_1000) ! l=3: 0880--0900 cm-1
-      tw(i,4)=tw(i,4)*aer_trn_ngh(i,idx_LW_0800_1000) ! l=4: 0900--1000 cm-1
-      tw(i,5)=tw(i,5)*aer_trn_ngh(i,idx_LW_1000_1200) ! l=5: 1000--1120 cm-1
-      tw(i,6)=tw(i,6)*aer_trn_ngh(i,idx_LW_1000_1200) ! l=6: 1120--1170 cm-1
-   end do                    ! end loop over lon
+      tmp=tt(i)*tt(i)
+   do l = 1,6
+         psi1 = exp(abp(l)*tt(i)+bbp(l)*tmp) ! 注意，检查这里的bbp 被编译成了常量？？ 检查这么改的效果
+         phi1 = exp(ab(l)*tt(i)+bb(l)*tmp)
+         p1 = pnew(i) * (psi1/phi1) *rsslp
+         w1 = dw(i) * winpl(i,kn) * phi1  
+         tw(l) = exp(-g1(l)*p1*(sqrt(1.0_r8 + g2(l)*(w1/p1)) - 1.0_r8) - &
+                   g3(l)*ds2c(i)-g4(l)*duptyp(i))
+   end do
 
-   do i = 1,ncol
+      tw(1)=tw(1)*(0.7_r8*aer_trn_ngh(i,idx_LW_0650_0800)+&! l=1: 0750--0820 cm-1
+                       0.3_r8*aer_trn_ngh(i,idx_LW_0800_1000))
+      tw(2)=tw(2)*aer_trn_ngh(i,idx_LW_0800_1000) ! l=2: 0820--0880 cm-1
+      tw(3)=tw(3)*aer_trn_ngh(i,idx_LW_0800_1000) ! l=3: 0880--0900 cm-1
+      tw(4)=tw(4)*aer_trn_ngh(i,idx_LW_0800_1000) ! l=4: 0900--1000 cm-1
+      tw(5)=tw(5)*aer_trn_ngh(i,idx_LW_1000_1200) ! l=5: 1000--1120 cm-1
+      tw(6)=tw(6)*aer_trn_ngh(i,idx_LW_1000_1200) ! l=6: 1120--1170 cm-1
+
 !
       du1 = abs(ucfc11(i,k2+1) - ucfc11(i,k2)) * winpl(i,kn)
       du2 = abs(ucfc12(i,k2+1) - ucfc12(i,k2)) * winpl(i,kn)
@@ -3671,17 +3674,17 @@ subroutine trcabn(ncol    ,                                     &
 !
 ! Absorptivity for CFC11 bands
 !
-      acfc1 = 50.0_r8*(1.0_r8 - exp(-54.09_r8*du1)) * tw(i,1)*bplnk(7,i,kn)
-      acfc2 = 60.0_r8*(1.0_r8 - exp(-5130.03_r8*du1))*tw(i,2)*bplnk(8,i,kn)
-      acfc3 = 60.0_r8*(1.0_r8 - tcfc3)*tw(i,4)*tcfc6 * bplnk(9,i,kn)
-      acfc4 = 100.0_r8*(1.0_r8 - tcfc4)* tw(i,5) * bplnk(10,i,kn)
+      acfc1 = 50.0_r8*(1.0_r8 - exp(-54.09_r8*du1)) * tw(1)*bplnk(7,i,kn)
+      acfc2 = 60.0_r8*(1.0_r8 - exp(-5130.03_r8*du1))*tw(2)*bplnk(8,i,kn)
+      acfc3 = 60.0_r8*(1.0_r8 - tcfc3)*tw(4)*tcfc6 * bplnk(9,i,kn)
+      acfc4 = 100.0_r8*(1.0_r8 - tcfc4)* tw(5) * bplnk(10,i,kn)
 !
 ! Absorptivity for CFC12 bands
 !
-      acfc5 = 45.0_r8*(1.0_r8 - exp(-1272.35_r8*du2))*tw(i,3)*bplnk(11,i,kn)
-      acfc6 = 50.0_r8*(1.0_r8 - tcfc6)*tw(i,4)*bplnk(12,i,kn)
-      acfc7 = 80.0_r8*(1.0_r8 - tcfc7)* tw(i,5)*tcfc4 *bplnk(13,i,kn)
-      acfc8 = 70.0_r8*(1.0_r8 - tcfc8)*tw(i,6)*bplnk(14,i,kn)
+      acfc5 = 45.0_r8*(1.0_r8 - exp(-1272.35_r8*du2))*tw(3)*bplnk(11,i,kn)
+      acfc6 = 50.0_r8*(1.0_r8 - tcfc6)*tw(4)*bplnk(12,i,kn)
+      acfc7 = 80.0_r8*(1.0_r8 - tcfc7)* tw(5)*tcfc4 *bplnk(13,i,kn)
+      acfc8 = 70.0_r8*(1.0_r8 - tcfc8)*tw(6)*bplnk(14,i,kn)
 !
 ! Absorptivity for CH4 band 1306 cm-1
 !
@@ -3717,7 +3720,7 @@ subroutine trcabn(ncol    ,                                     &
 ! 1168 cm-1 band
 !
       an2o3 = 2.54034_r8*sqti(i)*log(1.0_r8 + func(du03,dbeta03)) * &
-              tw(i,6) * tcfc8 * bplnk(6,i,kn)
+              tw(6) * tcfc8 * bplnk(6,i,kn)
 !
 ! Absorptivity for 1064 cm-1 band of CO2
 !
@@ -3728,7 +3731,7 @@ subroutine trcabn(ncol    ,                                     &
       dbetc2 = 2.0_r8 * dbetc1
       aco21 = 3.7571_r8*sqti(i)*log(1.0_r8 + func(du11,dbetc1) &
               + func(du12,dbetc2) + func(du13,dbetc2)) &
-              * to3(i) * tw(i,5) * tcfc4 * tcfc7 * bplnk(2,i,kn)
+              * to3(i) * tw(5) * tcfc4 * tcfc7 * bplnk(2,i,kn)
 !
 ! Absorptivity for 961 cm-1 band of co2
 !
@@ -3737,7 +3740,7 @@ subroutine trcabn(ncol    ,                                     &
       du23 = abs(uco223(i,k2+1) - uco223(i,k2)) * winpl(i,kn)
       aco22 = 3.8443_r8*sqti(i)*log(1.0_r8 + func(du21,dbetc1) &
               + func(du22,dbetc1) + func(du23,dbetc2)) &
-              * tw(i,4) * tcfc3 * tcfc6 * bplnk(1,i,kn)
+              * tw(4) * tcfc3 * tcfc6 * bplnk(1,i,kn)
 !
 ! total trace gas absorptivity
 !
