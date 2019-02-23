@@ -659,8 +659,9 @@ subroutine radabs(lchnk   ,ncol    ,             &
    do k1=pverp,ntoplw,-1
       do k2=pverp,ntoplw,-1
          if (k1 == k2) cycle
+         
          do i=1,ncol
-            !ASC-Y00
+            !ASC-Y00 这里会有一点向量化的
             dplh2o(i) = plh2o(i,k1) - plh2o(i,k2)
             u(i)      = abs(dplh2o(i))
             sqrtu(i)  = sqrt(u(i)) 
@@ -1038,7 +1039,8 @@ subroutine radabs(lchnk   ,ncol    ,             &
             f1sqwp(i) = f1co2*sqwp
             t1co2(i)  = 1._r8/(1._r8 + (245.18_r8*omet*sqwp*rsqti))
             oneme     = 1._r8 - et2
-            alphat    = oneme**3*rsqti
+            oneme     = oneme*oneme*oneme !改成了三个自己相乘
+            alphat    = oneme*rsqti
             pi        = abs(dpnm(i))
             wco2      =  2.5221_r8*co2vmr(i)*pi*rga
             u7(i)     =  4.9411e4_r8*alphat*et2*wco2
@@ -1407,7 +1409,8 @@ subroutine radabs(lchnk   ,ncol    ,             &
             omet     = (1._r8 - 1.5_r8*et2)
             f1co2    = 899.70_r8*omet*(1._r8 + 1.94774_r8*et + 4.73486_r8*et2)*rsqti
             oneme    = 1._r8 - et2
-            alphat   = oneme**3*rsqti
+            oneme     = oneme*oneme*oneme !改成了三个自己相乘
+            alphat    = oneme*rsqti
             pi       = abs(dpnm(i))*winpl(i,kn)
             wco2     = 2.5221_r8*co2vmr(i)*pi*rga
             u7_tmp    = 4.9411e4_r8*alphat*et2*wco2
@@ -1829,7 +1832,7 @@ subroutine radems(lchnk   ,ncol    ,                            &
 !
    do i=1,ncol
       ex             = exp(960._r8/tplnke(i))
-      co2plk(i)      = 5.e8_r8/((tplnke(i)**4)*(ex - 1._r8))
+      co2plk(i)      = 5.e8_r8/(((tplnke(i)**2)**2)*(ex - 1._r8))
       co2t(i,ntoplw) = tplnke(i)
       sum(i)         = co2t(i,ntoplw)*pnm(i,ntoplw)
    end do
@@ -2317,7 +2320,8 @@ subroutine radems(lchnk   ,ncol    ,                            &
          f1sqwp = f1co2*sqwp
          t1co2  = 1._r8/(1._r8 + 245.18_r8*omet*sqwp*rsqti)
          oneme  = 1._r8 - et2
-         alphat = oneme**3*rsqti
+         oneme     = oneme*oneme*oneme !改成了三个自己相乘
+         alphat = oneme*rsqti
          wco2   = 2.5221_r8*co2vmr(i)*pnm(i,k1)*rga
          u7     = 4.9411e4_r8*alphat*et2*wco2
          u8     = 3.9744e4_r8*alphat*et4*wco2
@@ -2483,7 +2487,7 @@ subroutine radtpl(ncol    ,                                     &
       tint(i,pverp)    = sqrt(sqrt(tint4(i,pverp)))
       tplnka(i,ntoplw) = tnm(i,ntoplw)
       tint(i,ntoplw)   = tplnka(i,ntoplw)
-      tlayr4(i,ntoplw) = tplnka(i,ntoplw)**4
+      tlayr4(i,ntoplw) = ((tplnka(i,ntoplw)**2)**2)
       tint4(i,ntoplw)  = tlayr4(i,ntoplw)
    end do
 !
@@ -2494,7 +2498,7 @@ subroutine radtpl(ncol    ,                                     &
       do i=1,ncol
          dy = (piln(i,k) - pmln(i,k))/(pmln(i,k-1) - pmln(i,k))
          tint(i,k)  = tnm(i,k) - dy*(tnm(i,k)-tnm(i,k-1))
-         tint4(i,k) = tint(i,k)**4
+         tint4(i,k) = ((tint(i,k)**2)**2)
       end do
    end do
 !
@@ -2506,7 +2510,7 @@ subroutine radtpl(ncol    ,                                     &
    do k=ntoplw+1,pverp
       do i=1,ncol
          tlayr(i,k)  = tnm(i,k-1)
-         tlayr4(i,k) = tlayr(i,k)**4
+         tlayr4(i,k) = ((tlayr(i,k)**2)**2)
          tplnka(i,k) = .5_r8*(tint(i,k) + tint(i,k-1))
       end do
    end do
@@ -4043,6 +4047,7 @@ subroutine trcplk(ncol    ,                                     &
    real(r8), intent(out) :: emplnk(14,pcols)         ! emissivity Planck factor
    real(r8), intent(out) :: abplnk1(14,pcols,pverp)  ! non-nearest layer Plack factor
    real(r8), intent(out) :: abplnk2(14,pcols,pverp)  ! nearest layer factor
+   real(r8) tmp
 
 !
 !--------------------------Local Variables------------------------------
@@ -4073,7 +4078,7 @@ subroutine trcplk(ncol    ,                                     &
 !
    do wvl = 1,14
       do i = 1,ncol
-         emplnk(wvl,i) = f1(wvl)/(tplnke(i)**4.0_r8*(exp(f3(wvl)/tplnke(i))-1.0_r8))
+         emplnk(wvl,i) = f1(wvl)/(((tplnke(i)**2)**2)*(exp(f3(wvl)/tplnke(i))-1.0_r8))
       end do
    end do
 !
@@ -4085,13 +4090,17 @@ subroutine trcplk(ncol    ,                                     &
 !
 ! non-nearlest layer function
 !
+            tmp = tint(i,k)**2
+            tmp = tmp**2 * tint(i,k)
             abplnk1(wvl,i,k) = (f2(wvl)*exp(f3(wvl)/tint(i,k)))  &
-                               /(tint(i,k)**5.0_r8*(exp(f3(wvl)/tint(i,k))-1.0_r8)**2.0_r8) !注意检查这里是不是被编译成了pow
+                               /( tmp *(exp(f3(wvl)/tint(i,k))-1.0_r8)**2.0_r8) 
 !
 ! nearest layer function
 !
+            tmp = tlayr(i,k)**2
+            tmp = tmp**2 * tlayr(i,k)
             abplnk2(wvl,i,k) = (f2(wvl)*exp(f3(wvl)/tlayr(i,k))) &
-                               /(tlayr(i,k)**5.0_r8*(exp(f3(wvl)/tlayr(i,k))-1.0_r8)**2.0_r8)
+                               /( tmp *(exp(f3(wvl)/tlayr(i,k))-1.0_r8)**2.0_r8)
          end do
       end do
    end do

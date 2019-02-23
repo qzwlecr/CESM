@@ -2095,6 +2095,9 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
    real(r8) :: w_limited(pcols,0:pver)       ! Aerosol ssa (limited to < 0.999999)
    real(r8) :: aer_g_limit(pcols,0:pver)     ! Aerosol tau_w_g (limited ssa)
    real(r8) :: aer_f_limit(pcols,0:pver)     ! Aerosol tau_w_f (limited ssa)
+   real(r8) :: store(ndayc)
+   real(r8) :: store_wtau(ndayc)
+
 !
    alpha(w,uu,g,e) = .75_r8*w*uu*((1._r8 + g*(1._r8-w))/(1._r8 - e*e*uu*uu))
    gamma(w,uu,g,e) = .50_r8*w*((3._r8*g*(1._r8-w)*uu*uu + 1._r8)/(1._r8-e*e*uu*uu))
@@ -2136,14 +2139,15 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
             
             tauray = trayoslp*(pflx(i,k+1)-pflx(i,k))
             taugab = abh2o*uh2o(i,k) + abo3*uo3(i,k) + abco2*uco2(i,k) + abo2*uo2(i,k)
-
-            tautot = tauxcl(i,k) + tauxci(i,k) + tauray + taugab + aer_tau(i,k)
+            store(i) =tauray + taugab + aer_tau(i,k)
+            tautot = tauxcl(i,k) + tauxci(i,k) + store(i)
             
             tmp1   = wcl(i,k)*tauxcl(i,k)
             tmp2   = wci(i,k)*tauxci(i,k)
             
             taucsc = tmp1 + tmp2 + aer_tau_w(i,k)
             wtau   = wray*tauray
+            store_wtau(i)=wtau
             wt     = wtau + taucsc
             wtot   = wt/tautot
             gtot   = (wtau*gray + gcl(i,k)*tmp1 &
@@ -2175,7 +2179,10 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
             tdir(ns,i,k) = max(tdir(ns,i,k),0.0_r8)
             rdif(ns,i,k) = max(rdif(ns,i,k),0.0_r8)
             tdif(ns,i,k) = max(tdif(ns,i,k),0.0_r8)
-!ASC-Y00 是否可以向量化？
+    end do
+!ASC-Y00  检查这么做是不是有用！
+   do i=1,ndayc !如果没有用，就把这两行删了，还是两个和在一起，然后把 store* 删了
+         
             if (tauxcl(i,k) == 0.0_r8 .and. tauxci(i,k) == 0.0_r8) then
 
                rdirc(ns,i,k) = rdir(ns,i,k)
@@ -2186,10 +2193,10 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
                !print *, 'miss' !148872717
             else
                !print *, 'hit'  !24874230
-
-               tautot = tauray + taugab + aer_tau(i,k)
+               !wtau tauray taugab
+               tautot = store(i)
                taucsc = aer_tau_w(i,k)
-
+               wtau   = store_wtau(i)
                wt     = wtau + taucsc
                wtot   = wt/tautot
                gtot   = (wtau*gray + aer_tau_w_g(i,k))/wt
