@@ -36,7 +36,7 @@ mpifort -o /media/rgy/win-file/document/computer/HPC/cesm/CESM/models/atm/cam/bl
 -L/media/rgy/win-file/document/computer/HPC/cesm/netcdf-build/lib -lnetcdf -lnetcdf -Wl,-rpath=/media/rgy/win-file/document/computer/HPC/cesm/netcdf-build/lib  \
 -L/media/rgy/win-file/document/computer/HPC/cesm/CESM/models/atm/cam/bld/mct/mct -lmct \
 -L/media/rgy/win-file/document/computer/HPC/cesm/CESM/models/atm/cam/bld/mct/mpeu -lmpeu  -L/media/rgy/win-file/document/computer/HPC/cesm/openmpi/lib -lmpi \
--lmkl_intel_ilp64 -lmkl_sequential -lmkl_core \
+-lmkl_intel_ilp64 -lmkl_sequential -lmkl_core -lsvml \
  -L/usr/local/cuda/lib64 -lcufft -lcudart|| exit 3
 #-L $INTEL/mkl/lib/intel64/ -lmkl_rt
 

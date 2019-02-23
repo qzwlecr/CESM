@@ -712,7 +712,7 @@ subroutine radcswmx(lchnk   ,ncol    ,                         &
 ! 
    fsds(Nday:ncol)     = 0.0_r8 ! ASC Y00 可以减少的初始化
 
-   fsnirtoa(1:ncol) = 0.0_r8
+   fsnirtoa(1:ncol) = 0.0_r8  ! todo. 解决这个一起init的问题
    fsnrtoac(1:ncol) = 0.0_r8
    fsnrtoaq(1:ncol) = 0.0_r8
 
@@ -2133,7 +2133,7 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
 
    do k=0,pver
       do i=1,ndayc
-            !ASC-Y00 这个地方实在弄不了了
+            
             tauray = trayoslp*(pflx(i,k+1)-pflx(i,k))
             taugab = abh2o*uh2o(i,k) + abo3*uo3(i,k) + abco2*uco2(i,k) + abo2*uo2(i,k)
 
@@ -2175,7 +2175,7 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
             tdir(ns,i,k) = max(tdir(ns,i,k),0.0_r8)
             rdif(ns,i,k) = max(rdif(ns,i,k),0.0_r8)
             tdif(ns,i,k) = max(tdif(ns,i,k),0.0_r8)
-
+!ASC-Y00 是否可以向量化？
             if (tauxcl(i,k) == 0.0_r8 .and. tauxci(i,k) == 0.0_r8) then
 
                rdirc(ns,i,k) = rdir(ns,i,k)
@@ -2183,7 +2183,10 @@ subroutine raddedmx(coszrs  ,ndayc   ,abh2o   , &
                rdifc(ns,i,k) = rdif(ns,i,k)
                tdifc(ns,i,k) = tdif(ns,i,k)
                explayc(ns,i,k) = explay(ns,i,k)
+               !print *, 'miss' !148872717
             else
+               !print *, 'hit'  !24874230
+
                tautot = tauray + taugab + aer_tau(i,k)
                taucsc = aer_tau_w(i,k)
 

@@ -191,17 +191,17 @@ module radae
   real(r8), parameter:: min_p_h2o = 1.0e-3_r8        ! min log_10(P) for pre-calculated abs/emis 
   real(r8), parameter:: max_lp_h2o = -0.0000001_r8   ! max log_10(P) for pre-calculated abs/emis 
   real(r8), parameter:: dlp_h2o = 0.3333333333333_r8 ! difference in adjacent elements of lp_h2o
- 
+  real(r8), parameter:: rdlp_h2o = 3.0_r8 !1._r8/dlp_h2o
   real(r8), parameter:: dtp_h2o = 21.111111111111_r8 ! difference in adjacent elements of tp_h2o
-
+  real(r8), parameter:: rdtp_h2o = 1._r8/dtp_h2o
   real(r8), parameter:: min_rh_h2o = 0.0_r8          ! min RH for pre-calculated abs/emis 
   real(r8), parameter:: max_rh_h2o = 1.19999999_r8   ! max RH for pre-calculated abs/emis 
   real(r8), parameter:: drh_h2o = 0.2_r8             ! difference in adjacent elements of RH
-
+  real(r8), parameter:: rdrh_h2o =5.0_r8
   real(r8), parameter:: min_te_h2o = -120.0_r8       ! min T_e-T_p for pre-calculated abs/emis 
   real(r8), parameter:: max_te_h2o = 79.999999_r8    ! max T_e-T_p for pre-calculated abs/emis 
   real(r8), parameter:: dte_h2o  = 10.0_r8           ! difference in adjacent elements of te_h2o
-
+  real(r8), parameter:: rdte_h2o = 0.1_r8
   real(r8), parameter:: min_lu_h2o = -8.0_r8         ! min log_10(U) for pre-calculated abs/emis 
   real(r8), parameter:: min_u_h2o  = 1.0e-8_r8       ! min pressure-weighted path-length
   real(r8), parameter:: max_lu_h2o =  3.9999999_r8   ! max log_10(U) for pre-calculated abs/emis 
@@ -406,6 +406,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
    real(r8) f1co2              ! Co2 central band factor
    real(r8) f2co2(pcols)       ! Co2 weak band factor
    real(r8) f2co2_tmp       ! Co2 weak band factor
+   real(r8)  tmp
 
    real(r8) f3co2(pcols)       ! Co2 weak band factor
    real(r8) t1co2(pcols)       ! Overlap factr weak bands on strong band
@@ -423,7 +424,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
    real(r8) u8                 ! Co2 hot band path length
    real(r8) u9                 ! Co2 hot band path length
    real(r8) u13                ! Co2 hot band path length
-   real(r8) rbeta7(pcols)      ! Inverse of co2 hot band line width par
+   real(r8) rbeta7          ! Inverse of co2 hot band line width par
    real(r8) rbeta7_tmp      ! Inverse of co2 hot band line width par
 
    real(r8) rbeta8             ! Inverse of co2 hot band line width par
@@ -659,10 +660,10 @@ subroutine radabs(lchnk   ,ncol    ,             &
       do k2=pverp,ntoplw,-1
          if (k1 == k2) cycle
          do i=1,ncol
-            !ASC-Y00 这个地方实在弄不了了 TODO
+            !ASC-Y00
             dplh2o(i) = plh2o(i,k1) - plh2o(i,k2)
             u(i)      = abs(dplh2o(i))
-            sqrtu(i)  = sqrt(u(i))
+            sqrtu(i)  = sqrt(u(i)) 
             ds2c      = abs(s2c(i,k1) - s2c(i,k2))
             dw(i)     = abs(w(i,k1) - w(i,k2))
             uc1(i)    = (ds2c + 1.7e-3_r8*u(i))*(1._r8 +  2._r8*ds2c)/(1._r8 + 15._r8*ds2c)
@@ -671,13 +672,37 @@ subroutine radabs(lchnk   ,ncol    ,             &
             pnew_mks  = pnew(i) * sslp_mks
 
             tpatha = abs(tcg(i,k1) - tcg(i,k2))/dw(i)
-            t_p = min(max(tpatha, min_tp_h2o), max_tp_h2o)  !+1._r8/500000._r8 !POC
-            iest = floor(t_p*PRECISION) - 160*PRECISION
-            esx = asc_gffgch_table(iest) +&
+            t_p = min(max(tpatha, min_tp_h2o), max_tp_h2o) 
+            iest = floor(t_p*PRECISION) - 160*PRECISION 
+
+            !  esx = exp(-7.90298_r8*(tboil/t_p-1._r8)*log(10._r8)+ &
+            !  5.02808_r8*log(tboil/t_p)- &
+            !  1.3816e-7_r8*(exp(11.344_r8*(1._r8-t_p/tboil)*log(10._r8))-1._r8)*log(10._r8)+ &
+            !  8.1328e-3_r8*(exp(-3.49149_r8*(tboil/t_p-1._r8)*log(10._r8))-1._r8)*log(10._r8)+ &
+            !  log(1013.246_r8))*100._r8
+            !  print *,'the default i ',esx
+             esx = asc_gffgch_table(iest) +&
              (asc_gffgch_table(iest+1)-asc_gffgch_table(iest)) *(t_p*PRECISION - floor(t_p*PRECISION))
             qsx = epsilo * esx / (pnew_mks - omeps * esx)
-                 
-            q_path = dw(i) / abs(pnm(i,k1) - pnm(i,k2)) / rga
+            !  print *,'we got', esx
+            !  iest = floor(t_p*PRECISION) - 160*PRECISION +1
+            ! esx = asc_gffgch_table(iest) +&
+            !  (asc_gffgch_table(iest+1)-asc_gffgch_table(iest)) *(t_p*PRECISION - floor(t_p*PRECISION))
+            ! qsx = epsilo * esx / (pnew_mks - omeps * esx)
+            !  print *,'we got i+1', esx
+            !  iest = floor(t_p*PRECISION) - 160*PRECISION -1
+            ! esx = asc_gffgch_table(iest) +&
+            !  (asc_gffgch_table(iest+1)-asc_gffgch_table(iest)) *(t_p*PRECISION - floor(t_p*PRECISION))
+            ! qsx = epsilo * esx / (pnew_mks - omeps * esx)
+            !  print *,'we got i-1', esx
+            ! esx = exp(-7.90298_r8*(tboil/t_p-1._r8)*log(10._r8)+ &
+            ! 5.02808_r8*log(tboil/t_p)- &
+            ! 1.3816e-7_r8*(exp(11.344_r8*(1._r8-t_p/tboil)*log(10._r8))-1._r8)*log(10._r8)+ &
+            ! 8.1328e-3_r8*(exp(-3.49149_r8*(tboil/t_p-1._r8)*log(10._r8))-1._r8)*log(10._r8)+ &
+            ! log(1013.246_r8))*100._r8
+            ! print *,'the default  i +1',esx
+
+            q_path = dw(i) / abs(pnm(i,k1) - pnm(i,k2)) *gravit_cgs
 
             ub(1) = abs(plh2ob(1,i,k1) - plh2ob(1,i,k2)) / psi(t_p,1)
             ub(2) = abs(plh2ob(2,i,k1) - plh2ob(2,i,k2)) / psi(t_p,2)
@@ -696,21 +721,21 @@ subroutine radabs(lchnk   ,ncol    ,             &
             te4  = te3 * te1
             te5  = te4 * te1
 
-            dvar = (t_p - min_tp_h2o) / dtp_h2o
+            dvar = (t_p - min_tp_h2o) *rdtp_h2o
             itp = min(max(int(aint(dvar,r8)) + 1, 1), n_tp - 1)
             itp1 = itp + 1
             wtp = dvar - floor(dvar)
             wtp1 = 1.0_r8 - wtp
             
             t_e = min(max(tplnka(i,k2)-t_p, min_te_h2o), max_te_h2o)
-            dvar = (t_e - min_te_h2o) / dte_h2o
+            dvar = (t_e - min_te_h2o) *rdte_h2o
             ite = min(max(int(aint(dvar,r8)) + 1, 1), n_te - 1)
             ite1 = ite + 1
             wte = dvar - floor(dvar)
             wte1 = 1.0_r8 - wte
             
             rh_path = min(max(q_path / qsx, min_rh_h2o), max_rh_h2o)
-            dvar = (rh_path - min_rh_h2o) / drh_h2o
+            dvar = (rh_path - min_rh_h2o) *rdrh_h2o
             irh = min(max(int(aint(dvar,r8)) + 1, 1), n_rh - 1)
             irh1 = irh + 1
             wrh = dvar - floor(dvar)
@@ -738,14 +763,14 @@ subroutine radabs(lchnk   ,ncol    ,             &
 
             uvar = ub(ib) * fdif
             log_u  = min(log10(max(uvar, min_u_h2o)), max_lu_h2o)
-            dvar = (log_u - min_lu_h2o) / dlu_h2o
+            dvar = (log_u - min_lu_h2o) / dlu_h2o !确认这个已经被编译成了乘法 qword_1750C58
             iu = min(max(int(aint(dvar,r8)) + 1, 1), n_u - 1)
             iu1 = iu + 1
             wu = dvar - floor(dvar)
             wu1 = 1.0_r8 - wu
             
             log_p  = min(log10(max(pnewb(ib), min_p_h2o)), max_lp_h2o)
-            dvar = (log_p - min_lp_h2o) / dlp_h2o
+            dvar = (log_p - min_lp_h2o) * rdlp_h2o !这个被当成除法了
             ip = min(max(int(aint(dvar,r8)) + 1, 1), n_p - 1)
             ip1 = ip + 1
             wp = dvar - floor(dvar)
@@ -829,7 +854,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
             wu1 = 1.0_r8 - wu
             
             log_p  = min(log10(max(pnewb(ib), min_p_h2o)), max_lp_h2o)
-            dvar = (log_p - min_lp_h2o) / dlp_h2o
+            dvar = (log_p - min_lp_h2o) * rdlp_h2o
             ip = min(max(int(aint(dvar,r8)) + 1, 1), n_p - 1)
             ip1 = ip + 1
             wp = dvar - floor(dvar)
@@ -978,7 +1003,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
          do i=1,ncol
             dpnm(i)  = pnm(i,k1) - pnm(i,k2)
             to3co2(i) = (pnm(i,k1)*co2t(i,k1) - pnm(i,k2)*co2t(i,k2))/dpnm(i)
-            te       = (to3co2(i)*r293)**.7_r8
+            te       = (to3co2(i)*r293)**.7_r8 !这个地方被编译成了pow
             dplos    = plos(i,k1) - plos(i,k2)
             if (dplos == 0._r8) then
               abso(i,3) = 0._r8
@@ -1024,30 +1049,30 @@ subroutine radabs(lchnk   ,ncol    ,             &
             tlocal    = tint(i,k2)
             tcrfac    = sqrt(tlocal*r250*tpath*r300)
             posqt     = ((pnm(i,k2) + pnm(i,k1))*r2sslp + dpfco2*tcrfac)*rsqti
-            rbeta7(i) = 1._r8/(5.3228_r8*posqt)
+            rbeta7 = 1._r8/(5.3228_r8*posqt)
             rbeta8    = 1._r8/(10.6576_r8*posqt)
-            rbeta9    = rbeta7(i)
-            rbeta13   = rbeta9
-            f2co2(i)  = (u7(i)/sqrt(4._r8 + u7(i)*(1._r8 + rbeta7(i)))) + &
+            tmp       = u7(i)/sqrt(4._r8 + u7(i)*(1._r8 + rbeta7))
+            tco2(i)   = 1._r8/(1.0_r8+10.0_r8*(tmp))
+
+            f2co2(i)  = (tmp) + &
                (u8   /sqrt(4._r8 + u8*(1._r8 + rbeta8))) + &
-               (u9   /sqrt(4._r8 + u9*(1._r8 + rbeta9)))
-            f3co2(i)  = u13/sqrt(4._r8 + u13*(1._r8 + rbeta13))
+               (u9   /sqrt(4._r8 + u9*(1._r8 + rbeta7)))
+            f3co2(i)  = u13/sqrt(4._r8 + u13*(1._r8 + rbeta7))
          end do
          if (k2 >= k1) then
             do i=1,ncol
                sqti(i) = sqrt(tlayr(i,k2))
             end do
          end if
-      !考虑把这两个循环合并，然后删掉 f2co2 f3co2 rbeta7 f1sqwp
+
          do i=1,ncol
             tmp1      = log(1._r8 + f1sqwp(i))
             tmp2      = log(1._r8 + f2co2(i))
             tmp3      = log(1._r8 + f3co2(i))
             absbnd    = (tmp1 + 2._r8*t1co2(i)*tmp2 + 2._r8*tmp3)*sqti(i)
             abso(i,4) = trab2(i)*co2em(i,k2)*absbnd
-            tco2(i)   = 1._r8/(1.0_r8+10.0_r8*(u7(i)/sqrt(4._r8 + u7(i)*(1._r8 + rbeta7(i))))) !这个部分和L1044的重复了
          end do
-
+  !DIR$ FORCEINLINE RECURSIVE
          call trcab(ncol     ,                            &
             k1      ,k2      ,ucfc11  ,ucfc12  ,un2o0   , &
             un2o1   ,uch4    ,uco211  ,uco212  ,uco213  , &
@@ -1079,7 +1104,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
          o3emm(i,2)  = 0.5_r8*(dbvtit(i,k2) + dbvtly(i,k2))
          o3emm(i,3)  = o3emm(i,1)
          o3emm(i,4)  = o3emm(i,2)
-         temh2o(i,1) = tbar(i,1)
+         temh2o(i,1) = tbar(i,1) !这个应该会处理好访存？？ todo ， 检查
          temh2o(i,2) = tbar(i,2)
          temh2o(i,3) = tbar(i,1)
          temh2o(i,4) = tbar(i,2)
@@ -1134,7 +1159,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
              (asc_gffgch_table(iest+1)-asc_gffgch_table(iest)) *(t_p*PRECISION - floor(t_p*PRECISION))
             qsx = epsilo * esx / (pnew_mks - omeps * esx)
 
-            q_path = dw(i) / ABS(dpnm(i)) / rga
+            q_path = dw(i) / ABS(dpnm(i)) *gravit_cgs
             
             ds2c     = abs(s2c(i,k2) - s2c(i,k2+1))
             uc1(i)   = uinpl(i,kn)*ds2c
@@ -1156,34 +1181,34 @@ subroutine radabs(lchnk   ,ncol    ,             &
 
             uvar = u(i)*fdif
             log_u  = min(log10(max(uvar, min_u_h2o)), max_lu_h2o)
-            dvar = (log_u - min_lu_h2o) / dlu_h2o
+            dvar = (log_u - min_lu_h2o) / dlu_h2o !检查这个是不是被编译成了 乘法
             iu = min(max(int(aint(dvar,r8)) + 1, 1), n_u - 1)
             iu1 = iu + 1
             wu = dvar - floor(dvar)
             wu1 = 1.0_r8 - wu
             
             log_p  = min(log10(max(pnew(i), min_p_h2o)), max_lp_h2o)
-            dvar = (log_p - min_lp_h2o) / dlp_h2o
+            dvar = (log_p - min_lp_h2o) * rdlp_h2o
             ip = min(max(int(aint(dvar,r8)) + 1, 1), n_p - 1)
             ip1 = ip + 1
             wp = dvar - floor(dvar)
             wp1 = 1.0_r8 - wp
             
-            dvar = (t_p - min_tp_h2o) / dtp_h2o
+            dvar = (t_p - min_tp_h2o) *rdtp_h2o
             itp = min(max(int(aint(dvar,r8)) + 1, 1), n_tp - 1)
             itp1 = itp + 1
             wtp = dvar - floor(dvar)
             wtp1 = 1.0_r8 - wtp
             
             t_e = min(max(temh2o(i,kn)-t_p,min_te_h2o),max_te_h2o)
-            dvar = (t_e - min_te_h2o) / dte_h2o
+            dvar = (t_e - min_te_h2o) *rdte_h2o
             ite = min(max(int(aint(dvar,r8)) + 1, 1), n_te - 1)
             ite1 = ite + 1
             wte = dvar - floor(dvar)
             wte1 = 1.0_r8 - wte
             
             rh_path = min(max(q_path / qsx, min_rh_h2o), max_rh_h2o)
-            dvar = (rh_path - min_rh_h2o) / drh_h2o
+            dvar = (rh_path - min_rh_h2o) *rdrh_h2o
             irh = min(max(int(aint(dvar,r8)) + 1, 1), n_rh - 1)
             irh1 = irh + 1
             wrh = dvar - floor(dvar)
@@ -1356,7 +1381,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
          end do
 
          do i=1,ncol
-            te        = (tbar(i,kn)*r293)**.7_r8
+            te        = (tbar(i,kn)*r293)**.7_r8 
             dplos     = abs(plos(i,k2+1) - plos(i,k2))
             u1        = zinpl(i,kn)*18.29_r8*dplos/te
             u2        = zinpl(i,kn)*.5649_r8*dplos/te
@@ -1387,7 +1412,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
             wco2     = 2.5221_r8*co2vmr(i)*pi*rga
             u7_tmp    = 4.9411e4_r8*alphat*et2*wco2
             u8       = 3.9744e4_r8*alphat*et4*wco2
-            u9       = 1.0447e5_r8*alphat*et4*et2*wco2
+            u9       = 1.0447e5_r8*alphat*et4*et2*wco2!检查这里被编译成了什么
             u13      = 2.8388e3_r8*alphat*et4*wco2
             tpath    = tbar(i,kn)
             tlocal   = tbar(i,kn)
@@ -1408,7 +1433,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
             abso(i,4)= trab2(i)*emm(i,kn)*absbnd
             tco2(i)  = 1.0_r8/(1.0_r8+ 10.0_r8*u7_tmp/sqrt(4._r8 + u7_tmp*(1._r8 + rbeta7_tmp)))
          end do ! do i =
-
+  !DIR$ FORCEINLINE RECURSIVE
          call trcabn(ncol      ,                            &
               k2      ,kn      ,ucfc11  ,ucfc12  ,un2o0   , &
               un2o1   ,uch4    ,uco211  ,uco212  ,uco213  , &
@@ -1878,7 +1903,7 @@ subroutine radems(lchnk   ,ncol    ,                            &
 !
 ! Compute effective RH along path
 !
-         q_path = w(i,k1) / pnm(i,k1) / rga
+         q_path = w(i,k1) / pnm(i,k1) *gravit_cgs
 !
 ! Calculate effective u, pnew for each band using
 !        Hulst-Curtis-Godson approximation:
@@ -1930,21 +1955,21 @@ subroutine radems(lchnk   ,ncol    ,                            &
 !
 ! Band-independent indices for lines and continuum tables
 !
-         dvar = (t_p - min_tp_h2o) / dtp_h2o
+         dvar = (t_p - min_tp_h2o) *rdtp_h2o
          itp = min(max(int(aint(dvar,r8)) + 1, 1), n_tp - 1)
          itp1 = itp + 1
          wtp = dvar - floor(dvar)
          wtp1 = 1.0_r8 - wtp
 
          t_e = min(max(tplnke(i) - t_p, min_te_h2o), max_te_h2o)
-         dvar = (t_e - min_te_h2o) / dte_h2o
+         dvar = (t_e - min_te_h2o) *rdte_h2o
          ite = min(max(int(aint(dvar,r8)) + 1, 1), n_te - 1)
          ite1 = ite + 1
          wte = dvar - floor(dvar)
          wte1 = 1.0_r8 - wte
 
          rh_path = min(max(q_path / qsx, min_rh_h2o), max_rh_h2o)
-         dvar = (rh_path - min_rh_h2o) / drh_h2o
+         dvar = (rh_path - min_rh_h2o) *rdrh_h2o
          irh = min(max(int(aint(dvar,r8)) + 1, 1), n_rh - 1)
          irh1 = irh + 1
          wrh = dvar - floor(dvar)
@@ -2031,7 +2056,7 @@ subroutine radems(lchnk   ,ncol    ,                            &
          wu1 = 1.0_r8 - wu
          
          log_p  = min(log10(max(pnewb(ib), min_p_h2o)), max_lp_h2o)
-         dvar = (log_p - min_lp_h2o) / dlp_h2o
+         dvar = (log_p - min_lp_h2o) * rdlp_h2o
          ip = min(max(int(aint(dvar,r8)) + 1, 1), n_p - 1)
          ip1 = ip + 1
          wp = dvar - floor(dvar)
@@ -2124,7 +2149,7 @@ subroutine radems(lchnk   ,ncol    ,                            &
          wu1 = 1.0_r8 - wu
          
          log_p  = min(log10(max(pnewb(ib), min_p_h2o)), max_lp_h2o)
-         dvar = (log_p - min_lp_h2o) / dlp_h2o
+         dvar = (log_p - min_lp_h2o) * rdlp_h2o
          ip = min(max(int(aint(dvar,r8)) + 1, 1), n_p - 1)
          ip1 = ip + 1
          wp = dvar - floor(dvar)
@@ -2985,7 +3010,7 @@ subroutine trcpth(ncol                                        , &
       bch4(i,ntoplw) = diff * 2.94449_r8 * ch4(i,ntoplw) * pnm(i,ntoplw)**2.0_r8 * rga * &
                   8.60957e4_r8 / (sslp*tnm(i,ntoplw))
       uptype(i,ntoplw) = diff * qnm(i,ntoplw) * pnm(i,ntoplw)**2.0_r8 *  &
-                    exp(1800.0_r8*(1.0_r8/tnm(i,ntoplw) - 1.0_r8/296.0_r8)) * rga / sslp
+                    exp(1800.0_r8*(1.0_r8/tnm(i,ntoplw) - 1.0_r8/296.0_r8)) * rga *rsslp
    end do
 !
 ! Calculate trace gas path lengths through model atmosphere
@@ -2994,7 +3019,7 @@ subroutine trcpth(ncol                                        , &
       do i = 1,ncol
          rt = 1._r8/tnm(i,k)
          rsqrt = sqrt(rt)
-         pbar = 0.5_r8 * (pnm(i,k+1) + pnm(i,k)) / sslp
+         pbar = 0.5_r8 * (pnm(i,k+1) + pnm(i,k)) *rsslp
          dpnm = (pnm(i,k+1) - pnm(i,k)) * rga
          alpha1 = diff * rsqrt * (1.0_r8 - exp(-1540.0_r8/tnm(i,k)))**3.0_r8
          alpha2 = diff * rsqrt * (1.0_r8 - exp(-1360.0_r8/tnm(i,k)))**3.0_r8
@@ -3035,7 +3060,7 @@ end subroutine trcpth
 !====================================================================================
 ! Private Interfaces
 !====================================================================================
-
+!DIR$ ATTRIBUTES INLINE :: fh2oself
 function fh2oself( temp )
 !
 ! Short function for H2O self-continuum temperature factor in
@@ -3068,7 +3093,12 @@ end function fh2oself
 
 !====================================================================================
 
+
+!DIR$ ATTRIBUTES INLINE :: phi
+
 function phi(tpx,iband)
+   !DIR$ FORCEINLINE 
+   !注意检查这里是否inline了
 !
 ! History: First version for Hitran 1996 (C/H/E)
 !          Current version for Hitran 2000 (C/LT/E)
@@ -3109,8 +3139,10 @@ function phi(tpx,iband)
 end function phi
 
 !====================================================================================
+!DIR$ ATTRIBUTES INLINE :: psi
 
 function psi(tpx,iband)
+   !DIR$ FORCEINLINE
 !
 ! History: First version for Hitran 1996 (C/H/E)
 !          Current version for Hitran 2000 (C/LT/E)
@@ -3322,7 +3354,7 @@ subroutine trcab(ncol    ,                                     &
       do i = 1,ncol
          psi1 = exp(abp(l)*tt(i) + bbp(l)*tt(i)*tt(i))
          phi1 = exp(ab(l)*tt(i) + bb(l)*tt(i)*tt(i))
-         p1 = pnew(i)*(psi1/phi1)/sslp
+         p1 = pnew(i)*(psi1/phi1)*rsslp
          w1 = dw(i)*phi1  !这个地方的指数表达式可以化简 TODO
          tw(i,l) = exp(-g1(l)*p1*(sqrt(1.0_r8 + g2(l)*(w1/p1)) - 1.0_r8) - &
                    g3(l)*ds2c(i)-g4(l)*duptyp(i))
@@ -3603,7 +3635,7 @@ subroutine trcabn(ncol    ,                                     &
       do i = 1,ncol
          psi1 = exp(abp(l)*tt(i)+bbp(l)*tt(i)*tt(i))
          phi1 = exp(ab(l)*tt(i)+bb(l)*tt(i)*tt(i))
-         p1 = pnew(i) * (psi1/phi1) / sslp
+         p1 = pnew(i) * (psi1/phi1) *rsslp
          w1 = dw(i) * winpl(i,kn) * phi1
          tw(i,l) = exp(- g1(l)*p1*(sqrt(1.0_r8+g2(l)*(w1/p1))-1.0_r8) &
                    - g3(l)*ds2c(i)-g4(l)*duptyp(i))
@@ -3652,7 +3684,7 @@ subroutine trcabn(ncol    ,                                     &
       tlw = exp(-1.0_r8*sqrt(up2(i)))
       tlw=tlw*aer_trn_ngh(i,idx_LW_1200_2000)
       duch4 = abs(uch4(i,k2+1) - uch4(i,k2)) * winpl(i,kn)
-      dbetac = 2.94449_r8 * pinpl(i,kn) * rsqti(i) / sslp
+      dbetac = 2.94449_r8 * pinpl(i,kn) * rsqti(i) *rsslp
       ach4 = 6.00444_r8*sqti(i)*log(1.0_r8 + func(duch4,dbetac)) * tlw * bplnk(3,i,kn)
       tch4 = 1.0_r8/(1.0_r8 + 0.02_r8*func(duch4,dbetac))
 !
@@ -3660,7 +3692,7 @@ subroutine trcabn(ncol    ,                                     &
 !
       du01 = abs(un2o0(i,k2+1) - un2o0(i,k2)) * winpl(i,kn)
       du11 = abs(un2o1(i,k2+1) - un2o1(i,k2)) * winpl(i,kn)
-      dbeta01 = 19.399_r8 *  pinpl(i,kn) * rsqti(i) / sslp
+      dbeta01 = 19.399_r8 *  pinpl(i,kn) * rsqti(i) *rsslp
       dbeta11 = dbeta01
 !
 ! 1285 cm-1 band
@@ -3688,7 +3720,7 @@ subroutine trcabn(ncol    ,                                     &
       du11 = abs(uco211(i,k2+1) - uco211(i,k2)) * winpl(i,kn)
       du12 = abs(uco212(i,k2+1) - uco212(i,k2)) * winpl(i,kn)
       du13 = abs(uco213(i,k2+1) - uco213(i,k2)) * winpl(i,kn)
-      dbetc1 = 2.97558_r8 * pinpl(i,kn) * rsqti(i) / sslp
+      dbetc1 = 2.97558_r8 * pinpl(i,kn) * rsqti(i) *rsslp
       dbetc2 = 2.0_r8 * dbetc1
       aco21 = 3.7571_r8*sqti(i)*log(1.0_r8 + func(du11,dbetc1) &
               + func(du12,dbetc2) + func(du13,dbetc2)) &
@@ -3854,6 +3886,9 @@ subroutine trcems(ncol    ,                                     &
 !
 !--------------------------Statement Functions--------------------------
 !
+ !DIR$   FORCEINLINE	
+    
+  
    real(r8) func, u, b
    func(u,b) = u/sqrt(4.0_r8 + u*(1.0_r8 + 1.0_r8 / b))
 !
@@ -3871,7 +3906,7 @@ subroutine trcems(ncol    ,                                     &
       do i = 1,ncol
          psi1 = exp(abp(l)*tt(i)+bbp(l)*tt(i)*tt(i))
          phi1 = exp(ab(l)*tt(i)+bb(l)*tt(i)*tt(i))
-         p1 = pnm(i,k) * (psi1/phi1) / sslp
+         p1 = pnm(i,k) * (psi1/phi1) *rsslp
          w1 = w(i,k) * phi1
          tw(i,l) = exp(- g1(l)*p1*(sqrt(1.0_r8+g2(l)*(w1/p1))-1.0_r8) &
                    - g3(l)*s2c(i,k)-g4(l)*uptype(i,k))
@@ -4051,7 +4086,7 @@ subroutine trcplk(ncol    ,                                     &
 ! non-nearlest layer function
 !
             abplnk1(wvl,i,k) = (f2(wvl)*exp(f3(wvl)/tint(i,k)))  &
-                               /(tint(i,k)**5.0_r8*(exp(f3(wvl)/tint(i,k))-1.0_r8)**2.0_r8)
+                               /(tint(i,k)**5.0_r8*(exp(f3(wvl)/tint(i,k))-1.0_r8)**2.0_r8) !注意检查这里是不是被编译成了pow
 !
 ! nearest layer function
 !

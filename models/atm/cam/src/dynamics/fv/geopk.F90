@@ -117,17 +117,14 @@
                pe(i,k,j)  = pe(i,k-1,j) + delp(i,j,k-1)
             enddo
          enddo
-         do k=1,km+1
-            do i= ifirst,ilast
-               pe(i,k,j)  = pe(i,k,j) + ptop ! 这个也丢cuda？ 就多一个参数
-            enddo
-         enddo
-
       enddo
-      !print *, akap ！ 这个是定植
+      ! akap ！ 这个是定植
+      !todo 检查是否成功展开了
    do j=jfirst, jlast
          do k=1,km+1
+            !DIR$ SIMD
             do i= ifirst,ilast
+               pe(i,k,j)  = pe(i,k,j) + ptop 
                pk(i,j,k) = exp(akap_*log(pe(i,k,j)))
                          !pe(i,k,j)**akap
             enddo

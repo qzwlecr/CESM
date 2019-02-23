@@ -226,6 +226,7 @@ void ientropy_cpp_ (double* s_in,double* p_in,double* qt_in,double* T_out,double
 
     double L,fs1,fs2,est,qv,e;
     int i;
+
     for(i=0;i<100;i++){
         L = rl - (cpliq - cpwv)*(Ts-tfreez);
         qmmr_hPa_cpp_(Ts, p, &est, &qst);

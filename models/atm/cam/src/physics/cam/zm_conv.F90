@@ -3369,7 +3369,7 @@ do k = pver, msg+1, -1
          qtmix(i,k) = qtp0(i)
          tfguess = t(i,k)
          !rcall = 1
-         call ientropy (smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess)
+         call ientropy_cpp (smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess)
       end if
 
 ! Entraining levels
@@ -3409,7 +3409,7 @@ do k = pver, msg+1, -1
 
          tfguess = tmix(i,k+1)
          !rcall = 2
-         call ientropy(smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess)   
+         call ientropy_cpp(smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess)   
 
 !
 ! Determine if this is lcl of this column if qsmix <= qtmix.
@@ -3428,7 +3428,7 @@ do k = pver, msg+1, -1
 
             tfguess = tmix(i,k)
            ! rcall = 3
-            call ientropy (slcl,pl(i),qtlcl,tl(i),qslcl,tfguess)
+            call ientropy_cpp (slcl,pl(i),qtlcl,tl(i),qslcl,tfguess)
 
 !            write(iulog,*)' '
 !            write(iulog,*)' p',p(i,k+1),pl(i),p(i,lcl(i))
@@ -3648,6 +3648,7 @@ end SUBROUTINE ientropy
 ! Wrapper for qmmr that does translation between Pa and hPa
 ! qmmr uses Pa internally, so get qmmr right, need to pass in Pa.
 ! Afterward, set es back to hPa.
+!DIR$ ATTRIBUTES INLINE :: qmmr_hPa
  subroutine qmmr_hPa(t, p1, es, qm)
    use ASCHACK, only:asc_gffgch_table,PRECISION,TABL_SIZE
 
@@ -3666,18 +3667,15 @@ end SUBROUTINE ientropy
 
   !if use the asc_gffgch_table
   !iest = floor(t*PRECISION) - 160*PRECISION
-  !if (iest .lt. 0 .OR. iest .gt. TABL_SIZE) then
-  !print *, t ,"ASC t"
+! 已经验证，这里不能换成别的解法
      es = exp(-7.90298_r8*(tboil/t-1._r8)*log(10._r8)+ &
      5.02808_r8*log(tboil/t)- &
      1.3816e-7_r8*(exp(11.344_r8*(1._r8-t/tboil)*log(10._r8))-1._r8)*log(10._r8)+ &
      8.1328e-3_r8*(exp(-3.49149_r8*(tboil/t-1._r8)*log(10._r8))-1._r8)*log(10._r8)+ &
      log(1013.246_r8))*100._r8
-!  else
-!   es = asc_gffgch_table(iest) +&
-!    (asc_gffgch_table(iest+1)-asc_gffgch_table(iest)) *(t*PRECISION - floor(t*PRECISION))
-!  endif
+
   p=p1*100._r8
+
 
   if ( (p - es) < epsilon(1.0_r8)**2 ) then
      qm = huge(1.0_r8)
@@ -3686,7 +3684,7 @@ end SUBROUTINE ientropy
   end if
   ! Ensures returned es is consistent with limiters on qmmr.
   es = min(es, p)
-  
+
   es = es*0.01_r8
 
 end subroutine qmmr_hPa

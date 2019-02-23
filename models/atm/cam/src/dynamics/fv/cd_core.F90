@@ -1423,6 +1423,8 @@
 #if !defined(USE_OMP)
 !CSD$ PARALLEL DO PRIVATE (I, J, K, WK3, WK1)
 #endif
+pk4 = D4_0*grid%ptop**akap  !todo ASC RGY
+
       do k=kfirst,klast+1
 
          if (k == 1) then
@@ -1432,7 +1434,6 @@
                   wz(i,j,1) = D0_0
                enddo
             enddo
-            pk4 = D4_0*grid%ptop**akap  !todo ASC RGY
             do j=js2g0,jn1g1
                do i=1,im
                   pkc(i,j,1) = pk4
