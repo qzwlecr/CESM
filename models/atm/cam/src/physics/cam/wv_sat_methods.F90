@@ -377,12 +377,16 @@ elemental function GoffGratch_svp_water(t) result(es)
   real(r8) :: es             ! SVP in Pa
 
   ! uncertain below -70 C
-   es = 10._r8**(-7.90298_r8*(tboil/t-1._r8)+ &
-        5.02808_r8*log10(tboil/t)- &
-        1.3816e-7_r8*(10._r8**(11.344_r8*(1._r8-t/tboil))-1._r8)+ &
-        8.1328e-3_r8*(10._r8**(-3.49149_r8*(tboil/t-1._r8))-1._r8)+ &
-        log10(1013.246_r8))*100._r8
-
+  !  es = 10._r8**(-7.90298_r8*(tboil/t-1._r8)+ &
+  !       5.02808_r8*log10(tboil/t)- &
+  !       1.3816e-7_r8*(10._r8**(11.344_r8*(1._r8-t/tboil))-1._r8)+ &
+  !       8.1328e-3_r8*(10._r8**(-3.49149_r8*(tboil/t-1._r8))-1._r8)+ &
+  !       log10(1013.246_r8))*100._r8
+    es = exp(-7.90298_r8*(tboil/t-1._r8)*log(10._r8)+ &
+     5.02808_r8*log(tboil/t)- &
+     1.3816e-7_r8*(exp(11.344_r8*(1._r8-t/tboil)*log(10._r8))-1._r8)*log(10._r8)+ &
+     8.1328e-3_r8*(exp(-3.49149_r8*(tboil/t-1._r8)*log(10._r8))-1._r8)*log(10._r8)+ &
+     log(1013.246_r8))*100._r8
 
   ! es = exp2(-7.90298_r8*(tboil/t-1._r8)*X + &
   !    5.02808_r8*log2(tboil/t)  -&
