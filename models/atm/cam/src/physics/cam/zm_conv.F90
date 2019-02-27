@@ -3369,7 +3369,7 @@ do k = pver, msg+1, -1
          qtmix(i,k) = qtp0(i)
          tfguess = t(i,k)
          !rcall = 1
-         call ientropy_cpp (smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess)
+         call ientropy (smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess)
       end if
 
 ! Entraining levels
@@ -3409,7 +3409,7 @@ do k = pver, msg+1, -1
 
          tfguess = tmix(i,k+1)
          !rcall = 2
-         call ientropy_cpp(smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess)   
+         call ientropy(smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess)   
 
 !
 ! Determine if this is lcl of this column if qsmix <= qtmix.
@@ -3428,7 +3428,7 @@ do k = pver, msg+1, -1
 
             tfguess = tmix(i,k)
            ! rcall = 3
-            call ientropy_cpp (slcl,pl(i),qtlcl,tl(i),qslcl,tfguess)
+            call ientropy (slcl,pl(i),qtlcl,tl(i),qslcl,tfguess)
 
 !            write(iulog,*)' '
 !            write(iulog,*)' p',p(i,k+1),pl(i),p(i,lcl(i))

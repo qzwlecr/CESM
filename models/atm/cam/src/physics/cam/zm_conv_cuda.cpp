@@ -216,6 +216,7 @@ void inline qmmr_hPa_cpp_(double t, double p, double *es_out, double *qm){
 //       return 0; 
 //   }
 extern "C" //牛顿迭代法解方程？
+//现在已经不使用这段代码了，还是丢到fortran里
 void ientropy_cpp_ (double* s_in,double* p_in,double* qt_in,double* T_out,double* qst_out,double* Tfg)
 {
     double Ts=*Tfg;
