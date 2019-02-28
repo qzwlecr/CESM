@@ -1,3 +1,4 @@
+#include "asc_flag_gpu.h"
 module pft_module
 !BOP
 !
@@ -399,8 +400,9 @@ CONTAINS
           endif
          endif
       enddo
+#ifdef use_gpu_fft
       call cuda_pft_cf_record(plan_idc, sc, js2g0, jn2g0, dc, im, fft_flt)
-
+#endif
 !************
 ! Cell edges
 !************
@@ -424,7 +426,9 @@ CONTAINS
           endif
          endif
       enddo
+#ifdef use_gpu_fft
       call cuda_pft_cf_record(plan_ide, se, js2g0, jn1g1, de, im, fft_flt)
+#endif
       return
 !EOC
  end subroutine pft_cf
