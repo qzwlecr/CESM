@@ -1,4 +1,4 @@
-
+#include "asc_flag_gpu.h"
 !-----------------------------------------------------------------------
 !BOP
 ! !ROUTINE: cd_core --- Dynamical core for both C- and D-grid Lagrangian
@@ -617,10 +617,13 @@
                   delpf(i,j,k) = delp(i,j,k)
                enddo
             enddo
-            ! call pft2d( delpf(1,js2g0,k), grid%sc, &
-            !             grid%dc, im, jn2g0-js2g0+1,    &
-            !             wk, wk2 )
-            call cuda_pft2d( delpf(1,js2g0,k), plan_c)
+#ifdef use_gpu_fft 
+call cuda_pft2d( delpf(1,js2g0,k), plan_c) !ASC-TODO 这个地方或许可以改成全部算完之后做fft
+#else
+             call pft2d( delpf(1,js2g0,k), grid%sc, &
+                         grid%dc, im, jn2g0-js2g0+1,    &
+                         wk, wk2 )
+#endif
          enddo
 #if (!defined USE_OMP) 
 !CSD$ END PARALLEL DO
@@ -682,10 +685,13 @@
 
 ! Optionally filter advecting C-grid winds
          if (filtcw .gt. 0) then
-            ! call pft2d(uc(1,js2g0,k), grid%sc, grid%dc, im, jn2g0-js2g0+1, wk, wk2 )
+#ifdef use_gpu_fft
             call cuda_pft2d(uc(1,js2g0,k), plan_c)
-            ! call pft2d(vc(1,js2g0,k), grid%se, grid%de, im, jlast-js2g0+1, wk, wk2 )
             call cuda_pft2d(vc(1,js2g0,k), plan_e)
+#else
+            call pft2d(uc(1,js2g0,k), grid%sc, grid%dc, im, jn2g0-js2g0+1, wk, wk2 )
+            call pft2d(vc(1,js2g0,k), grid%se, grid%de, im, jlast-js2g0+1, wk, wk2 )
+#endif
          endif
 
       enddo
@@ -982,10 +988,13 @@
                cx_om(i,j,k) = grid%dtdx(j)*uc(i,j,k)
             enddo
          enddo
-        !  call pft2d(uc(1,js2g0,k), grid%sc,       &
-        !             grid%dc, im, jn2g0-js2g0+1,       &
-        !             wk, wk2 )
-         call cuda_pft2d(uc(1,js2g0,k), plan_c)
+#ifdef use_gpu_fft
+call cuda_pft2d(uc(1,js2g0,k), plan_c)
+#else
+call pft2d(uc(1,js2g0,k), grid%sc,       &
+                     grid%dc, im, jn2g0-js2g0+1,       &
+                     wk, wk2 )
+#endif
          if ( jfirst == 1 ) then   ! Clean up
             do i=1,im
                uc(i,1,k) = D0_0
@@ -1045,10 +1054,12 @@
             enddo
          enddo
 
-        !  call pft2d(vc(1,js2g0,k), grid%se,          &
-        !             grid%de, im, jlast-js2g0+1, wk, wk1 )
-         call cuda_pft2d(vc(1,js2g0,k), plan_e)
-
+#ifdef use_gpu_fft
+call cuda_pft2d(vc(1,js2g0,k), plan_e)
+#else
+call pft2d(vc(1,js2g0,k), grid%se,          &
+                     grid%de, im, jlast-js2g0+1, wk, wk1 )
+#endif
       enddo
 #if (!defined USE_OMP) 
 !CSD$ END PARALLEL DO
@@ -1366,11 +1377,13 @@
                   delpf(i,j,k) = delp(i,j,k)
                enddo
             enddo
-            ! call pft2d( delpf(1,js2g0,k), grid%sc, &
-            !             grid%dc, im, jn2g0-js2g0+1,    &
-            !             wk, wk2 )
+#ifdef use_gpu_fft
             call cuda_pft2d( delpf(1,js2g0,k), plan_c)
-
+#else
+            call pft2d( delpf(1,js2g0,k), grid%sc, &
+                         grid%dc, im, jn2g0-js2g0+1,    &
+                         wk, wk2 )
+#endif
          enddo
 #if (!defined USE_OMP) 
 !CSD$ END PARALLEL DO
@@ -1559,15 +1572,17 @@ pk4 = D4_0*grid%ptop**akap  !todo ASC RGY
             enddo
          enddo
 
-        !  call pft2d( wk3(1,js2g0), grid%se,        &
-        !              grid%de, im, jlast-js2g0+1,       &
-        !              wk, wk2 )
+#ifdef use_gpu_fft
          call cuda_pft2d(wk3(1,js2g0), plan_e)
-
-        !  call pft2d( wk1(1,js2g0), grid%sc,        &
-        !              grid%dc, im, jn2g0-js2g0+1,       &
-        !              wk, wk2 )
          call cuda_pft2d(wk1(1,js2g0), plan_c)
+#else
+          call pft2d( wk3(1,js2g0), grid%se,        &
+                      grid%de, im, jlast-js2g0+1,       &
+                      wk, wk2 )
+          call pft2d( wk1(1,js2g0), grid%sc,        &
+                      grid%dc, im, jn2g0-js2g0+1,       &
+                      wk, wk2 )
+#endif
          do j=js2g0,jn2g0
             do i=1,im
                v(i,j,k) = v(i,j,k) + wk1(i,j)
