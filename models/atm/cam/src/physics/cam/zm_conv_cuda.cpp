@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/file.h>
+#include "asc_flag.h"
 
 #define MAX(a,b) ((a) > (b) ? a : b)
 #define MIN(a,b) ((a) < (b) ? a : b)
@@ -60,8 +61,6 @@ void readData(char* fileName) {
   if (acquireLock("/tmp/CESM.lock") != -1) {
     // we got the lock !
     // Create a shared memory block.
-    printf("[ASC debug] Y00: Master ...\n");
-
     int mem_id = shmget(key,size+1,IPC_CREAT | IPC_EXCL | 0666);
     if (mem_id<0) error();
       shmem_ptr = (char*)shmat(mem_id,NULL,0);
@@ -81,11 +80,9 @@ void readData(char* fileName) {
     shmem_ptr[i] = EOF;
     fclose(data);
     printf("[ASC debug] Y00: master finished reading, with size %d\n",size);
-    //releaseLock (fd);
-
   } else {
   // Other processes have read the data.
-    printf("[ASC debug] Y00: get the table with shm ...\n");
+    printf("[ASC debug] Y00: othr process getting the table with shm ...\n");
     sleep(100);//just wait for the master 
     int mem_id = shmget(key,size+1,IPC_CREAT);
     if (mem_id<0) error();
@@ -99,10 +96,9 @@ void readData(char* fileName) {
 extern "C" //init the ptr
 void asc_gffgch_init_ptr_(double** Tabl_ptr){
        *Tabl_ptr=gffgchTable;
-       printf("[ASC debug] Y00: Tabl_ptr %p \n",Tabl_ptr);
+       //printf("[ASC debug] Y00: Tabl_ptr %p \n",Tabl_ptr);
 }
 
-#define rgy_pc
 #ifdef rgy_pc 
 #define path "/media/rgy/win-file/document/computer/HPC/cesm/data"
 #else

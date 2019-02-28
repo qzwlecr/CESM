@@ -36,7 +36,7 @@ module physpkg
   use camsrfexch,      only: cam_export
   use phys_control,    only: do_waccm_phys
   use ASCHACK,          only:asc_gffgch_table,PRECISION,asc_gffgch_init
-
+#include "asc_flag.h" 
   implicit none
   private
 
@@ -680,7 +680,9 @@ subroutine phys_init( phys_state, phys_tend, pbuf2d, cam_out )
     !-----------------------------------------------------------------------
 
     ! Get microphysics option
+#ifdef use_asc_table
     call asc_gffgch_init()
+#endif
     call phys_getopts(microp_scheme_out = microp_scheme)
     call phys_getopts(do_clubb_sgs_out  = do_clubb_sgs )
 

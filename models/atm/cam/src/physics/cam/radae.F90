@@ -31,7 +31,8 @@ module radae
   use cam_logfile,      only: iulog
   use physconst,        only: gravit, cpair, epsilo, stebol, &
                              pstd, mwdry, mwco2, mwo3,tmelt
-  use ASCHACK,          only:asc_gffgch_table,PRECISION,asc_gffgch_init
+  use ASCHACK,          only:asc_gffgch_table,PRECISION
+#include "asc_flag.h" 
   implicit none
 
   save
@@ -674,6 +675,7 @@ subroutine radabs(lchnk   ,ncol    ,             &
 
             tpatha = abs(tcg(i,k1) - tcg(i,k2))/dw(i)
             t_p = min(max(tpatha, min_tp_h2o), max_tp_h2o) 
+#ifdef use_asc_table
             iest = floor(t_p*PRECISION) - 160*PRECISION 
 
             !  esx = exp(-7.90298_r8*(tboil/t_p-1._r8)*log(10._r8)+ &
@@ -684,7 +686,6 @@ subroutine radabs(lchnk   ,ncol    ,             &
             !  print *,'the default i ',esx
              esx = asc_gffgch_table(iest) +&
              (asc_gffgch_table(iest+1)-asc_gffgch_table(iest)) *(t_p*PRECISION - floor(t_p*PRECISION))
-            qsx = epsilo * esx / (pnew_mks - omeps * esx)
             !  print *,'we got', esx
             !  iest = floor(t_p*PRECISION) - 160*PRECISION +1
             ! esx = asc_gffgch_table(iest) +&
@@ -696,12 +697,15 @@ subroutine radabs(lchnk   ,ncol    ,             &
             !  (asc_gffgch_table(iest+1)-asc_gffgch_table(iest)) *(t_p*PRECISION - floor(t_p*PRECISION))
             ! qsx = epsilo * esx / (pnew_mks - omeps * esx)
             !  print *,'we got i-1', esx
-            ! esx = exp(-7.90298_r8*(tboil/t_p-1._r8)*log(10._r8)+ &
-            ! 5.02808_r8*log(tboil/t_p)- &
-            ! 1.3816e-7_r8*(exp(11.344_r8*(1._r8-t_p/tboil)*log(10._r8))-1._r8)*log(10._r8)+ &
-            ! 8.1328e-3_r8*(exp(-3.49149_r8*(tboil/t_p-1._r8)*log(10._r8))-1._r8)*log(10._r8)+ &
-            ! log(1013.246_r8))*100._r8
-            ! print *,'the default  i +1',esx
+#else
+               esx = exp(-7.90298_r8*(tboil/t_p-1._r8)*log(10._r8)+ &
+                 5.02808_r8*log(tboil/t_p)- &
+                 1.3816e-7_r8*(exp(11.344_r8*(1._r8-t_p/tboil)*log(10._r8))-1._r8)*log(10._r8)+ &
+                 8.1328e-3_r8*(exp(-3.49149_r8*(tboil/t_p-1._r8)*log(10._r8))-1._r8)*log(10._r8)+ &
+                 log(1013.246_r8))*100._r8
+#endif
+            qsx = epsilo * esx / (pnew_mks - omeps * esx)
+
 
             q_path = dw(i) / abs(pnm(i,k1) - pnm(i,k2)) *gravit_cgs
 
@@ -1155,10 +1159,17 @@ subroutine radabs(lchnk   ,ncol    ,             &
             pnew(i)  = u(i)/(winpl(i,kn)*dw(i))
             pnew_mks  = pnew(i) * sslp_mks
             t_p = min(max(tbar(i,kn), min_tp_h2o), max_tp_h2o)
-
+#ifdef use_asc_table
             iest = floor(t_p*PRECISION) - 160*PRECISION
             esx = asc_gffgch_table(iest) +&
              (asc_gffgch_table(iest+1)-asc_gffgch_table(iest)) *(t_p*PRECISION - floor(t_p*PRECISION))
+#else
+               esx = exp(-7.90298_r8*(tboil/t_p-1._r8)*log(10._r8)+ &
+                 5.02808_r8*log(tboil/t_p)- &
+                 1.3816e-7_r8*(exp(11.344_r8*(1._r8-t_p/tboil)*log(10._r8))-1._r8)*log(10._r8)+ &
+                 8.1328e-3_r8*(exp(-3.49149_r8*(tboil/t_p-1._r8)*log(10._r8))-1._r8)*log(10._r8)+ &
+                 log(1013.246_r8))*100._r8
+#endif
             qsx = epsilo * esx / (pnew_mks - omeps * esx)
 
             q_path = dw(i) / ABS(dpnm(i)) *gravit_cgs
@@ -1897,10 +1908,17 @@ subroutine radems(lchnk   ,ncol    ,                            &
 !
          tpathe   = tcg(i,k1)/w(i,k1)
          t_p = min(max(tpathe, min_tp_h2o), max_tp_h2o)
-
+#ifdef use_asc_table
          iest = floor(t_p*PRECISION) - 160*PRECISION
          esx = asc_gffgch_table(iest) +&
           (asc_gffgch_table(iest+1)-asc_gffgch_table(iest)) *(t_p*PRECISION - floor(t_p*PRECISION))
+#else
+            esx = exp(-7.90298_r8*(tboil/t_p-1._r8)*log(10._r8)+ &
+              5.02808_r8*log(tboil/t_p)- &
+              1.3816e-7_r8*(exp(11.344_r8*(1._r8-t_p/tboil)*log(10._r8))-1._r8)*log(10._r8)+ &
+              8.1328e-3_r8*(exp(-3.49149_r8*(tboil/t_p-1._r8)*log(10._r8))-1._r8)*log(10._r8)+ &
+              log(1013.246_r8))*100._r8
+#endif
          qsx = epsilo * esx / (pnew_mks - omeps * esx)
 
 !
@@ -2638,7 +2656,7 @@ subroutine radae_init(gravx, epsilox, stebol, pstdx, mwdryx, mwco2x, mwo3x)
 ! Constants to set
 !
 
-   write(iulog,*)'[ASC debug] Y00: radae_init called!'
+   !write(iulog,*)'[ASC debug] Y00: radae_init called!'
    ! gravit     = gravx
    ! gravit_cgs = 100._r8*gravx
    ! rga        = 1._r8/gravit_cgs
