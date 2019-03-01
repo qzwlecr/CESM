@@ -698,11 +698,11 @@ subroutine radabs(lchnk   ,ncol    ,             &
             ! qsx = epsilo * esx / (pnew_mks - omeps * esx)
             !  print *,'we got i-1', esx
 #else
-               esx = exp(-7.90298_r8*(tboil/t_p-1._r8)*log(10._r8)+ &
-                 5.02808_r8*log(tboil/t_p)- &
-                 1.3816e-7_r8*(exp(11.344_r8*(1._r8-t_p/tboil)*log(10._r8))-1._r8)*log(10._r8)+ &
-                 8.1328e-3_r8*(exp(-3.49149_r8*(tboil/t_p-1._r8)*log(10._r8))-1._r8)*log(10._r8)+ &
-                 log(1013.246_r8))*100._r8
+            esx = exp(-7.90298_r8*log(10._r8)*(tboil/t_p-1._r8)+ &
+              5.02808_r8*log(tboil/t_p)- &
+              1.3816e-7_r8*log(10._r8)*(exp(11.344_r8*log(10._r8)*(1._r8-t_p/tboil))-1._r8)+ &
+              8.1328e-3_r8*log(10._r8)*(exp(-3.49149_r8*log(10._r8)*(tboil/t_p-1._r8))-1._r8)+ &
+              log(1013.246_r8))*100._r8
 #endif
             qsx = epsilo * esx / (pnew_mks - omeps * esx)
 
@@ -1164,11 +1164,11 @@ subroutine radabs(lchnk   ,ncol    ,             &
             esx = asc_gffgch_table(iest) +&
              (asc_gffgch_table(iest+1)-asc_gffgch_table(iest)) *(t_p*PRECISION - floor(t_p*PRECISION))
 #else
-               esx = exp(-7.90298_r8*(tboil/t_p-1._r8)*log(10._r8)+ &
-                 5.02808_r8*log(tboil/t_p)- &
-                 1.3816e-7_r8*(exp(11.344_r8*(1._r8-t_p/tboil)*log(10._r8))-1._r8)*log(10._r8)+ &
-                 8.1328e-3_r8*(exp(-3.49149_r8*(tboil/t_p-1._r8)*log(10._r8))-1._r8)*log(10._r8)+ &
-                 log(1013.246_r8))*100._r8
+              esx = exp(-7.90298_r8*log(10._r8)*(tboil/t_p-1._r8)+ &
+              5.02808_r8*log(tboil/t_p)- &
+              1.3816e-7_r8*log(10._r8)*(exp(11.344_r8*log(10._r8)*(1._r8-t_p/tboil))-1._r8)+ &
+              8.1328e-3_r8*log(10._r8)*(exp(-3.49149_r8*log(10._r8)*(tboil/t_p-1._r8))-1._r8)+ &
+              log(1013.246_r8))*100._r8
 #endif
             qsx = epsilo * esx / (pnew_mks - omeps * esx)
 
@@ -1913,10 +1913,15 @@ subroutine radems(lchnk   ,ncol    ,                            &
          esx = asc_gffgch_table(iest) +&
           (asc_gffgch_table(iest+1)-asc_gffgch_table(iest)) *(t_p*PRECISION - floor(t_p*PRECISION))
 #else
-            esx = exp(-7.90298_r8*(tboil/t_p-1._r8)*log(10._r8)+ &
+            ! esx = exp(-7.90298_r8*(tboil/t_p-1._r8)*log(10._r8)+ &
+            !   5.02808_r8*log(tboil/t_p)- &
+            !   1.3816e-7_r8*(exp(11.344_r8*(1._r8-t_p/tboil)*log(10._r8))-1._r8)*log(10._r8)+ &
+            !   8.1328e-3_r8*(exp(-3.49149_r8*(tboil/t_p-1._r8)*log(10._r8))-1._r8)*log(10._r8)+ &
+            !   log(1013.246_r8))*100._r8
+         esx = exp(-7.90298_r8*log(10._r8)*(tboil/t_p-1._r8)+ &
               5.02808_r8*log(tboil/t_p)- &
-              1.3816e-7_r8*(exp(11.344_r8*(1._r8-t_p/tboil)*log(10._r8))-1._r8)*log(10._r8)+ &
-              8.1328e-3_r8*(exp(-3.49149_r8*(tboil/t_p-1._r8)*log(10._r8))-1._r8)*log(10._r8)+ &
+              1.3816e-7_r8*log(10._r8)*(exp(11.344_r8*log(10._r8)*(1._r8-t_p/tboil))-1._r8)+ &
+              8.1328e-3_r8*log(10._r8)*(exp(-3.49149_r8*log(10._r8)*(tboil/t_p-1._r8))-1._r8)+ &
               log(1013.246_r8))*100._r8
 #endif
          qsx = epsilo * esx / (pnew_mks - omeps * esx)
