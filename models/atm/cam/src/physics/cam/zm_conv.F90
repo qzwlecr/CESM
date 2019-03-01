@@ -3355,7 +3355,17 @@ new_q = 0._r8
 new_s = 0._r8
 
 ! **** Begin loops ****
-!ASC-RGY 如果实际计算的都是第一个，就好办了，如果不是的话，就特别难受
+! rgy@water-palace:/media/rgy/win-file/document/computer/HPC/cesm/CESM/models/atm/cam/bld$ 
+!  grep -o 'ASC-4' ./cam.run.log | wc -l
+! 24857484 2/3
+!  grep -o 'ASC-2' ./cam.run.log | wc -l
+! 12428742 1/3
+!  grep -o 'ASC-3' ./cam.run.log | wc -l
+! 589404
+!  grep -o 'ASC-1' ./cam.run.log | wc -l
+! 594976
+
+
 do k = pver, msg+1, -1
    do i=1,ncol 
 
@@ -3368,15 +3378,13 @@ do k = pver, msg+1, -1
          smix(i,k)  = sp0(i)
          qtmix(i,k) = qtp0(i)
          tfguess = t(i,k)
-         !rcall = 1
+         !print *, 'ASC-1'
          !call ientropy_0 (smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess)
          !print *, 'the ientropy_0 give us ',tmix(i,k)
-         !call ientropy   (smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess)
+         call ientropy   (smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess)
          !print *, 'the ientropy   give us ',tmix(i,k)
-         call ientropy (smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess)
+         !call ientropy_3 (smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess)
          !print *, 'the ientropy_3 give us ',tmix(i,k)
-         !call ientropy_4 (smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess)
-         !print *, 'the ientropy_4 give us ',tmix(i,k)
       end if
 
 ! Entraining levels
@@ -3415,7 +3423,7 @@ do k = pver, msg+1, -1
 ! t(i,k) used as a first guess so that it converges faster.
 
          tfguess = tmix(i,k+1)
-         !rcall = 2
+            !print *, 'ASC-2'
          call ientropy (smix(i,k),p(i,k),qtmix(i,k),tmix(i,k),qsmix(i,k),tfguess)   
 
 !
@@ -3434,7 +3442,7 @@ do k = pver, msg+1, -1
             qtlcl  = qtmix(i,k+1) +  dqtdp*(pl(i)-p(i,k+1))
 
             tfguess = tmix(i,k)
-           ! rcall = 3
+            !print *, 'ASC-3'
             call ientropy (slcl,pl(i),qtlcl,tl(i),qslcl,tfguess)
 
 !            write(iulog,*)' '
@@ -3530,7 +3538,7 @@ do k = pver, msg+1, -1
 ! Invert entropy to get updated Tmix and qsmix of parcel.
 
             tfguess = tmix(i,k)
-            !rcall =4
+            !print *, 'ASC-4'
             call ientropy (new_s, p(i,k), new_q, tmix(i,k), qsmix(i,k), tfguess)
             
          end do  ! Iteration loop for freezing processes.
@@ -3648,70 +3656,9 @@ qv = min(qt,qst)                             !       /* check for saturation */
 T = Ts 
 
  100    format (A,I1,I4,I4,7(A,F6.2))
-
+!print *,"the dTs   ", dTs !发现现在dTs都是0，就是说，都是准确值，在double的精度下
 return
 end SUBROUTINE ientropy
-!baseLine
-SUBROUTINE ientropy_0 (s,p,qt,T,qst,Tfg)
-!-----------------------------------------------------------------------------------------
-!
-! p(mb), Tfg/T(K), qt/qv(kg/kg), s(J/kg). 
-! Inverts entropy, pressure and total water qt 
-! for T and saturated vapor mixing ratio
-! 
-
-     real(r8), intent(in)  :: s, p, Tfg, qt
-     real(r8), intent(out) :: qst, T
-     real(r8) :: qv,Ts,dTs,fs1,fs2,est
-     real(r8) :: pref,eref,L,e
-     real(r8) :: this_lat,this_lon
-     integer :: LOOPMAX,i
-
-LOOPMAX = 50000                   !* max number of iteration loops 
-
-! Values for entropy
-pref = 1000.0_r8           ! mb ref pressure.
-eref = 6.106_r8           ! sat p at tfreez (mb)
-
-! Invert the entropy equation -- use Newton's method
-
-Ts = Tfg                  ! Better first guess based on Tprofile from conv.
-
-do i=0, LOOPMAX
-
-   L = rl - (cpliq - cpwv)*(Ts-tfreez) 
-
-   call qmmr_hPa(Ts, p, est, qst)
-   qv = min(qt,qst) 
-   e = qv*p / (eps1 +qv)  ! Bolton (eq. 16)
-   fs1 = (cpres + qt*cpliq)*log( Ts/tfreez ) - rgas*log( (p-e)/pref ) + &
-        L*qv/Ts - qv*rh2o*log(qv/qst) - s
-   
-   L = rl - (cpliq - cpwv)*(Ts-1._r8-tfreez)         
-
-   call qmmr_hPa(Ts-1._r8, p, est, qst)
-   qv = min(qt,qst) 
-   e = qv*p / (eps1 +qv)
-   fs2 = (cpres + qt*cpliq)*log( (Ts-1._r8)/tfreez ) - rgas*log( (p-e)/pref ) + &
-        L*qv/(Ts-1._r8) - qv*rh2o*log(qv/qst) - s 
-   
-   dTs = fs1/(fs2 - fs1)
-   Ts  = Ts+dTs
-   if (abs(dTs).lt.0.00001_r8) go to 2333
-enddo 
-call endrun('**** ZM_CONV IENTROPY: Tmix did not converge ****')
-
-! Replace call to satmixutils.
-
-2333 call qmmr_hPa(Ts, p, est, qst)
-
-qv = min(qt,qst)                             !       /* check for saturation */
-T = Ts 
-
- 100    format (A,I1,I4,I4,7(A,F6.2))
-
-return
-end SUBROUTINE ientropy_0
 
 !
 !-----------------------------------------------------------------------------------------
@@ -3750,7 +3697,7 @@ SUBROUTINE ientropy_3 (s,p,qt,T,qst,Tfg)
 
   c=b
   fc=fb
-  tol=0.00001_r8
+  tol=0.000000001_r8
 
   converge: do i=0, LOOPMAX
      if ((fb > 0.0_r8 .and. fc > 0.0_r8) .or. &
@@ -3816,13 +3763,74 @@ SUBROUTINE ientropy_3 (s,p,qt,T,qst,Tfg)
 100 format (A,I1,I4,I4,7(A,F6.2))
 
 end SUBROUTINE ientropy_3
+
+!baseLine
+SUBROUTINE ientropy_0 (s,p,qt,T,qst,Tfg)
+!-----------------------------------------------------------------------------------------
+!
+! p(mb), Tfg/T(K), qt/qv(kg/kg), s(J/kg). 
+! Inverts entropy, pressure and total water qt 
+! for T and saturated vapor mixing ratio
+! 
+
+     real(r8), intent(in)  :: s, p, Tfg, qt
+     real(r8), intent(out) :: qst, T
+     real(r8) :: qv,Ts,dTs,fs1,fs2,est
+     real(r8) :: pref,eref,L,e
+     real(r8) :: this_lat,this_lon
+     integer :: LOOPMAX,i
+
+LOOPMAX = 50000                   !* max number of iteration loops 
+
+! Values for entropy
+pref = 1000.0_r8           ! mb ref pressure.
+eref = 6.106_r8           ! sat p at tfreez (mb)
+
+! Invert the entropy equation -- use Newton's method
+
+Ts = Tfg                  ! Better first guess based on Tprofile from conv.
+
+do i=0, LOOPMAX
+
+   L = rl - (cpliq - cpwv)*(Ts-tfreez) 
+
+   call qmmr_hPa(Ts, p, est, qst)
+   qv = min(qt,qst) 
+   e = qv*p / (eps1 +qv)  ! Bolton (eq. 16)
+   fs1 = (cpres + qt*cpliq)*log( Ts/tfreez ) - rgas*log( (p-e)/pref ) + &
+        L*qv/Ts - qv*rh2o*log(qv/qst) - s
+   
+   L = rl - (cpliq - cpwv)*(Ts-1._r8-tfreez)         
+
+   call qmmr_hPa(Ts-1._r8, p, est, qst)
+   qv = min(qt,qst) 
+   e = qv*p / (eps1 +qv)
+   fs2 = (cpres + qt*cpliq)*log( (Ts-1._r8)/tfreez ) - rgas*log( (p-e)/pref ) + &
+        L*qv/(Ts-1._r8) - qv*rh2o*log(qv/qst) - s 
+   
+   dTs = fs1/(fs2 - fs1)
+   Ts  = Ts+dTs
+   if (abs(dTs).lt.0.00001_r8) go to 2333
+enddo 
+call endrun('**** ZM_CONV IENTROPY: Tmix did not converge ****')
+
+! Replace call to satmixutils.
+
+2333 call qmmr_hPa(Ts, p, est, qst)
+
+qv = min(qt,qst)                             !       /* check for saturation */
+T = Ts 
+
+ 100    format (A,I1,I4,I4,7(A,F6.2))
+
+return
+end SUBROUTINE ientropy_0
+
 ! Wrapper for qmmr that does translation between Pa and hPa
 ! qmmr uses Pa internally, so get qmmr right, need to pass in Pa.
 ! Afterward, set es back to hPa.
 !DIR$ ATTRIBUTES INLINE :: qmmr_hPa
  subroutine qmmr_hPa(t, p1, es, qm)
-   !use ASCHACK, only:asc_gffgch_table,PRECISION,TABL_SIZE
-
   ! Inputs
   real(r8), intent(in) :: t    ! Temperature (K) 
   real(r8), intent(in) :: p1    ! Pressure (hPa)
@@ -3832,13 +3840,7 @@ end SUBROUTINE ientropy_3
                                ! (vapor mass over dry mass, kg/kg)
   real(r8),parameter  :: tboil = 373.16_r8 
   real(r8)  p
-  integer  iest             ! index in estblh2o
-  real(r8) esx              ! 
 
-
-  !if use the asc_gffgch_table
-  !iest = floor(t*PRECISION) - 160*PRECISION
-! 已经验证，这里不能换成别的解法,考虑一下乘法交换率？手工改一下？
      es = exp(-7.90298_r8*log(10._r8)*(tboil/t-1._r8)+ &
      5.02808_r8*log(tboil/t)- &
      1.3816e-7_r8*log(10._r8)*(exp(11.344_r8*log(10._r8)*(1._r8-t/tboil))-1._r8)+ &
