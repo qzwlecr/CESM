@@ -399,7 +399,7 @@ contains
    real(r8) :: h2osoi_liq_sat           ! liquid water corresponding to eff_porosity for this layer [kg/m2]
    real(r8) :: deficit                  ! difference between desired soil moisture level for this layer and current soil moisture level [kg/m2]
 !------------------------------------------------------------------------------
-
+   real(r8) ::tmp_wta0_thm,tmp,tmp1,tmp_taux
    ! Assign local pointers to derived type members (gridcell-level)
 
    forc_lwrad     => clm_a2l%forc_lwrad
@@ -807,7 +807,7 @@ contains
 
          !compute the stability parameter for ricsoilc  ("S" in Sakaguchi&Zeng,2008)
 
-         ri = ( grav*htop(p) * (taf(p) - t_grnd(c)) ) / (taf(p) * uaf(p) **2.00_r8)
+         ri = ( grav*htop(p) * (taf(p) - t_grnd(c)) ) / (taf(p) * uaf(p) **2)  !todo-rgy
 
          !! modify csoilc value (0.004) if the under-canopy is in stable condition
 
@@ -844,8 +844,8 @@ contains
          ! Sensible heat conductance for air, leaf and ground
          ! Moved the original subroutine in-line...
 
-         wta    = 1._r8/rah(p,1)             ! air
-         wtl    = (elai(p)+esai(p))/rb(p)    ! leaf
+         wta    = 1._r8/rah(p,1)             ! air 
+         wtl    = (elai(p)+esai(p))/rb(p)    ! leaf  !todo-rgy
          wtg(p) = 1._r8/rah(p,2)             ! ground
          wtshi  = 1._r8/(wta+wtl+wtg(p))
 
@@ -889,13 +889,13 @@ contains
          ! Moved the original subroutine in-line...
 
          wtaq    = frac_veg_nosno(p)/raw(p,1)                        ! air
-         wtlq    = frac_veg_nosno(p)*(elai(p)+esai(p))/rb(p) * rpp   ! leaf
+         wtlq    = frac_veg_nosno(p)* wtl * rpp   ! leaf
 
          !Litter layer resistance. Added by K.Sakaguchi
          snowdp_c = z_dl ! critical depth for 100% litter burial by snow (=litter thickness)
          fsno_dl = snowdp(c)/snowdp_c    ! effective snow cover for (dry)plant litter
          elai_dl = lai_dl*(1._r8 - min(fsno_dl,1._r8)) ! exposed (dry)litter area index
-         rdl = ( 1._r8 - exp(-elai_dl) ) / ( 0.004_r8*uaf(p)) ! dry litter layer resistance
+         rdl = ( 1._r8 - exp(-elai_dl) ) / ( 0.004_r8*uaf(p)) ! dry litter layer resistance !todo-rgy
 
          ! add litter resistance and Lee and Pielke 1992 beta
          if (delq(p) .lt. 0._r8) then  !dew. Do not apply beta for negative flux (follow old rsoil)
@@ -916,8 +916,9 @@ contains
          dc1 = forc_rho(g)*cpair*wtl
          dc2 = hvap*forc_rho(g)*wtlq
 
-         efsh   = dc1*(wtga*t_veg(p)-wtg0*t_grnd(c)-wta0(p)*thm(p))
-         efe(p) = dc2*(wtgaq*qsatl(p)-wtgq0*qg(c)-wtaq0(p)*forc_q(g))
+         tmp_wta0_thm=wta0(p)*thm(p) + wtg0*t_grnd(c)
+         efsh   = dc1*(wtga*t_veg(p)-tmp_wta0_thm) !todo-rgy
+         efe(p) = dc2*(wtgaq*qsatl(p)-wtgq0*qg(c)-wtaq0(p)*forc_q(g)) !这个每个的表达式都重复了很多次，考虑是不是要重构？？？
 
          ! Evaporation flux from foliage
 
@@ -927,9 +928,10 @@ contains
             efe(p)  = 0.1_r8*efeold
             erre = efe(p) - efeold
          end if
-         dt_veg(p) = (sabv(p) + air(p) + bir(p)*t_veg(p)**4 + &
-              cir(p)*t_grnd(c)**4 - efsh - efe(p)) / &
-              (- 4._r8*bir(p)*t_veg(p)**3 +dc1*wtga +dc2*wtgaq*qsatldT(p))
+         tmp=t_veg(p)**2
+         dt_veg(p) = (sabv(p) + air(p) + bir(p)*tmp**2 + &            !todo-rgy
+              cir(p)*(t_grnd(c)**2)**2 - efsh - efe(p)) / &                     !todo-rgy
+              (- 4._r8*bir(p)*t_veg(p)*tmp +dc1*wtga +dc2*wtgaq*qsatldT(p)) !todo-rgy
          t_veg(p) = tlbef(p) + dt_veg(p)
          dels = dt_veg(p)
          del(p)  = abs(dels)
@@ -947,9 +949,11 @@ contains
          ! "efe" was limited as its sign changes frequently.  This limit may
          ! result in an imbalance in "hvap*qflx_evap_veg" and
          ! "efe + dc2*wtgaq*qsatdt_veg"
+         tmp=wtaq0(p)*forc_q(g)
+         tmp1 =wtgq0*qg(c) +tmp
 
          efpot = forc_rho(g)*wtl*(wtgaq*(qsatl(p)+qsatldT(p)*dt_veg(p)) &
-            -wtgq0*qg(c)-wtaq0(p)*forc_q(g))
+            -tmp1)
          qflx_evap_veg(p) = rpp*efpot
          
          ! Calculation of evaporative potentials (efpot) and
@@ -981,20 +985,20 @@ contains
          ! temperature, canopy vapor pressure, aerodynamic temperature, and
          ! Monin-Obukhov stability parameter for next iteration.
 
-         taf(p) = wtg0*t_grnd(c) + wta0(p)*thm(p) + wtl0(p)*t_veg(p)
-         qaf(p) = wtlq0(p)*qsatl(p) + wtgq0*qg(c) + forc_q(g)*wtaq0(p)
+         taf(p) = tmp_wta0_thm + wtl0(p)*t_veg(p)
+         qaf(p) = wtlq0(p)*qsatl(p) + tmp1 !todo-rgy
 
          ! Update Monin-Obukhov length and wind speed including the
          ! stability effect
 
          dth(p) = thm(p)-taf(p)
          dqh(p) = forc_q(g)-qaf(p)
-         delq(p) = wtalq(p)*qg(c)-wtlq0(p)*qsatl(p)-wtaq0(p)*forc_q(g)
+         delq(p) = wtalq(p)*qg(c)-wtlq0(p)*qsatl(p)-tmp
 
          tstar = temp1(p)*dth(p)
          qstar = temp2(p)*dqh(p)
 
-         thvstar = tstar*(1._r8+0.61_r8*forc_q(g)) + 0.61_r8*forc_th(g)*qstar
+         thvstar = tstar*(1._r8+0.61_r8*forc_q(g)) + 0.61_r8*forc_th(g)*qstar!todo-rgy
          zeta = zldis(p)*vkc*grav*thvstar/(ustar(p)**2*thv(c))
 
          if (zeta >= 0._r8) then     !stable
@@ -1052,9 +1056,11 @@ contains
       ! Fluxes from ground to canopy space
 
       delt    = wtal(p)*t_grnd(c)-wtl0(p)*t_veg(p)-wta0(p)*thm(p)
-      taux(p) = -forc_rho(g)*forc_u(g)/ram1(p)
-      tauy(p) = -forc_rho(g)*forc_v(g)/ram1(p)
-      eflx_sh_grnd(p) = cpair*forc_rho(g)*wtg(p)*delt
+      tmp_taux =-forc_rho(g)/ram1(p)
+      taux(p) = forc_u(g)*tmp_taux
+      tauy(p) = forc_v(g)*tmp_taux
+      tmp    =  cpair*forc_rho(g)*wtg(p)
+      eflx_sh_grnd(p) = tmp *delt
       qflx_evap_soi(p) = forc_rho(g)*wtgq(p)*delq(p)
 
       ! 2 m height air temperature
@@ -1085,7 +1091,7 @@ contains
 
       ! Derivative of soil energy flux with respect to soil temperature
 
-      cgrnds(p) = cgrnds(p) + cpair*forc_rho(g)*wtg(p)*wtal(p)
+      cgrnds(p) = cgrnds(p) + tmp*wtal(p) !todo-rgy
       cgrndl(p) = cgrndl(p) + forc_rho(g)*wtgq(p)*wtalq(p)*dqgdT(c)
       cgrnd(p)  = cgrnds(p) + cgrndl(p)*htvp(c)
 
