@@ -53,7 +53,7 @@ fort.o: mpif.h
 lib$(MODULE).a: $(OBJS_ALL)
 	echo $(OBJS_ALL)
 	$(RM) $@
-	$(AR) $@ $(OBJS_ALL)
+	$(AR) ruv $@ $(OBJS_ALL)
 	$(RANLIB) $@
 
 

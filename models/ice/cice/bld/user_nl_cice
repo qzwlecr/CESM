@@ -4,4 +4,4 @@
 ! Note - that it does not matter what namelist group the namelist_var belongs to
 !----------------------------------------------------------------------------------
 
- 
+ histfreq = 'x','x','x','x','x'

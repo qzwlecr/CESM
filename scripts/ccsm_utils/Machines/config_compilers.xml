@@ -863,11 +863,11 @@ for mct, etc.
   <SFC>ifort</SFC>
   <SCC>icc</SCC>
   <SCXX>icpc</SCXX>
-  <ADD_FFLAGS> -O3 -xHost -mkl -g </ADD_FFLAGS>
-  <ADD_CFLAGS> -O3 -xHost -mkl -g </ADD_CFLAGS>
-  <NETCDF_PATH>/home/gpu_ubuntu/zhanglichen/tools/netcdf-icc-build</NETCDF_PATH>
-  <ADD_SLIBS>-L/home/gpu_ubuntu/zhanglichen/tools/netcdf-icc-build/lib -lnetcdf -lnetcdff</ADD_SLIBS>
-  <MPI_PATH>/home/gpu_ubuntu/zhanglichen/tools/mvapich2-icc-build</MPI_PATH>
+  <ADD_FFLAGS> -O3 -xHost -mkl -ip -align array64byte -qopt-report-phase=vec -qopt-report=5 </ADD_FFLAGS>
+  <ADD_CFLAGS> -O3 -xHost -mkl -ip -qopt-report-phase=vec -qopt-report=5 </ADD_CFLAGS>
+  <ADD_LDFLAGS> -L/home/gpu_ubuntu/zhanglichen/tools/hdf5-icc-build-wtf/lib -lhdf5</ADD_LDFLAGS>
+  <ADD_SLIBS> -mkl -lnetcdf -lnetcdff -L/home/gpu_ubuntu/zhanglichen/tools/hdf5-icc-build-wtf/lib -lhdf5 </ADD_SLIBS>
+  <MPI_PATH>/home/gpu_ubuntu/zhanglichen/tools/mvapich2-icc-build-wtf</MPI_PATH>
 
 </compiler>
 <compiler MACH="cluster-exp2" COMPILER="intel">
@@ -877,11 +877,11 @@ for mct, etc.
   <SFC>ifort</SFC>
   <SCC>icc</SCC>
   <SCXX>icpc</SCXX>
-  <ADD_FFLAGS> -O3 -xHost -mkl -g </ADD_FFLAGS>
-  <ADD_CFLAGS> -O3 -xHost -mkl -g </ADD_CFLAGS>
-  <NETCDF_PATH>/home/gpu_ubuntu/zhanglichen/tools/netcdf-icc-build</NETCDF_PATH>
-  <ADD_SLIBS>-L/home/gpu_ubuntu/zhanglichen/tools/netcdf-icc-build/lib -lnetcdf -lnetcdff</ADD_SLIBS>
-  <MPI_PATH>/home/gpu_ubuntu/zhanglichen/tools/mvapich2-icc-build</MPI_PATH>
+  <ADD_FFLAGS> -O3 -xHost -mkl -ip -align array64byte -qopt-report-phase=vec -qopt-report=5 </ADD_FFLAGS>
+  <ADD_CFLAGS> -O3 -xHost -mkl -ip -qopt-report-phase=vec -qopt-report=5 </ADD_CFLAGS>
+  <ADD_LDFLAGS> -L/home/gpu_ubuntu/zhanglichen/tools/hdf5-icc-build-wtf/lib -lhdf5</ADD_LDFLAGS>
+  <ADD_SLIBS> -mkl -lnetcdf -lnetcdff -L/home/gpu_ubuntu/zhanglichen/tools/hdf5-icc-build-wtf/lib -lhdf5 </ADD_SLIBS>
+  <MPI_PATH>/home/gpu_ubuntu/zhanglichen/tools/mvapich2-icc-build-wtf</MPI_PATH>
 </compiler>
 
 </config_compilers>

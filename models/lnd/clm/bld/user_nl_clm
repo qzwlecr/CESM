@@ -18,4 +18,4 @@
 ! Set glc_smb            with GLC_SMB                            option
 ! Set maxpatch_glcmec    with GLC_NEC                            option
 !----------------------------------------------------------------------------------
-
+hist_empty_htapes = .TRUE.
