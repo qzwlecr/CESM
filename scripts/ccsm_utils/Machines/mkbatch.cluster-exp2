@@ -78,9 +78,9 @@ setenv OMP_NUM_THREADS ${maxthrds}
 
 #mpiexec -n ${maxtasks} \$EXEROOT/cesm.exe >&! cesm.log.\$LID
 setenv MV2_SMP_USE_CMA 0
-setenv MV2_ENABLE_AFFINITY 0
-mpirun -launcher rsh -np ${maxtasks} -f /home/gpu_ubuntu/public/hostfile \$EXEROOT/cesm.exe >&! cesm.log.\$LID
-#mpirun -launcher rsh -np ${maxtasks} -f /home/gpu_ubuntu/public/hostfile /home/gpu_ubuntu/public/software/intel/vtune_amplifier_2019.1.0.579888/bin64/amplxe-cl -collect hpc-performance -target-duration-type long -result-dir /home/gpu_ubuntu/zhanglichen/profiling/cesm/exp1 -- \$EXEROOT/cesm.exe >&! cesm.log.\$LID
+#setenv MV2_ENABLE_AFFINITY 0
+mpirun -np ${maxtasks} -f /home/gpu_ubuntu/public/hostfile_cpu \$EXEROOT/cesm.exe >&! cesm.log.\$LID
+#mpirun -launcher rsh -np ${maxtasks} -f /home/gpu_ubuntu/public/hostfile /home/gpu_ubuntu/public/software/intel/vtune_amplifier_2019.1.0.579888/bin64/amplxe-cl -collect hotspots -target-duration-type long -knob enable-stack-collection=true -result-dir /home/gpu_ubuntu/zhanglichen/profiling/cesm/exp1 -- \$EXEROOT/cesm.exe >&! cesm.log.\$LID
 
 wait
 echo "\`date\` -- CSM EXECUTION HAS FINISHED" 
