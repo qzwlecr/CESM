@@ -3310,7 +3310,7 @@ real(r8) tscool     ! Super cooled temperature offset (in degC) (eg -35).
 
 real(r8) qxsk, qxskp1        ! LCL excess water (k, k+1)
 real(r8) dsdp, dqtdp, dqxsdp ! LCL s, qt, p gradients (k, k+1)
-real(r8) slcl,qtlcl,qslcl    ! LCL s, qt, qs values.
+real(r8) slcl,qtlcl,qslcl,tmp    ! LCL s, qt, qs values.
 
 integer rcall       ! Number of ientropy call for errors recording
 integer nit_lheat     ! Number of iterations for condensation/freezing loop.
@@ -3539,8 +3539,13 @@ do k = pver, msg+1, -1
 
             tfguess = tmix(i,k)
             !print *, 'ASC-4'
+            !call ientropy (new_s, p(i,k), new_q, tmix(i,k), qsmix(i,k), tfguess)
+            !tmp=tmix(i,k)
             call ientropy (new_s, p(i,k), new_q, tmix(i,k), qsmix(i,k), tfguess)
-            
+            ! if (abs(tmp-tmix(i,k)) .gt. 0.1 ) then
+            !    print *,'[ASC Debug Y00 ] ientropy give us ',tmp,' ientropy_3 give us ',tmix(i,k)
+            !    call endrun("failed")
+            ! endif
          end do  ! Iteration loop for freezing processes.
 
 ! tp  - Parcel temp is temp of mixture.

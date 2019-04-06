@@ -946,44 +946,29 @@ subroutine radcswmx(lchnk   ,ncol    ,                         &
 
          do i=1,Nday
 
-            ! liquid
-            ! note that optical properties for liquid valid only
-            ! in range of 4.2 > rel > 16 micron (Slingo 89)
-            ! microp_scheme		= 'RK' in /CESM/EXP1/Buildconf/camconf/atm_in
-            ! if ( microp_scheme == 'MG' ) then
-            !    tmp2l = 1._r8 - cbarli - dbarli*min(max(4.2_r8,rel(i,k)),16._r8)
-            !    tmp3l = fbarli*min(max(4.2_r8,rel(i,k)),16._r8)
-            ! else
+
+             if ( microp_scheme == 'MG' ) then
+                tmp2l = 1._r8 - cbarli - dbarli*min(max(4.2_r8,rel(i,k)),16._r8)
+                tmp3l = fbarli*min(max(4.2_r8,rel(i,k)),16._r8)
+                tmp2i = 1._r8 - cbarii - dbarii*min(max(13._r8,rei(i,k)),130._r8)
+                tmp3i = fbarii*min(max(13._r8,rei(i,k)),130._r8)
+             else! always this for ASC
                tmp2l = 1._r8 - cbarli - dbarli*rel(i,k)
                tmp3l = fbarli*rel(i,k)
-            !endif
-
-            ! ice
-            ! note that optical properties for ice valid only
-            ! in range of 13 > rei > 130 micron (Ebert and Curry 92)
-            ! if ( microp_scheme == 'MG' ) then
-            !    tmp2i = 1._r8 - cbarii - dbarii*min(max(13._r8,rei(i,k)),130._r8)
-            !    tmp3i = fbarii*min(max(13._r8,rei(i,k)),130._r8)
-            ! else
                tmp2i = 1._r8 - cbarii - dbarii*rei(i,k)
                tmp3i = fbarii*rei(i,k)
-            !endif
+            endif
+
 
             if (cld(i,k) >= cldmin .and. cld(i,k) >= cldeps) then
 
-               ! liquid
-               ! if ( microp_scheme == 'MG' ) then
-               !    tmp1l = abarli + bbarli/min(max(4.2_r8,rel(i,k)),16._r8)
-               ! else
+                if ( microp_scheme == 'MG' ) then
+                   tmp1l = abarli + bbarli/min(max(4.2_r8,rel(i,k)),16._r8)
+                   tmp1i = abarii + bbarii/max(13._r8,min(rei(i,k),130._r8))
+                else
                   tmp1l = abarli + bbarli/rel(i,k)
-               !endif
-
-               ! ice
-               ! if ( microp_scheme == 'MG' ) then
-               !    tmp1i = abarii + bbarii/max(13._r8,min(rei(i,k),130._r8))
-               ! else
                   tmp1i = abarii + bbarii/rei(i,k)
-               !endif
+                endif
 
                tauxcl(i,k) = cliqwp(i,k)*tmp1l
                tauxci(i,k) = cicewp(i,k)*tmp1i

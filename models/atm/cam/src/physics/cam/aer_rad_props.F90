@@ -474,25 +474,21 @@ subroutine get_hygro_rad_props(ncol, krh, wrh, mass, ext, ssa, asm, &
    real(r8), intent(out) :: tau_w_f(pcols,pver,nswbands)
 
    ! Local variables
-   real(r8) :: ext1, ssa1, asm1,tmp,tmp1
+   real(r8) :: ext1, ssa1, asm1
    integer :: icol, ilev, iswband
+   !-----------------------------------------------------------------------------
 
-   
    do iswband = 1, nswbands
-      do ilev = 1, pver
-         !或许可以在这里simd？？？
-         do icol = 1, ncol
-            !不知道这样会不会有用，看到说访存受限的地方simd也没用，如果编译器拒绝就算了吧，，，
-            tmp = krh(icol,ilev)
-            tmp1=wrh(icol,ilev)
-            ext1 = (1 + tmp1) * ext(tmp+1,iswband) &
-                      - tmp1  * ext(tmp,  iswband)
-            ssa1 = (1 + tmp1) * ssa(tmp+1,iswband) &
-                      - tmp1  * ssa(tmp,  iswband)
-            asm1 = (1 + tmp1) * asm(tmp+1,iswband) &
-                      - tmp1  * asm(tmp,  iswband)
-  !ASC todo 编译器说上面的这个没有办法向量化，因为间隔不一样
-            tau    (icol, ilev, iswband) = mass(icol, ilev) * ext1  !这个地方要改成累乘
+      do icol = 1, ncol
+         do ilev = 1, pver
+            ext1 = (1 + wrh(icol,ilev)) * ext(krh(icol,ilev)+1,iswband) &
+                      - wrh(icol,ilev)  * ext(krh(icol,ilev),  iswband)
+            ssa1 = (1 + wrh(icol,ilev)) * ssa(krh(icol,ilev)+1,iswband) &
+                      - wrh(icol,ilev)  * ssa(krh(icol,ilev),  iswband)
+            asm1 = (1 + wrh(icol,ilev)) * asm(krh(icol,ilev)+1,iswband) &
+                      - wrh(icol,ilev)  * asm(krh(icol,ilev),  iswband)
+  
+            tau    (icol, ilev, iswband) = mass(icol, ilev) * ext1
             tau_w  (icol, ilev, iswband) = mass(icol, ilev) * ext1 * ssa1
             tau_w_g(icol, ilev, iswband) = mass(icol, ilev) * ext1 * ssa1 * asm1
             tau_w_f(icol, ilev, iswband) = mass(icol, ilev) * ext1 * ssa1 * asm1 * asm1

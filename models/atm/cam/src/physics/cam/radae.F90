@@ -156,7 +156,6 @@ module radae
   real(r8), parameter:: min_tp_h2o = 160.0_r8        ! min T_p for pre-calculated abs/emis 
   real(r8), parameter:: max_tp_h2o = 349.999999_r8   ! max T_p for pre-calculated abs/emis
   integer, parameter :: ntemp = 192 ! Number of temperatures in H2O sat. table for Tp
-  real(r8) :: estblh2o(0:ntemp)       ! saturation vapor pressure for H2O for Tp rang
   integer, parameter :: o_fa = 6   ! Degree+1 of poly of T_e for absorptivity as U->inf.
   integer, parameter :: o_fe = 6   ! Degree+1 of poly of T_e for emissivity as U->inf.
 !-----------------------------------------------------------------------------
