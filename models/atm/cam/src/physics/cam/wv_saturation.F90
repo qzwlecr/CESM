@@ -91,7 +91,7 @@ real(r8), parameter :: tboil = 373.16_r8
   integer :: plenest                             ! length of estbl
   real(r8), allocatable :: estbl(:)              ! table values of saturation vapor pressure
 
-  real(r8) :: omeps      ! 1.0_r8 - epsilo
+  real(r8), parameter :: omeps   = 1.0_r8 - epsilo
 
   real(r8) :: c3         ! parameter used by findsp
 
@@ -202,7 +202,7 @@ subroutine wv_sat_init
   integer  :: i         ! Increment counter
 
   ! Precalculated because so frequently used.
-  omeps  = 1.0_r8 - epsilo
+  !omeps  = 1.0_r8 - epsilo
 
   ! Transition range method is only valid for transition temperatures at:
   ! -40 deg C < T < 0 deg C
@@ -214,10 +214,10 @@ subroutine wv_sat_init
 
 ! Init "methods" module containing actual SVP formulae.
 
-  call wv_sat_methods_init(r8, tmelt, h2otrip, tboil, ttrice, &
-       epsilo, errstring)
+!   call wv_sat_methods_init(r8, tmelt, h2otrip, tboil, ttrice, &
+!        epsilo, errstring)
 
-  call handle_errmsg(errstring, subname="wv_sat_methods_init")
+!   call handle_errmsg(errstring, subname="wv_sat_methods_init")
 
   ! Add two to make the table slightly too big, just in case.
   plenest = ceiling(tmax-tmin) + 2
@@ -475,7 +475,6 @@ elemental subroutine qmmr(t, p, es, qm)
   use wv_sat_methods, only: &
        wv_sat_svp_water
 
-
   ! Inputs
   real(r8), intent(in) :: t    ! Temperature
   real(r8), intent(in) :: p    ! Pressure
@@ -487,7 +486,6 @@ elemental subroutine qmmr(t, p, es, qm)
   es = wv_sat_svp_water(t)
 
   qm = svp_to_qmmr(es, p)
-
   ! Ensures returned es is consistent with limiters on qmmr.
   es = min(es, p)
 
@@ -566,7 +564,7 @@ elemental subroutine qsat_water(t, p, es, qs, gam, dqsdt, enthalpy)
   real(r8) :: hltalt       ! Modified latent heat for T derivatives
 
   call wv_sat_qsat_water(t, p, es, qs)
-
+  
   if (present(gam) .or. present(dqsdt) .or. present(enthalpy)) then
 
      ! "generalized" analytic expression for t derivative of es

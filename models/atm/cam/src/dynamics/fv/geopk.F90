@@ -37,7 +37,7 @@
 
       use shr_kind_mod, only: r8 => shr_kind_r8
       use dynamics_vars, only: T_FVDYCORE_GRID
-
+      use physconst,only :akap_ =>akap
       implicit none
 
 ! !INPUT PARAMETERS:
@@ -92,57 +92,63 @@
       jlast  = grid%jlastxy
 
       itot = ilast - ifirst + 1
-!     nxu = nx
-      nxu = 1
-      it = itot / nxu
-      jp = nxu * ( jlast - jfirst + 1 )
+      it = itot
+      jp = ( jlast - jfirst + 1 )
 
-!$omp  parallel do      &
-!$omp  default(shared)  &
-!$omp  private(i1, i2, ixj, i, j, k )
+      !asc , init it by the intel_memset 编译器会自动优化这个的
+      !Y00: this is trying to init the matrix? we use a sinlg memset to do it
+      do j=jfirst,jlast
+         do i=ifirst,ilast
+            pe(i,1,j) = D0_0  !only init the (*,1,*) for all the cal will base on this one
+        enddo
+      enddo
 
-!     do 2000 j=jfirst,jlast
-      do 2000 ixj=1, jp
-
-         j  = jfirst + (ixj-1)/nxu
-         i1 = ifirst + it * mod(ixj-1, nxu)
-         i2 = i1 + it - 1
-
-         do i=i1,i2
-            pe(i,1,j) = D0_0
-            wz(i,j,km+1) = D0_0
+      do j=jfirst,jlast
+         do i=ifirst,ilast
+           wz(i,j,km+1) = D0_0  ! only the last (*,*,km+1) for all the cal base on the last one
          enddo
+      enddo
 
-! Top down
+
+   do j=jfirst, jlast
+   ! Top down
          do k=2,km+1
-            do i=i1,i2
+            do i= ifirst,ilast
                pe(i,k,j)  = pe(i,k-1,j) + delp(i,j,k-1)
             enddo
          enddo
+      enddo
+      ! akap ！ 这个是定植
+      !todo 检查是否成功展开了
+   do j=jfirst, jlast
          do k=1,km+1
-            do i=i1,i2
-               pe(i,k,j)  = pe(i,k,j) + ptop
-               pk(i,j,k) = pe(i,k,j)**akap
+            !DIR$ SIMD
+            do i= ifirst,ilast
+               pe(i,k,j)  = pe(i,k,j) + ptop 
+               pk(i,j,k) = exp(akap_*log(pe(i,k,j)))
+                         !pe(i,k,j)**akap
             enddo
          enddo
+      enddo
 
-! Bottom up
+   do j=jfirst, jlast
+   ! Bottom up
          do k=1,km
-            do i=i1,i2
+            do i= ifirst,ilast
                delpp(i,j,k) = cp*pt(i,j,k)*(pk(i,j,k+1)-pk(i,j,k))
             enddo
          enddo
          do k=km,1,-1
-            do i=i1,i2
+            do i= ifirst,ilast
                wz(i,j,k) = wz(i,j,k+1)+delpp(i,j,k)
             enddo
          enddo
          do k=1,km+1
-            do i=i1,i2
+            do i= ifirst,ilast
                wz(i,j,k) = wz(i,j,k)+hs(i,j)
             enddo
          enddo
-2000  continue
+      enddo
 
       return
 !EOC

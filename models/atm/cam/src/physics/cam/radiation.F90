@@ -339,7 +339,7 @@ end function radiation_nextsw_cday
     !-----------------------------------------------------------------------
 
     call radconstants_init()
-
+! todo 全部改成const
     call radsw_init(gravit)
     call radlw_init(gravit, stebol)
     call radae_init(gravit, epsilo, stebol, pstd, mwdry, mwco2, mwo3)
@@ -768,13 +768,12 @@ end function radiation_nextsw_cday
           ! Get Oxygen mass mixing ratio.
           call rad_cnst_get_gas(0,'O2', state, pbuf,  o2)
           call calc_col_mean(state, o2, o2_col)
-   
           ! Get aerosol radiative properties.
+         !ASC todo, 热点 start!
           call t_startf('aero_optics_sw')
           call aer_rad_props_sw(0, state, pbuf,  nnite, idxnite, &
                aer_tau, aer_tau_w, aer_tau_w_g, aer_tau_w_f)
           call t_stopf('aero_optics_sw')
-
           call radcswmx(lchnk, &
                ncol,       pnm,        pbr,        sp_hum,     o3,         &
                o2_col,     cld,        cicewp,     cliqwp,     rel,        &
@@ -786,16 +785,14 @@ end function radiation_nextsw_cday
                cam_out%soll, cam_out%solsd, cam_out%solld, fns, fcns,      &
                Nday,       Nnite,      IdxDay,     IdxNite,    co2_col_mean, &
                aer_tau,    aer_tau_w,  aer_tau_w_g, aer_tau_w_f , liq_icld_vistau, ice_icld_vistau  ) 
-
+          !ASC todo, 热点 end!
           call t_stopf('rad_sw')
-
           !  Output net fluxes at 200 mb
           call vertinterp(ncol, pcols, pverp, state%pint, 20000._r8, fcns, fsn200c)
           call vertinterp(ncol, pcols, pverp, state%pint, 20000._r8, fns, fsn200)
           do i = 1,ncol
              call vertinterp(1, 1, pverp, state%pint(i,:), p_trop(i), fns(i,:), fsnr(i))
           enddo
-
 
           !
           ! Convert units of shortwave fields needed by rest of model from CGS to MKS
@@ -854,23 +851,19 @@ end function radiation_nextsw_cday
 	  !! initialize tau_cld_vistau and tau_icld_vistau as fillvalue, they will stay fillvalue for night columns
           tot_icld_vistau(1:pcols,1:pver)=fillvalue
           tot_cld_vistau(1:pcols,1:pver)=fillvalue
-
 	  !! only do calcs for tot_cld_vistau and tot_icld_vistau on daytime columns
           do i=1,Nday
 	     !! sum the water and ice optical depths to get total in-cloud cloud optical depth
              tot_icld_vistau(IdxDay(i),1:pver)=liq_icld_vistau(IdxDay(i),1:pver)+ice_icld_vistau(IdxDay(i),1:pver)
-
 	     !! sum wat and ice, multiply by cloud fraction to get grid-box value
              tot_cld_vistau(IdxDay(i),1:pver)=(liq_icld_vistau(IdxDay(i),1:pver)+ &
                   ice_icld_vistau(IdxDay(i),1:pver))*cld(IdxDay(i),1:pver)
           end do
-
 	  ! add fillvalue for night columns
           do i = 1, Nnite
               liq_icld_vistau(IdxNite(i),:)  = fillvalue
               ice_icld_vistau(IdxNite(i),:)  = fillvalue
           end do
-
 	  !! use idx_sw_diag, idx_sw_diag is the index to the visible band of the shortwave
           call outfld ('TOT_CLD_VISTAU    ',tot_cld_vistau  ,pcols,lchnk)
           call outfld ('TOT_ICLD_VISTAU   ',tot_icld_vistau ,pcols,lchnk)
@@ -881,7 +874,7 @@ end function radiation_nextsw_cday
        ! Longwave radiation computation
 
        if (dolw) then
-
+          
           call t_startf("rad_lw")
 
           ! Convert upward longwave flux units to CGS
@@ -900,6 +893,7 @@ end function radiation_nextsw_cday
           ! absems requires lw absorption optical depth and transmission through aerosols
           call t_startf('aero_optics_lw')
           if (doabsems) call aer_rad_props_lw(0, state, pbuf,  odap_aer)
+!ASC todo, 热点
           call t_stopf('aero_optics_lw')
 
           call radclwmx(lchnk, ncol, doabsems, &
@@ -911,7 +905,6 @@ end function radiation_nextsw_cday
              fnl, fcnl, co2_col_mean, odap_aer)
 
           call t_stopf("rad_lw")
-
           !  Output fluxes at 200 mb
           call vertinterp(ncol, pcols, pverp, state%pint, 20000._r8, fnl, fln200)
           call vertinterp(ncol, pcols, pverp, state%pint, 20000._r8, fcnl, fln200c)

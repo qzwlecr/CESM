@@ -15,7 +15,7 @@
 !
 !            SUBROUTINE SET99
 !                AN INITIALIZATION ROUTINE THAT MUST BE CALLED ONCE
-!                BEFORE A SEQUENCE OF CALLS TO THE FFT ROUTINES
+!                BEFORE A SQUENCE OF CALLS TO THE FFT ROUTINES
 !                (PROVIDED THAT N IS NOT CHANGED).
 !
 !            SUBROUTINES FFT99 AND FFT991
@@ -233,6 +233,10 @@
 !================================================================================================
 
       SUBROUTINE FFT99(A,WORK,TRIGS,IFAX,INC,JUMP,N,LOT,ISIGN)
+      !asc hack begin
+      !TODO
+      !RETURN
+      !asc hack end
 !
 !-----------------------------------------------------------------------
 !     SUBROUTINE "FFT99" - MULTIPLE FAST REAL PERIODIC TRANSFORM
@@ -594,6 +598,10 @@
 !================================================================================================
 
       SUBROUTINE FFT991(A,WORK,TRIGS,IFAX,INC,JUMP,N,LOT,ISIGN)
+      !asc hack begin
+      !TODO
+      !RETURN
+      !asc hack end
 !
 !-----------------------------------------------------------------------
 !     SUBROUTINE "FFT991" - MULTIPLE REAL/HALF-COMPLEX PERIODIC
@@ -756,6 +764,10 @@
 !================================================================================================
 
       SUBROUTINE SET99 (TRIGS, IFAX, N)
+      !asc hack begin
+      !call() TODO
+      !RETURN
+      !asc hack end
 !
 !-----------------------------------------------------------------------
 !
@@ -782,6 +794,8 @@
 !
 !-----------------------------------------------------------------------
 !
+      print*, "<<<n=", N, ">>>";
+
       CALL FAX (IFAX, N, MODE)
       I = IFAX(1)
       IF (IFAX(I+1) .GT. 5 .OR. N .LE. 4) IFAX(1) = -99
