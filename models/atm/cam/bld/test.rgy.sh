@@ -19,7 +19,7 @@ INTEL='/media/rgy/linux-file/intel_parallel_studio/'
 #rm -f ./*.o
 ./cuda-build.sh || exit 1
 
- ./configure -dyn fv -hgrid 1.9x2.5 -ntasks 1 -phys cam4 -ocn aquaplanet -pergro -fc gfortran  -fopt '-lmkl:sequential  -g -O3' #-debug
+ ./configure -dyn fv -hgrid 1.9x2.5 -ntasks 1 -phys cam4 -ocn aquaplanet -pergro -fc ifort  -fopt '-lmkl:sequential  -g -O3' #-debug
  ./build-namelist -s -case cam5.0_port -runtype startup  -csmdata ./ -namelist "&camexp stop_option='ndays', stop_n=2 nhtfrq=1 ndens=1 \
     mfilt=97 hfilename_spec='h%t.nc' empty_htapes=.true.    fincl1='T:I','PS:I' /"
  rm -f Depends
@@ -43,7 +43,7 @@ mpifort -o /media/rgy/win-file/document/computer/HPC/cesm/CESM/models/atm/cam/bl
 rm -f ./h0.nc 
 
 echo "run the cam"
-optirun mpirun ./cam >cam.run.log 2>&1|| exit 4
+ ./cam >cam.run.log 2>&1|| exit 4
 
 echo "cprncdf !"
 rm -f ./result 

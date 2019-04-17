@@ -28,7 +28,7 @@
    use fv_control_mod, only: div24del2flag, del2coef
    use spmd_utils,     only: masterproc
    use abortutils,     only: endrun
-
+   use pft_mkl
 #if defined( SPMD )
    use mod_comm,      only : mp_send4d_ns, mp_recv4d_ns,     &
                              mp_send2_ns, mp_recv2_ns,                   &
@@ -620,7 +620,7 @@
 #ifdef use_gpu_fft 
 call cuda_pft2d( delpf(1,js2g0,k), plan_c) !ASC-TODO 这个地方或许可以改成全部算完之后做fft
 #else
-             call pft2d( delpf(1,js2g0,k), grid%sc, &
+             call pft2d_mkl( delpf(1,js2g0,k), grid%sc, &
                          grid%dc, im, jn2g0-js2g0+1,    &
                          wk, wk2 )
 #endif
@@ -689,8 +689,8 @@ call cuda_pft2d( delpf(1,js2g0,k), plan_c) !ASC-TODO 这个地方或许可以改
             call cuda_pft2d(uc(1,js2g0,k), plan_c)
             call cuda_pft2d(vc(1,js2g0,k), plan_e)
 #else
-            call pft2d(uc(1,js2g0,k), grid%sc, grid%dc, im, jn2g0-js2g0+1, wk, wk2 )
-            call pft2d(vc(1,js2g0,k), grid%se, grid%de, im, jlast-js2g0+1, wk, wk2 )
+            call pft2d_mkl(uc(1,js2g0,k), grid%sc, grid%dc, im, jn2g0-js2g0+1, wk, wk2 )
+            call pft2d_mkl(vc(1,js2g0,k), grid%se, grid%de, im, jlast-js2g0+1, wk, wk2 )
 #endif
          endif
 
@@ -991,7 +991,7 @@ call cuda_pft2d( delpf(1,js2g0,k), plan_c) !ASC-TODO 这个地方或许可以改
 #ifdef use_gpu_fft
 call cuda_pft2d(uc(1,js2g0,k), plan_c)
 #else
-call pft2d(uc(1,js2g0,k), grid%sc,       &
+call pft2d_mkl(uc(1,js2g0,k), grid%sc,       &
                      grid%dc, im, jn2g0-js2g0+1,       &
                      wk, wk2 )
 #endif
@@ -1057,7 +1057,7 @@ call pft2d(uc(1,js2g0,k), grid%sc,       &
 #ifdef use_gpu_fft
 call cuda_pft2d(vc(1,js2g0,k), plan_e)
 #else
-call pft2d(vc(1,js2g0,k), grid%se,          &
+call pft2d_mkl(vc(1,js2g0,k), grid%se,          &
                      grid%de, im, jlast-js2g0+1, wk, wk1 )
 #endif
       enddo
@@ -1380,7 +1380,7 @@ call pft2d(vc(1,js2g0,k), grid%se,          &
 #ifdef use_gpu_fft
             call cuda_pft2d( delpf(1,js2g0,k), plan_c)
 #else
-            call pft2d( delpf(1,js2g0,k), grid%sc, &
+            call pft2d_mkl( delpf(1,js2g0,k), grid%sc, &
                          grid%dc, im, jn2g0-js2g0+1,    &
                          wk, wk2 )
 #endif
@@ -1576,10 +1576,10 @@ pk4 = D4_0*grid%ptop**akap  !todo ASC RGY
          call cuda_pft2d(wk3(1,js2g0), plan_e)
          call cuda_pft2d(wk1(1,js2g0), plan_c)
 #else
-          call pft2d( wk3(1,js2g0), grid%se,        &
+          call pft2d_mkl( wk3(1,js2g0), grid%se,        &
                       grid%de, im, jlast-js2g0+1,       &
                       wk, wk2 )
-          call pft2d( wk1(1,js2g0), grid%sc,        &
+          call pft2d_mkl( wk1(1,js2g0), grid%sc,        &
                       grid%dc, im, jn2g0-js2g0+1,       &
                       wk, wk2 )
 #endif

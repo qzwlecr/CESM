@@ -227,60 +227,11 @@ CONTAINS
 
 !Local Auto arrays:
 
-#if defined( LIBSCI_FFT )
-    !   real (r8) qwk(2*im+4, jp)
-    !   complex(r8) cqf(im/2+1, jp)
-    !   integer imo2p
-#elif defined( SGI_FFT )
-    !   integer*4 im_4, nj_4, imp2_4
-#endif
-
-#if defined( LIBSCI_FFT )
-    !   imo2p = im/2 + 1
-    !   ooim = D1_0/real(im,r8)
-
-    !   call dzfftm(-1, im, nj, D1_0, q1, im+2, cqf, imo2p,      &
-    !               trigs, qwk, 0)
-
-    !   do n=1,nj
-    !      do i=3,imo2p
-    !         cqf(i,n) = cqf(i,n) * damp(2*i-2,jf(n))
-    !      enddo
-    !   enddo
-
-    !   call zdfftm( 1, im, nj, ooim, cqf, imo2p, q1, im+2,    &
-    !               trigs, qwk, 0)
-#elif defined( SGI_FFT )
-    !   im_4 = im
-    !   nj_4 = nj
-    !   imp2_4 = im+2
-    !   call dzfftm1du (-1, im_4, nj_4, q1, 1, imp2_4, trigs)
-    !   do n=1,nj
-    !      do i=5,im+2
-    !         q1(i,n) = q1(i,n) * damp(i-2,jf(n))
-    !      enddo
-    !   enddo
-    !   call dzfftm1du (1, im_4, nj_4, q1, 1, imp2_4, trigs)
-    !   ooim = D1_0/real(im,r8)
-    !   do n=1,nj
-    !     do i=1,im+2
-    !       q1(i,n) = ooim*q1(i,n)
-    !     enddo
-    !   enddo
-#else
-    !   if(save_flag == 0) then 
-    !      print *, "{im+2=", im + 2, "nj=", nj, "}"
-    !      call needle(q1, 1, (im + 2) * nj) 
-    !   endif
-
       call fft991 (q1, q2, trigs, ifax, 1, im+2, im, nj, -1)
     !   call cuda_fft991_batch_host(1, (im + 2) * nj, q1, 1, im + 2, im, nj, -1)
-
-
     !   if(save_flag == 0) then 
     !      call needle(q1, 1, (im + 2) * nj) 
     !   endif
-
       do n=1,nj
          do i=5,im+2
             q1(i,n) = q1(i,n) * damp(i-2,jf(n))
@@ -298,7 +249,6 @@ CONTAINS
     !      call needle(q1, 1, (im + 2) * nj) 
     !   endif
     !   save_flag = save_flag + 1
-#endif
 
       return
 !EOC

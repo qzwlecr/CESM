@@ -1,0 +1,103 @@
+#include "asc_flag_gpu.h"
+module pft_mkl
+ use shr_kind_mod,   only: r8 => shr_kind_r8
+ use fftw_mkl
+ !use pft_module
+#ifdef NO_R16
+   integer,parameter :: r16= selected_real_kind(12) ! 8 byte real
+#else
+   integer,parameter :: r16= selected_real_kind(24) ! 16 byte real
+#endif
+
+      public pft2d_mkl 
+!-----------------------------------------------------------------------
+      private
+      real(r8), parameter ::  D0_0                    =  0.0_r8
+      !integer, save :: ifax(13)                      !ECMWF fft
+      !real(r8), allocatable, save :: trigs(:)        ! reentrant code??
+
+CONTAINS
+
+ subroutine pft2d_mkl (p, s, damp, im,  jp, q1, q2)
+ implicit none
+! !INPUT PARAMETERS:
+      integer im                   ! Total X dimension
+      integer jp                   ! Total Y dimension
+      real(r8)   s(jp)             ! 3-point algebraic filter
+      real(r8)  damp(im,jp)        ! FFT damping coefficients
+
+! !INPUT/OUTPUT PARAMETERS:
+      real(r8) q1( im+2, *)        ! Work array! (im+2, jp)
+      real(r8) q2(*)               ! Work array! (im+1)*jp
+      real(r8)  p(im,jp)           ! Array to be polar filtered
+
+
+! !LOCAL VARIABLES:
+      real(r8) rsc, bt 
+      integer  i, j, n, nj
+
+!Local Auto arrays:
+      integer  jf(jp) !removed
+      nj = 0
+      do 200 j=1,jp
+       ! Packing for FFT 
+               nj = j
+               jf(j) = j
+               do i=1,im
+                  q1(i,j) = p(i,j)
+               enddo
+                  q1(im+1,j) = D0_0 !TODO 优化这里
+                  q1(im+2,j) = D0_0
+200   continue
+
+      call fftrans0(damp, im, jp, jp,jf, q1, q2)
+      !PRINT *,'done fftrans_fftw'
+      do n=1,nj
+         do i=1,im
+            p(i,n) = q1(i,n)
+         enddo
+      enddo
+      return
+!EOC
+ end subroutine pft2d_mkl 
+
+ subroutine fftrans0(damp, im, jp, nj,jf, q1, q2)
+ implicit none
+! !INPUT PARAMETERS:
+      integer im                   ! Total X dimension
+      integer jp                   ! Total Y dimension
+      integer jf(jp)               ! J index versus transform number
+      integer nj                   ! Number of transforms
+      real(r8)  damp(im,jp)        ! FFT damping coefficients
+
+! !INPUT/OUTPUT PARAMETERS:
+      real(r8),intent(inout) :: q1( im+2, *)        ! Work array
+      real(r8),intent(inout) :: q2(*)               ! Work array
+
+! !LOCAL VARIABLES:
+      integer i, n
+      LOGICAL, save::save_flag = .FALSE.
+
+      if(save_flag .eqv. .FALSE. )then
+            call SC_SETUP(im+2,im,nj)
+            save_flag=.TRUE.
+            PRINT *,'init'
+      endif
+      call SC_FFT991(q1,im+2,im,nj,-1)
+! SUBROUTINE FFT991 (A,WORK,TRIGS,IFAX,INC,JUMP,N,M,ISIGN)
+      !call fft991  (q1, q2, trigs, ifax, 1, im+2,im,nj, -1)
+
+      do n=1,nj
+         do i=5,im+2
+            q1(i,n) = q1(i,n) * damp(i-2,n)
+         enddo
+      enddo
+
+      call SC_FFT991(q1,im+2,im,nj,1)
+      !call fft991 (q1, q2, trigs, ifax, 1, im+2, im, nj, 1)
+      return
+!EOC
+ end subroutine fftrans0
+!-----------------------------------------------------------------------
+
+end module pft_mkl
