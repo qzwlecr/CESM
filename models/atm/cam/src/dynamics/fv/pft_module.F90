@@ -1,4 +1,4 @@
-#include "asc_flag_gpu.h"
+#include "asc_flag_fft.h_gpu.h"
 module pft_module
 !BOP
 !
@@ -400,7 +400,7 @@ CONTAINS
           endif
          endif
       enddo
-#ifdef use_gpu_fft
+#ifdef use_fftw_fft
       call cuda_pft_cf_record(plan_idc, sc, js2g0, jn2g0, dc, im, fft_flt)
 #endif
 !************
@@ -426,7 +426,7 @@ CONTAINS
           endif
          endif
       enddo
-#ifdef use_gpu_fft
+#ifdef use_fftw_fft
       call cuda_pft_cf_record(plan_ide, se, js2g0, jn1g1, de, im, fft_flt)
 #endif
       return
