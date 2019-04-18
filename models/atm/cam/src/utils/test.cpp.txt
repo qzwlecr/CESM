@@ -1,0 +1,24 @@
+#include "fft100_cuda.cpp"
+#include <stdio.h>
+#include <cstring>
+#include <iostream>
+
+int main(){
+    double input[5*10];
+    for(int x=0;x<50;x++){
+        input[x]=(double)x;
+    }
+    double damp[5*10];
+    memset(damp,1.0l,sizeof(input));
+
+    int z=0;
+    int s_size=5;
+    int One=1;
+    int x_dim=10;
+    cuda_pft_cf_record_(&z,input,&z,&s_size,damp,&x_dim,&One);
+    fftw_pft2d_(input,&z);
+    needle_(input,&s_size,&x_dim);
+    //std::cout<<input;
+    puts("finish");
+    return 0;
+}

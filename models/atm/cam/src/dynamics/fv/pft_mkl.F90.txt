@@ -1,4 +1,4 @@
-#include "asc_flag_gpu.h"
+#include "asc_flag_fft.h_gpu.h"
 module pft_mkl
  use shr_kind_mod,   only: r8 => shr_kind_r8
  use fftw_mkl
