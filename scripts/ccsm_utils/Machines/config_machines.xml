@@ -42,7 +42,7 @@
         <RUNDIR>/home/gpu_ubuntu/zhanglichen/asc2019/cesm/$CASE/run</RUNDIR>
         <EXEROOT>/home/gpu_ubuntu/zhanglichen/asc2019/cesm/$CASE/bld</EXEROOT>
         <DIN_LOC_ROOT>/home/gpu_ubuntu/zhanglichen/asc2019/cesm/inputdata/$CASE</DIN_LOC_ROOT>
-        <DOUT_S>FALSE</DOUT_S>
+        <DOUT_S>TRUE</DOUT_S>
         <DOUT_S_ROOT>/home/gpu_ubuntu/zhanglichen/asc2019/cesm/outputdata/short/$CASE</DOUT_S_ROOT>
         <DOUT_L_MSROOT>/home/gpu_ubuntu/zhanglichen/asc2019/cesm/outputdata/long/$CASE</DOUT_L_MSROOT>
         <CCSM_BASELINE>/local/zhanglichen/cesm/CESM/ccsm_baselines</CCSM_BASELINE>

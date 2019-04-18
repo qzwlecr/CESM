@@ -1,5 +1,4 @@
 ! Users should add all user specific namelist changes below in the form of 
-! namelist_var = new_namelist_value 
+! namelist_var = new_namelist_value
  
-empty_htapes = .TRUE.
-fincl1 = 'U10','TS','PS','Z3','SST'
+
