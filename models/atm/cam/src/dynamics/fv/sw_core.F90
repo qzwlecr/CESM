@@ -8,13 +8,13 @@ module sw_core
   use dynamics_vars, only: T_FVDYCORE_GRID
   use shr_kind_mod, only : r8 => shr_kind_r8
   include "pft_plan.h"
-  include "asc_flag_gpu.h"
+  include "asc_flag_fft.h_gpu.h"
 #ifdef NO_R16
    integer,parameter :: r16= selected_real_kind(12) ! 8 byte real
 #else
    integer,parameter :: r16= selected_real_kind(24) ! 16 byte real
 #endif
-
+#define use_fftw_fft
 !
 ! !PUBLIC MEMBER FUNCTIONS:
       public d2a2c_winds, c_sw, d_sw
@@ -340,9 +340,9 @@ contains
 ! use wk4, crx as work arrays
 ! dog todo
 
-#ifdef use_gpu_fft
-     call cuda_pft2d(ptk(1,js2g0), plan_c)
-     call cuda_pft2d(tm2(1,js2g0), plan_c)
+#ifdef use_fftw_fft
+     call fftw_pft2d(ptk(1,js2g0), plan_c)
+     call fftw_pft2d(tm2(1,js2g0), plan_c)
 #else
       call pft2d_mkl(ptk(1,js2g0), sc,   &
                  dc, im, jn2g0-js2g0+1,  &
@@ -909,9 +909,9 @@ contains
 
 #if defined(FILTER_MASS_FLUXES)
 
-#ifdef use_gpu_fft
-call cuda_pft2d(xfx(1,js2g0), plan_c)
-call cuda_pft2d(yfx(1,js2g0), plan_e)
+#ifdef use_fftw_fft
+call fftw_pft2d(xfx(1,js2g0), plan_c)
+call fftw_pft2d(yfx(1,js2g0), plan_e)
 #else
     call pft2d_mkl( xfx(1,js2g0), sc, dc, im, jn2g0-js2g0+1, &
                      v2, u2 )
@@ -1128,9 +1128,9 @@ call cuda_pft2d(yfx(1,js2g0), plan_e)
      !
      ! filter velocity components for stability
      !
-#ifdef use_gpu_fft
-     call cuda_pft2d(u(1,js2gd), plan_e_div4)
-     call cuda_pft2d(v(1,js2gs), plan_c_div4)
+#ifdef use_fftw_fft
+     call fftw_pft2d(u(1,js2gd), plan_e_div4)
+     call fftw_pft2d(v(1,js2gs), plan_c_div4)
 #else
      call pft2d_mkl(u(1,js2gd), grid%sediv4, grid%dediv4, im, jn1gs-js2gd+1, &
            wkdiv4, wk2div4 )
