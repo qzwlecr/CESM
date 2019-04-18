@@ -1,4 +1,4 @@
-#include "asc_flag_fft.h_gpu.h"
+#include "asc_flag_fft.h"
 module pft_module
 !BOP
 !
