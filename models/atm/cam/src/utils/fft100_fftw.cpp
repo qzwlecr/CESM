@@ -7,6 +7,7 @@
 #include <cstring>
 #include <assert.h>
 #include <chrono>
+#include "fftw3_mkl.h"
 using namespace std::chrono;
 #define DOG_BUGGY 0
 
