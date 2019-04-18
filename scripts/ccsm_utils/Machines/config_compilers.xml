@@ -863,8 +863,8 @@ for mct, etc.
   <SFC>ifort</SFC>
   <SCC>icc</SCC>
   <SCXX>icpc</SCXX>
-  <ADD_FFLAGS> -O3 -xHost -mkl -ip -align array64byte -qopt-report-phase=vec -qopt-report=5 </ADD_FFLAGS>
-  <ADD_CFLAGS> -O3 -xHost -mkl -ip -qopt-report-phase=vec -qopt-report=5 </ADD_CFLAGS>
+  <ADD_FFLAGS> -fp-model double  -fimf-precision=high -prec-div -O3 -xHost -lmkl -ipo5 -align array64byte -lsvml -funsafe-math-optimizations  </ADD_FFLAGS>
+  <ADD_CFLAGS> -fp-model double  -fimf-precision=high -prec-div -O3 -xHost -lmkl -ipo5 -align array64byte -lsvml -funsafe-math-optimizations   </ADD_CFLAGS>
   <ADD_LDFLAGS> -L/home/gpu_ubuntu/zhanglichen/tools/hdf5-icc-build-wtf/lib -lhdf5</ADD_LDFLAGS>
   <ADD_SLIBS> -mkl -lnetcdf -lnetcdff -L/home/gpu_ubuntu/zhanglichen/tools/hdf5-icc-build-wtf/lib -lhdf5 </ADD_SLIBS>
   <MPI_PATH>/home/gpu_ubuntu/zhanglichen/tools/mvapich2-icc-build-wtf</MPI_PATH>
@@ -877,8 +877,8 @@ for mct, etc.
   <SFC>ifort</SFC>
   <SCC>icc</SCC>
   <SCXX>icpc</SCXX>
-  <ADD_FFLAGS> -O3 -xHost -mkl -ip -align array64byte -qopt-report-phase=vec -qopt-report=5 </ADD_FFLAGS>
-  <ADD_CFLAGS> -O3 -xHost -mkl -ip -qopt-report-phase=vec -qopt-report=5 </ADD_CFLAGS>
+  <ADD_FFLAGS> -O3 -xHost -mkl -ip -align array64byte  </ADD_FFLAGS>
+  <ADD_CFLAGS> -O3 -xHost -mkl -ip  </ADD_CFLAGS>
   <ADD_LDFLAGS> -L/home/gpu_ubuntu/zhanglichen/tools/hdf5-icc-build-wtf/lib -lhdf5</ADD_LDFLAGS>
   <ADD_SLIBS> -mkl -lnetcdf -lnetcdff -L/home/gpu_ubuntu/zhanglichen/tools/hdf5-icc-build-wtf/lib -lhdf5 </ADD_SLIBS>
   <MPI_PATH>/home/gpu_ubuntu/zhanglichen/tools/mvapich2-icc-build-wtf</MPI_PATH>
