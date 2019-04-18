@@ -44,7 +44,7 @@ struct PftRecord {
     double* dev_damp;                // of fft_count * (x_dim + 2), keep it in memory
     double* dev_origin;     // of fft_count * (x_dim), keep it in memory
     fftw_complex* dev_freq; //complex   // of fft_count * (x_dim + 2), keep it in memory
-    double* dev_inout;               // of s_size * x_dim
+    //double* dev_inout;               // of s_size * x_dim
 };
 
 thread_local PftRecord pft_records[4] = {};
@@ -112,7 +112,7 @@ extern "C" void cuda_pft_cf_record_(int* plan_id_, double* s_, int* s_beg_, int*
             free(record.dev_damp);
             free(record.dev_origin);
             free(record.dev_freq);
-            free(record.dev_inout);
+            //free(record.dev_inout);
             //cufftDestroy(record.fwd_plan);
             //cufftDestroy(record.bck_plan);
         }
@@ -121,7 +121,7 @@ extern "C" void cuda_pft_cf_record_(int* plan_id_, double* s_, int* s_beg_, int*
         record.dev_damp = (double*)malloc(fft_count * (x_dim + 2)*sizeof(double));
         record.dev_origin = (double*) malloc(fft_count * x_dim*sizeof(double));
         record.dev_freq = (fftw_complex*) malloc(fft_count * (x_dim + 2)*sizeof(double) );
-        record.dev_inout = (double*) malloc(s_size * x_dim*sizeof(double));
+        //record.dev_inout = (double*) malloc(s_size * x_dim*sizeof(double));
 //         fftw_plan fftw_plan_many_dft_r2c(int rank, const int *n, int howmany,
 //                                double *in, const int *inembed,
 //                                int istride, int idist,
@@ -262,10 +262,10 @@ extern "C" void fftw_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
     auto* dev_damp = record.dev_damp;
     auto* dev_origin = record.dev_origin;
     auto* dev_freq =  record.dev_freq;
-    auto* dev_inout = record.dev_inout;
+    auto* dev_inout = p_inout_;//record.dev_inout;
     auto s_offset = record.s_offset;
     p_inout_ += s_offset;
-    memcpy(dev_inout, p_inout_, sizeof(double) * s_size * x_dim);
+    //memcpy(dev_inout, p_inout_, sizeof(double) * s_size * x_dim);
     //log_origin(record,dev_inout);
     pft_prepare(dev_inout, plan_id,s_size,x_dim);
     //log_origin(record,dev_origin);
@@ -291,7 +291,7 @@ extern "C" void fftw_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
     fftw_execute_dft_c2r(record.bck_plan, dev_freq, dev_origin);
 
     pft_finish  (dev_inout, plan_id,fft_count,x_dim);
-    memcpy(p_inout_, dev_inout, sizeof(double) * s_size * x_dim);
+    //memcpy(p_inout_, dev_inout, sizeof(double) * s_size * x_dim);
     //puts("\nend fftw_pft2d_");
 
 }
