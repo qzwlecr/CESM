@@ -64,7 +64,7 @@ extern "C" void cuda_pft_cf_record_(int* plan_id_, double* s_, int* s_beg_, int*
 
     int fft_count = 0;
     bool force_fft = (bool)*fft_flt_;
-    std::cout<<plan_id<<" "<<s_size<<" "<<*damp_<<" "<<x_dim<<" "<<force_fft<<"init fftw\n";
+    //std::cout<<plan_id<<" "<<s_size<<" "<<*damp_<<" "<<x_dim<<" "<<force_fft<<"init fftw\n";
     //          0             94            1           144         1
     //exit(1);
     int s_beg = 0;
@@ -138,7 +138,7 @@ extern "C" void cuda_pft_cf_record_(int* plan_id_, double* s_, int* s_beg_, int*
         const int N=x_dim;
         const int foo=N/2+1;
         int jump=N;
-        std::cout<<jump<<"\n ";
+        //std::cout<<jump<<"\n ";
         int lot=fft_count;
         int inc=1;
         record.fwd_plan=fftw_plan_many_dft_r2c(1,&N,lot,

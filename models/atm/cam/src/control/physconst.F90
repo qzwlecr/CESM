@@ -149,7 +149,7 @@ contains
       character(len=*), parameter :: subname = 'physconst_readnl'
       logical       newg, newsday, newmwh2o, newcpwv, newmwdry, newrearth, newtmelt
 
-            write(iulog,*)'[ASC debug] Y00: physconst_readnl called!'
+           ! write(iulog,*)'[ASC debug] Y00: physconst_readnl called!'
             !stop 'physconst_readnl'
 !       ! Physical constants needing to be reset (ie. for aqua planet experiments)
 !       namelist /physconst_nl/  cpwv, gravit, mwdry, mwh2o, rearth, sday, tmelt, tms_orocnst, tms_z0fac
