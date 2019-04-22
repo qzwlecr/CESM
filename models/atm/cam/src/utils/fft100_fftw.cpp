@@ -260,16 +260,16 @@ extern "C" void fftw_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
     int x_dim = record.x_dim;
     int fft_count = record.fft_count;
     auto* dev_damp = record.dev_damp;
-    auto* dev_origin = record.dev_origin;
+    // auto* dev_origin = record.dev_origin;
     auto* dev_freq =  record.dev_freq;
     auto* dev_inout = p_inout_;//record.dev_inout;
     auto s_offset = record.s_offset;
     p_inout_ += s_offset;
     //memcpy(dev_inout, p_inout_, sizeof(double) * s_size * x_dim);
     //log_origin(record,dev_inout);
-    pft_prepare(dev_inout, plan_id,s_size,x_dim);
+    //pft_prepare(dev_inout, plan_id,s_size,x_dim);
     //log_origin(record,dev_origin);
-    fftw_execute_dft_r2c(record.fwd_plan, dev_origin, dev_freq);
+    fftw_execute_dft_r2c(record.fwd_plan, dev_inout, dev_freq);
 
     //log_freq(record,(double*)dev_freq);
     
@@ -288,9 +288,9 @@ extern "C" void fftw_pft2d_(double* p_inout_,    // array filtered [y_dim][x_dim
       //  printf("%d\n",fft_count * (x_dim + 2));
     //log_freq(record,(double*)dev_freq);
 
-    fftw_execute_dft_c2r(record.bck_plan, dev_freq, dev_origin);
+    fftw_execute_dft_c2r(record.bck_plan, dev_freq, dev_inout);
 
-    pft_finish  (dev_inout, plan_id,fft_count,x_dim);
+    //pft_finish  (dev_inout, plan_id,fft_count,x_dim);
     //memcpy(p_inout_, dev_inout, sizeof(double) * s_size * x_dim);
     //puts("\nend fftw_pft2d_");
 
