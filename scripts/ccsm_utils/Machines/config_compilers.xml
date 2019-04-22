@@ -863,8 +863,8 @@ for mct, etc.
   <SFC>ifort</SFC>
   <SCC>icc</SCC>
   <SCXX>icpc</SCXX>
-  <ADD_FFLAGS> -fp-model double -fimf-precision=high -O3 -xHost -mkl -Wl, -ipo5 -align array64byte -lsvml -funsafe-math-optimizations  </ADD_FFLAGS>
-  <ADD_CFLAGS> -fp-model double -fimf-precision=high -O3 -xHost -mkl -Wl, -ipo5 -lsvml -I/home/gpu_ubuntu/public/software/intel/compilers_and_libraries_2019.1.144/linux/mkl/include/fftw </ADD_CFLAGS>
+  <ADD_FFLAGS> -fp-model double -fimf-precision=high -O3 -xHost -mkl=sequential -Wl, -ipo5 -align array64byte -lsvml -funsafe-math-optimizations  </ADD_FFLAGS>
+  <ADD_CFLAGS> -fp-model double -fimf-precision=high -O3 -xHost -mkl=sequential -Wl, -ipo5 -lsvml -I/home/gpu_ubuntu/public/software/intel/compilers_and_libraries_2019.1.144/linux/mkl/include/fftw </ADD_CFLAGS>
   <ADD_LDFLAGS> -L/home/gpu_ubuntu/zhanglichen/tools/hdf5-icc-build/lib -lhdf5 -lstdc++</ADD_LDFLAGS>
   <ADD_SLIBS> -mkl -Wl, -lnetcdf -lnetcdff -L/home/gpu_ubuntu/zhanglichen/tools/hdf5-icc-build/lib -lhdf5 </ADD_SLIBS>
   <MPI_PATH>/home/gpu_ubuntu/zhanglichen/tools/mvapich2-icc-build</MPI_PATH>
