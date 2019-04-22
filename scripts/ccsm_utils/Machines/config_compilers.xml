@@ -863,11 +863,11 @@ for mct, etc.
   <SFC>ifort</SFC>
   <SCC>icc</SCC>
   <SCXX>icpc</SCXX>
-  <ADD_FFLAGS> -fp-model double  -fimf-precision=high  -O3 -xHost -mkl -Wl, -ipo5 -align array64byte -lsvml -funsafe-math-optimizations  </ADD_FFLAGS>
-  <ADD_CFLAGS> -fp-model double  -fimf-precision=high  -O3 -xHost -mkl -Wl, -ipo5  -lsvml -I/home/gpu_ubuntu/public/software/intel/compilers_and_libraries_2019.1.144/linux/mkl/include/fftw </ADD_CFLAGS>
-  <ADD_LDFLAGS> -L/home/gpu_ubuntu/zhanglichen/tools/hdf5-icc-build-wtf/lib -lhdf5 -lstdc++</ADD_LDFLAGS>
-  <ADD_SLIBS> -mkl -Wl, -lnetcdf -lnetcdff -L/home/gpu_ubuntu/zhanglichen/tools/hdf5-icc-build-wtf/lib -lhdf5 </ADD_SLIBS>
-  <MPI_PATH>/home/gpu_ubuntu/zhanglichen/tools/mvapich2-icc-build-wtf</MPI_PATH>
+  <ADD_FFLAGS> -fp-model double -fimf-precision=high -O3 -xHost -mkl -Wl, -ipo5 -align array64byte -lsvml -funsafe-math-optimizations  </ADD_FFLAGS>
+  <ADD_CFLAGS> -fp-model double -fimf-precision=high -O3 -xHost -mkl -Wl, -ipo5 -lsvml -I/home/gpu_ubuntu/public/software/intel/compilers_and_libraries_2019.1.144/linux/mkl/include/fftw </ADD_CFLAGS>
+  <ADD_LDFLAGS> -L/home/gpu_ubuntu/zhanglichen/tools/hdf5-icc-build/lib -lhdf5 -lstdc++</ADD_LDFLAGS>
+  <ADD_SLIBS> -mkl -Wl, -lnetcdf -lnetcdff -L/home/gpu_ubuntu/zhanglichen/tools/hdf5-icc-build/lib -lhdf5 </ADD_SLIBS>
+  <MPI_PATH>/home/gpu_ubuntu/zhanglichen/tools/mvapich2-icc-build</MPI_PATH>
 
 </compiler>
 <compiler MACH="cluster-exp2" COMPILER="intel">
@@ -877,11 +877,11 @@ for mct, etc.
   <SFC>ifort</SFC>
   <SCC>icc</SCC>
   <SCXX>icpc</SCXX>
-  <ADD_FFLAGS> -O3 -xHost -mkl -ip -align array64byte  </ADD_FFLAGS>
-  <ADD_CFLAGS> -O3 -xHost -mkl -ip  </ADD_CFLAGS>
-  <ADD_LDFLAGS> -L/home/gpu_ubuntu/zhanglichen/tools/hdf5-icc-build-wtf/lib -lhdf5</ADD_LDFLAGS>
-  <ADD_SLIBS> -mkl -lnetcdf -lnetcdff -L/home/gpu_ubuntu/zhanglichen/tools/hdf5-icc-build-wtf/lib -lhdf5 </ADD_SLIBS>
-  <MPI_PATH>/home/gpu_ubuntu/zhanglichen/tools/mvapich2-icc-build-wtf</MPI_PATH>
+  <ADD_FFLAGS> -fp-model double -fimf-precision=high -prec-div -O3 -xHost -mkl -ipo5 -align array64byte -lsvml -funsafe-math-optimizations  </ADD_FFLAGS>
+  <ADD_CFLAGS> -fp-model double -fimf-precision=high -prec-div -O3 -xHost -mkl -ipo5 -lsvml -I/home/gpu_ubuntu/public/software/intel/compilers_and_libraries_2019.1.144/linux/mkl/include/fftw </ADD_CFLAGS>
+  <ADD_LDFLAGS> -L/home/gpu_ubuntu/zhanglichen/tools/hdf5-icc-build/lib -lhdf5 -lstdc++</ADD_LDFLAGS>
+  <ADD_SLIBS> -mkl -lnetcdf -lnetcdff -L/home/gpu_ubuntu/zhanglichen/tools/hdf5-icc-build/lib -lhdf5 </ADD_SLIBS>
+  <MPI_PATH>/home/gpu_ubuntu/zhanglichen/tools/mvapich2-icc-build</MPI_PATH>
 </compiler>
 
 </config_compilers>
